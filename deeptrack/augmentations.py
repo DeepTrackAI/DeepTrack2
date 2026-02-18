@@ -75,7 +75,7 @@ Flip an image of a particle up-down then flips left-right:
 
     >>> particle = dt.PointParticle()
     >>> optics = dt.Fluorescence()
-    >>> image = dt.Value(optics(particle))\ 
+    >>> image = dt.Value(optics(particle)) 
     ...     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
     image.plot()
 
@@ -101,12 +101,9 @@ import random
 
 import numpy as np
 import scipy.ndimage as ndimage
-# from scipy.ndimage import gaussian_filter
-# from scipy.ndimage.interpolation import map_coordinates
 
 from deeptrack import utils, TORCH_AVAILABLE
 from deeptrack.features import Feature
-from deeptrack.image import Image # TBE
 from deeptrack.types import PropertyLike
 from deeptrack.scatterers import ScatteredVolume, ScatteredField
 from deeptrack.backend import xp, config
@@ -1035,13 +1032,15 @@ class ElasticTransformation(Augmentation):
         mode: str = "constant",
         **kwargs,
     ) -> torch.Tensor:
-        
+
+
         if image.ndim not in (2, 3):
             raise ValueError("ElasticTransformation only supports 2D or 3D tensors.")
 
         device = image.device
         dtype = image.dtype
 
+        # Reshape to (N=1, C, H, W)
         if image.ndim == 2:
             H, W = image.shape
             C = 1
@@ -1050,13 +1049,7 @@ class ElasticTransformation(Augmentation):
             H, W, C = image.shape
             image_ = image.permute(2, 0, 1).unsqueeze(0)
 
-        spatial_shape = (H, W)
-
-        # Create random field
-        noise_y = torch.rand(spatial_shape, device=device, dtype=dtype)
-        noise_x = torch.rand(spatial_shape, device=device, dtype=dtype)
-
-        # Gaussian smoothing
+        # Build Gaussian kernel
         def gaussian_kernel_1d(sigma):
             radius = int(3 * sigma)
             coords = torch.arange(-radius, radius + 1, device=device, dtype=dtype)
@@ -1070,34 +1063,39 @@ class ElasticTransformation(Augmentation):
 
         def smooth(field):
             field = field.unsqueeze(0).unsqueeze(0)
-
-            # horizontal
-            field = F.conv2d(
-                field,
-                kernel_x,
-                padding=(0, kernel_x.shape[-1] // 2),
-            )
-
-            # vertical
-            field = F.conv2d(
-                field,
-                kernel_y,
-                padding=(kernel_y.shape[-2] // 2, 0),
-            )
-
+            field = F.conv2d(field, kernel_x, padding=(0, kernel_x.shape[-1] // 2))
+            field = F.conv2d(field, kernel_y, padding=(kernel_y.shape[-2] // 2, 0))
             return field.squeeze(0).squeeze(0)
 
+        # Create displacement fields
+        if ignore_last_dim or C == 1:
+            # Shared displacement for all channels
+            noise_y = torch.rand((H, W), device=device, dtype=dtype)
+            noise_x = torch.rand((H, W), device=device, dtype=dtype)
 
-        delta_y = smooth(noise_y) * alpha
-        delta_x = smooth(noise_x) * alpha
+            delta_y = smooth(noise_y) * alpha
+            delta_x = smooth(noise_x) * alpha
 
+            delta_y = delta_y.unsqueeze(0)  # (1,H,W)
+            delta_x = delta_x.unsqueeze(0)
 
-        # Build sampling grid
+        else:
+            # Independent displacement per channel
+            noise_y = torch.rand((C, H, W), device=device, dtype=dtype)
+            noise_x = torch.rand((C, H, W), device=device, dtype=dtype)
+
+            delta_y = torch.stack([smooth(n) for n in noise_y]) * alpha
+            delta_x = torch.stack([smooth(n) for n in noise_x]) * alpha
+
+        # Build base grid
         yy, xx = torch.meshgrid(
             torch.arange(H, device=device, dtype=dtype),
             torch.arange(W, device=device, dtype=dtype),
             indexing="ij",
         )
+
+        yy = yy.unsqueeze(0).expand(C, -1, -1)
+        xx = xx.unsqueeze(0).expand(C, -1, -1)
 
         yy = yy + delta_y
         xx = xx + delta_x
@@ -1110,10 +1108,12 @@ class ElasticTransformation(Augmentation):
         xx = 2.0 * xx / (W - 1) - 1.0
         yy = 2.0 * yy / (H - 1) - 1.0
 
-        grid = torch.stack([xx, yy], dim=-1)
-        grid = grid.unsqueeze(0)
+        grid = torch.stack([xx, yy], dim=-1)  # (C,H,W,2)
 
-        # 4. grid_sample
+        # grid_sample expects (N,H,W,2)
+        # So we loop over channels if needed
+        outputs = []
+
         mode_map = {
             0: "nearest",
             1: "bilinear",
@@ -1127,18 +1127,24 @@ class ElasticTransformation(Augmentation):
             "wrap": "zeros",
         }.get(mode, "zeros")
 
-        out = F.grid_sample(
-            image_,
-            grid,
-            mode=mode_map.get(order, "bilinear"),
-            padding_mode=padding_mode,
-            align_corners=True,
-        )
+        for c in range(C):
+            out_c = F.grid_sample(
+                image_[:, c:c+1],
+                grid[c:c+1],
+                mode=mode_map.get(order, "bilinear"),
+                padding_mode=padding_mode,
+                align_corners=True,
+            )
+            outputs.append(out_c)
 
+        out = torch.cat(outputs, dim=1)
+
+        # Restore original shape
         if image.ndim == 2:
             return out.squeeze(0).squeeze(0)
 
         return out.squeeze(0).permute(1, 2, 0)
+
 
 
 class Crop(Augmentation):
@@ -1175,7 +1181,7 @@ class Crop(Augmentation):
     def __init__(
         self: Crop,
         *args,
-        crop: int | list[int] | tuple[int] | Callable[[Image], tuple[int]] = (64, 64),        
+        crop: int | list[int] | tuple[int] | Callable[np.ndarray | torch.Tensor, tuple[int]] = (64, 64),        
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
@@ -1188,80 +1194,105 @@ class Crop(Augmentation):
             **kwargs,
         )
 
-    def get(
-        self: Crop,
-        image: Image | np.ndarray,
-        corner: str,
-        crop: int | list[int] | tuple[int],
-        crop_mode: str,
-        **kwargs
-    ) -> Image:
-        """Abstract method which performs the `Crop` augmentation.
+    def _get_xp(
+        self: Crop, 
+        array: np.ndarray | torch.Tensor,
+        crop: int | list[int] | tuple[int] | Callable[np.ndarray | torch.Tensor, tuple[int]],
+        crop_mode: str, 
+        corner: str | tuple[int] | Callable[[np.ndarray | torch.Tensor], tuple[int]],
+        xp: Any, 
+        **kwargs,
+    ) -> np.ndarray | torch.Tensor:
 
-        """    
-        # Get crop argument.
+        # Normalize crop
         if callable(crop):
-            crop = crop(image)
+            crop = crop(array)
+
         if isinstance(crop, int):
-            crop = (crop,) * image.ndim
+            crop = (crop,) * array.ndim
 
-        crop = [c if c is not None else image.shape[i]\
-        for i, c in enumerate(crop)]
+        crop = [c if c is not None else array.shape[i]
+                for i, c in enumerate(crop)]
 
-        # Get amount to crop from image.
         if crop_mode == "retain":
-            crop_amount = np.array(image.shape) - np.array(crop)
+            crop_amount = np.array(array.shape) - np.array(crop)
         elif crop_mode == "remove":
             crop_amount = np.array(crop)
         else:
-            raise ValueError("Unrecognized crop_mode {0}".format(crop_mode))
+            raise ValueError(f"Unrecognized crop_mode {crop_mode}")
 
-        # Contain within image.
-        crop_amount = np.amax(
-            (np.array(crop_amount), [0] * image.ndim),
-            axis=0
-        )
-        crop_amount = np.amin((np.array(image.shape) - 1, crop_amount), axis=0)
+        crop_amount = np.maximum(crop_amount, 0)
+        crop_amount = np.minimum(np.array(array.shape) - 1, crop_amount)
 
-        # Get corner of crop.
+        # Determine corner
         if isinstance(corner, str) and corner == "random":
-
-            # Ensure seed is consistent
-            slice_start = [np.random.randint(m + 1) for m in crop_amount]
+            slice_start = [np.random.randint(int(m) + 1) for m in crop_amount]
         elif callable(corner):
-            slice_start = corner(image)
+            slice_start = corner(array)
         else:
             slice_start = corner
 
-        # Ensure compatible with image.
-        slice_start = [c % (m + 1) for c, m in zip(slice_start, crop_amount)]
+        slice_start = [int(c) % (int(m) + 1)
+                    for c, m in zip(slice_start, crop_amount)]
+
         slice_end = [
-            a - c + s for a, s, c in zip(image.shape, slice_start, crop_amount)
+            a - c + s
+            for a, s, c in zip(array.shape, slice_start, crop_amount)
         ]
 
         slices = tuple(
-            [
-                slice(slice_start_i, slice_end_i)
-                for slice_start_i, slice_end_i in zip(slice_start, slice_end)
-            ]
+            slice(s0, s1)
+            for s0, s1 in zip(slice_start, slice_end)
         )
 
-        cropped_image = image[slices]
+        out = array[slices]
 
-        # Update positions.
-        if hasattr(image, "properties"):
-            cropped_image.properties =\
-            [dict(prop) for prop in image.properties]
-            for prop in cropped_image.properties:
-                if "position" in prop:
-                    position = np.array(prop["position"])
-                    try:
-                        position[..., 0:2] -= np.array(slice_start)[0:2]
-                        prop["position"] = position
-                    except IndexError:
-                        pass
+        # Store for metadata update
+        self._last_crop = {
+            "start": tuple(slice_start),
+        }
 
-        return cropped_image
+        return out
+    
+    def _update_properties(self, element, old_shape, new_shape, **kwargs):
+
+        if not isinstance(getattr(element, "properties", None), dict):
+            return element
+
+        props = element.properties
+
+        if not hasattr(self, "_last_crop"):
+            return element
+
+        start_y, start_x = self._last_crop["start"][:2]
+
+        # Update position (y, x)
+        if "position" in props and props["position"] is not None:
+
+            pos = np.asarray(props["position"], dtype=float).copy()
+            pos[..., 0] -= start_y
+            pos[..., 1] -= start_x
+            props["position"] = pos
+
+        # Update output_region
+        # Convention: (ymin, xmin, ymax, xmax)
+        if "output_region" in props and props["output_region"] is not None:
+
+            ymin, xmin, ymax, xmax = props["output_region"]
+
+            new_ymin = ymin + start_y
+            new_xmin = xmin + start_x
+            new_ymax = new_ymin + new_shape[0]
+            new_xmax = new_xmin + new_shape[1]
+
+            props["output_region"] = (
+                new_ymin,
+                new_xmin,
+                new_ymax,
+                new_xmax,
+            )
+
+        return element
 
 
 class CropToMultiplesOf(Crop):
@@ -1283,43 +1314,41 @@ class CropToMultiplesOf(Crop):
     """
 
     def __init__(
-        self: CropToMultiplesOf,
+        self,
         multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
         corner: PropertyLike[str] = "random",
-        **kwargs
+        **kwargs,
     ) -> None:
-        
-        kwargs.pop("crop", False)
-        kwargs.pop("crop_mode", False)
 
-        def image_to_crop(
-            image: Image | np.ndarray
-        ) -> Image:
-            
+        kwargs.pop("crop", None)
+        kwargs.pop("crop_mode", None)
+
+        def image_to_crop(image):
+
             shape = image.shape
-            multiple = self.multiple()
+            mul = self.multiple()
 
-            if not isinstance(multiple, (list, tuple, np.ndarray)):
-                multiple = (multiple,) * image.ndim
+            if not isinstance(mul, (list, tuple, np.ndarray)):
+                mul = (mul,) * len(shape)
+
             new_shape = list(shape)
-            idx = 0
-            for dim, mul in zip(shape, multiple):
-                if mul is not None and mul != -1:
-                    new_shape[idx] = int((dim // mul) * mul)
-                idx += 1
 
-            return new_shape
+            for i, (dim, m) in enumerate(zip(shape, mul)):
+                if m is not None and m != -1:
+                    new_shape[i] = int((dim // m) * m)
+
+            return tuple(new_shape)
 
         super().__init__(
-            multiple=multiple,
-            corner=corner,
             crop=lambda: image_to_crop,
             crop_mode="retain",
+            corner=corner,
+            multiple=multiple,
             **kwargs,
         )
 
 
-class CropTight(Feature):
+class CropTight(Augmentation):
     """Crops input array to remove empty space.
 
     Removes indices from the start and end of the array,
@@ -1334,7 +1363,7 @@ class CropTight(Feature):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, eps: PropertyLike[float], **kwargs) -> Image`
+    `get(image: np.ndarray | torch.Tensor, eps: PropertyLike[float], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `CropTight` augmentation.
 
     """
@@ -1346,24 +1375,111 @@ class CropTight(Feature):
     ) -> None:
         super().__init__(eps=eps, **kwargs)
 
-    def get(
-        self: CropTight,
-        image: Image | np.ndarray,
-        eps: float,
+    def _get_numpy(
+        self: CropTight, 
+        image: np.ndarray, 
+        eps: float, 
         **kwargs
-    ) -> Image:
-        """Abstract method which performs the `CropTight` augmentation.
-        
-        `CropTight` removes indices from the start and end of the array,
-        where all values are below eps.
+    ) -> np.ndarray:
 
-        """          
-        image = np.asarray(image)
-        image = image[..., np.any(image > eps, axis=(0, 1))]
-        image = image[np.any(image > eps, axis=(1, 2)), ...]
-        image = image[:, np.any(image > eps, axis=(0, 2)), :]
+        mask = image > eps
 
-        return image
+        keep_z = np.any(mask, axis=(0, 1))
+        keep_y = np.any(mask, axis=(1, 2))
+        keep_x = np.any(mask, axis=(0, 2))
+
+        ys = np.where(keep_y)[0]
+        xs = np.where(keep_x)[0]
+        zs = np.where(keep_z)[0]
+
+        if len(ys) == 0 or len(xs) == 0 or len(zs) == 0:
+            # nothing survives — return minimal array
+            self._last_crop = dict(
+                ymin=0, xmin=0, ymax=0, xmax=0, zmin=0, zmax=0
+            )
+            return image[0:1, 0:1, 0:1]
+
+        ymin = ys[0]
+        ymax = ys[-1] + 1
+
+        xmin = xs[0]
+        xmax = xs[-1] + 1
+
+        zmin = zs[0]
+        zmax = zs[-1] + 1
+
+        self._last_crop = dict(
+            ymin=ymin,
+            xmin=xmin,
+            ymax=ymax,
+            xmax=xmax,
+            zmin=zmin,
+            zmax=zmax,
+        )
+
+        return image[ymin:ymax, xmin:xmax, zmin:zmax]
+
+
+    def _get_torch(self, image: torch.Tensor, eps: float, **kwargs):
+
+        mask = image > eps
+
+        keep_z = torch.any(mask, dim=(0, 1))
+        keep_y = torch.any(mask, dim=(1, 2))
+        keep_x = torch.any(mask, dim=(0, 2))
+
+        ys = torch.nonzero(keep_y, as_tuple=True)[0]
+        xs = torch.nonzero(keep_x, as_tuple=True)[0]
+        zs = torch.nonzero(keep_z, as_tuple=True)[0]
+
+        if len(ys) == 0 or len(xs) == 0 or len(zs) == 0:
+            self._last_crop = dict(
+                ymin=0, xmin=0, ymax=0, xmax=0, zmin=0, zmax=0
+            )
+            return image[0:1, 0:1, 0:1]
+
+        ymin = int(ys[0])
+        ymax = int(ys[-1]) + 1
+
+        xmin = int(xs[0])
+        xmax = int(xs[-1]) + 1
+
+        zmin = int(zs[0])
+        zmax = int(zs[-1]) + 1
+
+        self._last_crop = dict(
+            ymin=ymin,
+            xmin=xmin,
+            ymax=ymax,
+            xmax=xmax,
+            zmin=zmin,
+            zmax=zmax,
+        )
+
+        return image[ymin:ymax, xmin:xmax, zmin:zmax]
+
+    def _update_properties(self, element, old_shape, new_shape, **kwargs):
+
+        if not isinstance(element.properties, dict):
+            return element
+
+        if "position" in element.properties:
+            pos = np.asarray(element.properties["position"], dtype=float).copy()
+            pos[0] -= self._last_crop["ymin"]
+            pos[1] -= self._last_crop["xmin"]
+            element.properties["position"] = pos
+
+        if "output_region" in element.properties:
+            ymin, xmin, ymax, xmax = element.properties["output_region"]
+
+            element.properties["output_region"] = (
+                ymin + self._last_crop["ymin"],
+                xmin + self._last_crop["xmin"],
+                ymin + self._last_crop["ymax"],
+                xmin + self._last_crop["xmax"],
+            )
+
+        return element
 
 
 class Pad(Augmentation):
@@ -1387,7 +1503,7 @@ class Pad(Augmentation):
 
     Methods
     -------
-    `get(image: Image | np.ndarray, px: PropertyLike[int], **kwargs) -> Image`
+    `get(image: np.ndarray | torch.Tensor, px: PropertyLike[int], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `Pad` augmentation.
     `_image_wrap_process_and_get(images: list[Image] | list[np.ndarray], **kwargs) -> list[Image]`
         Simple method which wraps an `Image` in a `list`.
@@ -1408,8 +1524,14 @@ class Pad(Augmentation):
     ) -> None:
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
-
-    def _get_numpy(self, image, px, mode="constant", cval=0, **kwargs):
+    def _get_numpy(
+        self: Pad, 
+        image: np.ndarray, 
+        px: list[int] | tuple[int], 
+        mode: str = "constant", 
+        cval: float = 0, 
+        **kwargs,
+    ) -> np.ndarray:
         if not isinstance(image, np.ndarray):
             raise TypeError(f"Pad (numpy) expects ndarray, got {type(image)}")
 
@@ -1422,21 +1544,31 @@ class Pad(Augmentation):
             px = px(image)
 
         if isinstance(px, int):
-            padding = [(px, px)] * spatial_ndim
+            padding = [(px, px)] * image.ndim
         else:
-            if len(px) != 2 * spatial_ndim:
-                raise ValueError(
-                    f"px must have length {2 * spatial_ndim} for channel-last data"
-                )
-            padding = [(px[i], px[i + 1]) for i in range(0, len(px), 2)]
+            padding = []
+            for idx in range(0, len(px), 2):
+                padding.append((px[idx], px[idx + 1]))
 
-        # Do NOT pad channels
-        padding.append((0, 0))
-        out = np.pad(image, pad_width=padding, mode=mode, constant_values=cval)
-        return out
+            # Fill missing dims with zero padding
+            while len(padding) < image.ndim:
+                padding.append((0, 0))
+
+        return np.pad(
+            image,
+            padding,
+            mode=mode,
+            constant_values=cval,
+        )
     
-
-    def _get_torch(self, image, px, mode="constant", cval=0, **kwargs):
+    def _get_torch(
+        self: Pad, 
+        image: torch.Tensor, 
+        px: list[int] | tuple[int], 
+        mode: str = "constant", 
+        cval: float = 0, 
+        **kwargs
+    ) -> torch.Tensor:
 
         if not isinstance(image, torch.Tensor):
             raise TypeError(f"Pad (torch) expects Tensor, got {type(image)}")
@@ -1444,76 +1576,82 @@ class Pad(Augmentation):
         if image.ndim < 2:
             raise ValueError("Pad expects at least 2D tensor (H, W[, C])")
 
-        spatial_ndim = image.ndim - 1  # channel-last
-
         if callable(px):
             px = px(image)
 
         if isinstance(px, int):
-            pad_pairs = [(px, px)] * spatial_ndim
+            padding = [(px, px)] * image.ndim
         else:
-            if len(px) != 2 * spatial_ndim:
-                raise ValueError(
-                    f"px must have length {2 * spatial_ndim} for channel-last data"
-                )
-            pad_pairs = [(px[i], px[i + 1]) for i in range(0, len(px), 2)]
+            padding = []
+            for idx in range(0, len(px), 2):
+                padding.append((px[idx], px[idx + 1]))
 
-        # torch wants reverse order, flattened
-        # also: do NOT pad channels
-        pad_pairs.append((0, 0))
-        pad = [v for pair in reversed(pad_pairs) for v in pair]
+            while len(padding) < image.ndim:
+                padding.append((0, 0))
 
-        if mode == "constant":
-            return F.pad(image, pad, mode="constant", value=cval)
+        pad_list = []
 
-        return F.pad(image, pad, mode=mode)
+        for before, after in reversed(padding):
+            pad_list.extend([before, after])
 
+        return F.pad(
+            image,
+            pad_list,
+            mode="constant",
+            value=cval,
+        )
 
+    def _update_properties(
+        self,
+        element,
+        old_shape,
+        new_shape,
+        px,
+        **kwargs,
+    ):
 
-    # def get(
-    #     self: Pad,
-    #     image: Image | np.ndarray,
-    #     px: int,
-    #     **kwargs
-    # ) -> Image:
-    #     """Abstract method which performs the `Pad` augmentation.
+        if not isinstance(element.properties, dict):
+            return element
 
-    #     """    
-    #     padding = []
-    #     if callable(px):
-    #         px = px(image)
-    #     elif isinstance(px, int):
-    #         padding = [(px, px)] * image.ndim
+        if callable(px):
+            px = px(element.array)
 
-    #     for idx in range(0, len(px), 2):
-    #         padding.append((px[idx], px[idx + 1]))
+        if isinstance(px, int):
+            padding = [(px, px)] * element.array.ndim
+        else:
+            padding = []
+            for idx in range(0, len(px), 2):
+                padding.append((px[idx], px[idx + 1]))
 
-    #     while len(padding) < image.ndim:
-    #         padding.append((0, 0))
+            while len(padding) < element.array.ndim:
+                padding.append((0, 0))
 
-    #     return utils.safe_call(
-    #         np.pad,
-    #         positional_args=(image, padding),
-    #         **kwargs,
-    #         )
- 
+        props = element.properties
 
-    # def _image_wrap_process_and_get(
-    #     self: Pad,
-    #     images: list[Image] | list[np.ndarray],
-    #     **kwargs
-    # ) -> list[Image]:
-    #     """Simple method which wraps an `Image` in a `list`.
-        
-    #     """
-    #     results = [self.get(image, **kwargs) for image in images]
+        # Shift position
+        if "position" in props:
+            pos = np.asarray(props["position"], dtype=float).copy()
 
-    #     # for idx, result in enumerate(results):
-    #     #    if isinstance(result, tuple):
-    #     #    results[idx] = Image(result[0]).merge_properties_from(images[idx])
-    #     #    else:
-    #     #    Image(results[idx]).merge_properties_from(images[idx])
-    #     return results
+            # Only shift first two dims (y, x)
+            pos[0] += padding[0][0]
+            pos[1] += padding[1][0]
+
+            props["position"] = pos
+
+        # Update output_region (ymin, xmin, ymax, xmax)
+        if "output_region" in props:
+            ymin, xmin, ymax, xmax = props["output_region"]
+
+            new_region = (
+                ymin - padding[0][0],
+                xmin - padding[1][0],
+                ymax + padding[0][1],
+                xmax + padding[1][1],
+            )
+
+            props["output_region"] = new_region
+
+        return element
 
 
 class PadToMultiplesOf(Pad):
@@ -1529,40 +1667,71 @@ class PadToMultiplesOf(Pad):
 
     """
 
+    # def __init__(
+    #     self: PadToMultiplesOf,
+    #     multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
+    #     **kwargs
+    # ) -> None:
+        
+    #     def amount_to_pad(
+    #         image: np.ndarray | torch.Tensor
+    #     ) -> list[int]:
+    #         """Method to calculate number of pixels.
+        
+    #         Calculates the number of pixels needed to pad an image 
+    #         for its height/width to be a multiple of a value.
+        
+    #         """
+    #         shape = image.shape
+    #         multiple = self.multiple()
+
+    #         if not isinstance(multiple, (list, tuple, np.ndarray)):
+    #             multiple = (multiple,) * image.ndim
+    #         new_shape = [0] * (image.ndim * 2)
+    #         idx = 0
+    #         for dim, mul in zip(shape, multiple):
+    #             if mul is not None and mul != -1:
+    #                 to_add = -dim % mul
+    #                 to_add_first = to_add // 2
+    #                 to_add_after = to_add - to_add_first
+    #                 new_shape[idx * 2] = to_add_first
+    #                 new_shape[idx * 2 + 1] = to_add_after
+
+    #             idx += 1
+
+    #         return new_shape
+
+    #     super().__init__(multiple=multiple, px=lambda: amount_to_pad, **kwargs)
+
+
     def __init__(
-        self: PadToMultiplesOf,
+        self,
         multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
-        **kwargs
+        **kwargs,
     ) -> None:
-        
-        def amount_to_pad(
-            image: Image | np.ndarray
-        ) -> list[int]:
-            """Method to calculate number of pixels.
-        
-            Calculates the number of pixels needed to pad an image 
-            for its height/width to be a multiple of a value.
-        
-            """
+
+        def amount_to_pad(image: np.ndarray | torch.Tensor) -> list[int]:
+
             shape = image.shape
-            multiple = self.multiple()
+            multiple_value = self.multiple()
 
-            if not isinstance(multiple, (list, tuple, np.ndarray)):
-                multiple = (multiple,) * image.ndim
-            new_shape = [0] * (image.ndim * 2)
-            idx = 0
-            for dim, mul in zip(shape, multiple):
+            if not isinstance(multiple_value, (list, tuple, np.ndarray)):
+                multiple_value = (multiple_value,) * image.ndim
+
+            px = [0] * (image.ndim * 2)
+
+            for i, (dim, mul) in enumerate(zip(shape, multiple_value)):
+
                 if mul is not None and mul != -1:
-                    to_add = -dim % mul
-                    to_add_first = to_add // 2
-                    to_add_after = to_add - to_add_first
-                    new_shape[idx * 2] = to_add_first
-                    new_shape[idx * 2 + 1] = to_add_after
+                    to_add = (-dim) % mul
+                    before = to_add // 2
+                    after = to_add - before
 
-                idx += 1
+                    px[2 * i] = before
+                    px[2 * i + 1] = after
 
-            return new_shape
+            return px
 
-        super().__init__(multiple=multiple, px=lambda: amount_to_pad, **kwargs)
+        super().__init__(px=lambda: amount_to_pad, multiple=multiple, **kwargs)
 
 # TODO: add resizing by rescaling

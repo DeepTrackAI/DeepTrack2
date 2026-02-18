@@ -676,15 +676,62 @@ class TestAugmentations(unittest.TestCase):
 
             base = base_np if backend == "numpy" else torch.tensor(base_np)
 
+            # Identity test (alpha=0 should return identical image)
+            elastic_identity = augmentations.ElasticTransformation(
+                alpha=0.0,
+                sigma=3,
+                ignore_last_dim=True,
+                order=1,
+            )
+
+            out_id = elastic_identity(base)
+
+            if backend == "numpy":
+                np.testing.assert_allclose(out_id, base, atol=1e-6)
+            else:
+                self.assertTrue(torch.allclose(out_id, base, atol=1e-6))
+
+            # Deterministic reproducibility
             elastic = augmentations.ElasticTransformation(
                 alpha=15,
                 sigma=3,
                 ignore_last_dim=True,
                 order=1,
-                # mode="reflect",
             )
 
+            np.random.seed(42)
+            if backend == "torch":
+                torch.manual_seed(42)
+
+            out_a = elastic(base)
+
+            np.random.seed(42)
+            if backend == "torch":
+                torch.manual_seed(42)
+
+            out_b = elastic(base)
+
+            if backend == "numpy":
+                np.testing.assert_allclose(out_a, out_b, atol=1e-6)
+            else:
+                self.assertTrue(torch.allclose(out_a, out_b, atol=1e-6))
+
+            # Basic sanity checks on output
             out = elastic(base)
+
+            # Mean intensity should be approximately preserved
+            if backend == "numpy":
+                self.assertAlmostEqual(
+                    float(out.mean()),
+                    float(base.mean()),
+                    places=2,
+                )
+            else:
+                self.assertAlmostEqual(
+                    float(out.mean().item()),
+                    float(base.mean().item()),
+                    places=2,
+                )
 
             # Shape preserved
             self.assertEqual(out.shape, base.shape)
@@ -724,132 +771,564 @@ class TestAugmentations(unittest.TestCase):
                 self.assertIsNotNone(x.grad)
                 self.assertFalse(torch.isnan(x.grad).any())
 
+            # Test that ignore_last_dim=False produces different warps per channel
+            base2_np = np.zeros((H, W, 2), dtype=np.float32)
+            base2_np[..., 0] = self.make_ellipse(H, W, cy=32, cx=28, ry=12, rx=20)[..., 0]
+            base2_np[..., 1] = self.make_ellipse(H, W, cy=20, cx=40, ry=8,  rx=10)[..., 0]
+            base2 = base2_np if backend == "numpy" else torch.tensor(base2_np)
+
+            # Same seed for both runs so randomness is comparable
+            np.random.seed(123)
+            if backend == "torch":
+                torch.manual_seed(123)
+
+            elastic_shared = augmentations.ElasticTransformation(
+                alpha=15, sigma=3, ignore_last_dim=True, order=1
+            )
+            out_shared = elastic_shared(base2)
+
+            np.random.seed(123)
+            if backend == "torch":
+                torch.manual_seed(123)
+
+            elastic_indep = augmentations.ElasticTransformation(
+                alpha=15, sigma=3, ignore_last_dim=False, order=1
+            )
+            out_indep = elastic_indep(base2)
+
+            # The per-channel difference should change more with independent warps
+            if backend == "numpy":
+                d_shared = out_shared[..., 0] - out_shared[..., 1]
+                d_indep = out_indep[..., 0] - out_indep[..., 1]
+                self.assertGreater(np.mean(np.abs(d_indep - d_shared)), 1e-3)
+            else:
+                d_shared = out_shared[..., 0] - out_shared[..., 1]
+                d_indep = out_indep[..., 0] - out_indep[..., 1]
+                self.assertGreater(torch.mean(torch.abs(d_indep - d_shared)).item(), 1e-3)
+
+
+    def test_Crop(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            # Pure array behaviour
+            image_np = np.ones((10, 10, 10), dtype=np.float32)
+            image = image_np if backend == "numpy" else torch.tensor(image_np)
+
+            cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="remove")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (7, 8, 9))
+
+            cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="retain")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (3, 2, 1))
+
+            cropper = augmentations.Crop(crop=2, crop_mode="remove")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (8, 8, 8))
+
+            cropper = augmentations.Crop(crop=2, crop_mode="retain")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (2, 2, 2))
+
+            cropper = augmentations.Crop(crop=12, crop_mode="remove")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (1, 1, 1))
+
+            cropper = augmentations.Crop(crop=0, crop_mode="retain")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (1, 1, 1))
+
+            # ScatteredVolume geometry + metadata
+            H, W, C = 20, 30, 1
+
+            base_np = np.arange(H * W, dtype=np.float32).reshape(H, W, 1)
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            # Known geometry
+            position = np.array([10, 15], dtype=float)  # (y, x)
+            output_region = (0, 0, H, W)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={
+                    "position": position.copy(),
+                    "output_region": output_region,
+                },
+            )
+
+            # Deterministic crop
+            crop = augmentations.Crop(
+                crop=(10, 12, None),   # retain shape in last dim
+                crop_mode="retain",
+                corner=(3, 5, 0),
+            )
+
+            cropped = crop(volume)
+
+            # Array correctness
+            expected = base_np[3:13, 5:17, :]
+
+            if backend == "numpy":
+                np.testing.assert_array_equal(cropped.array, expected)
+            else:
+                self.assertTrue(torch.equal(cropped.array, torch.tensor(expected)))
+
+            # Position update (y, x)
+            expected_pos = np.array([
+                position[0] - 3,
+                position[1] - 5
+            ])
+
+            got_pos = cropped.properties["position"]
+
+            self.assertAlmostEqual(got_pos[0], expected_pos[0])
+            self.assertAlmostEqual(got_pos[1], expected_pos[1])
+
+            # output_region update
+            # Convention: (ymin, xmin, ymax, xmax)
+            ymin, xmin, ymax, xmax = output_region
+
+            expected_region = (
+                ymin + 3,
+                xmin + 5,
+                ymin + 3 + 10,
+                xmin + 5 + 12,
+            )
+
+            self.assertEqual(
+                cropped.properties["output_region"],
+                expected_region,
+            )
+
+    def test_CropToMultiplesOf(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            H, W, D = 11, 11, 11
+
+            base_np = np.arange(H * W * D, dtype=np.float32).reshape(H, W, D)
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            position = np.array([5, 6], dtype=float)  # (y, x)
+            output_region = (0, 0, H, W)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={
+                    "position": position.copy(),
+                    "output_region": output_region,
+                },
+            )
+
+            # multiple = 2
+            cropper = augmentations.CropToMultiplesOf(multiple=2, corner=(0, 0, 0))
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (10, 10, 10))
+
+            # position unchanged if corner=(0,0,0)
+            self.assertAlmostEqual(cropped.properties["position"][0], position[0])
+            self.assertAlmostEqual(cropped.properties["position"][1], position[1])
+
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (0, 0, 10, 10),
+            )
+
+            # multiple = -1 (no crop)
+            cropper = augmentations.CropToMultiplesOf(multiple=-1, corner=(0, 0, 0))
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (11, 11, 11))
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (0, 0, 11, 11),
+            )
+
+            # multiple per axis
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=(2, 3, 5),
+                corner=(0, 0, 0),
+            )
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (10, 9, 10))
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (0, 0, 10, 9),
+            )
+
+            # skip one axis with -1
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=(2, -1, 7),
+                corner=(0, 0, 0),
+            )
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (10, 11, 7))
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (0, 0, 10, 11),
+            )
+
+            # skip with None
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=(2, 3, None),
+                corner=(0, 0, 0),
+            )
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (10, 9, 11))
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (0, 0, 10, 9),
+            )
+
+            # Corner shift test
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=2,
+                corner=(1, 2, 0),
+            )
+            cropped = cropper(volume)
+
+            self.assertSequenceEqual(cropped.array.shape, (10, 10, 10))
+
+            # Position must shift by corner
+            effective_corner = (1 % 2, 2 % 2, 0 % 2)
+
+            expected_pos = np.array([
+                position[0] - effective_corner[0],
+                position[1] - effective_corner[1],
+            ])
+
+            got_pos = cropped.properties["position"]
+
+            self.assertAlmostEqual(got_pos[0], expected_pos[0])
+            self.assertAlmostEqual(got_pos[1], expected_pos[1])
+
+            self.assertEqual(
+                cropped.properties["output_region"],
+                (1, 0, 11, 10),
+            )
+
+    def test_CropTight(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            H, W, D = 20, 30, 10
+
+            base_np = np.zeros((H, W, D), dtype=np.float32)
+
+            # Insert solid block
+            y0, y1 = 5, 15
+            x0, x1 = 8, 22
+            z0, z1 = 2, 7
+
+            base_np[y0:y1, x0:x1, z0:z1] = 1.0
+
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            position = np.array([10.0, 15.0])  # inside block
+            output_region = (0, 0, H, W)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={
+                    "position": position.copy(),
+                    "output_region": output_region,
+                },
+            )
+
+            crop = augmentations.CropTight(eps=1e-6)
+            cropped = crop(volume)
+
+            # Shape correctness
+            expected_shape = (y1 - y0, x1 - x0, z1 - z0)
+
+            self.assertSequenceEqual(
+                cropped.array.shape,
+                expected_shape,
+            )
+
+            # Array correctness
+            expected_array = base_np[y0:y1, x0:x1, z0:z1]
+
+            if backend == "numpy":
+                np.testing.assert_array_equal(cropped.array, expected_array)
+            else:
+                self.assertTrue(
+                    torch.equal(
+                        cropped.array,
+                        torch.tensor(expected_array),
+                    )
+                )
+
+            # Position update
+            expected_pos = np.array([
+                position[0] - y0,
+                position[1] - x0,
+            ])
+
+            got_pos = cropped.properties["position"]
+
+            self.assertAlmostEqual(got_pos[0], expected_pos[0])
+            self.assertAlmostEqual(got_pos[1], expected_pos[1])
+
+            # Output region update
+            # Convention: (ymin, xmin, ymax, xmax)
+            expected_region = (
+                output_region[0] + y0,
+                output_region[1] + x0,
+                output_region[0] + y1,
+                output_region[1] + x1,
+            )
+
+            self.assertEqual(
+                cropped.properties["output_region"],
+                expected_region,
+            )
+
+            # No-op case (already tight)
+            tight = crop(cropped)
+
+            self.assertSequenceEqual(
+                tight.array.shape,
+                expected_shape,
+            )
+
+            # Torch differentiability
+            if backend == "torch":
+                x = torch.tensor(base_np, requires_grad=True)
+                out = crop(x)
+
+                loss = out.sum()
+                loss.backward()
+
+                self.assertIsNotNone(x.grad)
+                self.assertFalse(torch.isnan(x.grad).any())
+
+
+    def test_Pad(self):
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            H, W, D = 10, 10, 10
+
+            base_np = np.ones((H, W, D), dtype=np.float32)
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            # Shape correctness
+            padder = augmentations.Pad(px=(2, 0, 2, 0, 0, 0), mode="constant")
+            out = padder.update().resolve(base)
+            self.assertSequenceEqual(out.shape, (12, 12, 10))
+
+            padder = augmentations.Pad(px=(2, 2, 2, 0, 0, 0), mode="constant")
+            out = padder.update().resolve(base)
+            self.assertSequenceEqual(out.shape, (14, 12, 10))
+
+            padder = augmentations.Pad(px=(2, 2, 2, 2, 0, 0), mode="constant")
+            out = padder.update().resolve(base)
+            self.assertSequenceEqual(out.shape, (14, 14, 10))
+
+            padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 0), mode="constant")
+            out = padder.update().resolve(base)
+            self.assertSequenceEqual(out.shape, (14, 14, 12))
+
+            padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 2), mode="constant")
+            out = padder.update().resolve(base)
+            self.assertSequenceEqual(out.shape, (14, 14, 14))
+
+            # Interior must remain unchanged
+            if backend == "numpy":
+                interior = out[2:-2, 2:-2, 2:-2]
+                np.testing.assert_array_equal(interior, base_np)
+            else:
+                interior = out[2:-2, 2:-2, 2:-2]
+                self.assertTrue(torch.equal(interior, base))
+
+            # Padding must contain cval
+            if backend == "numpy":
+                border_sum = np.sum(out) - np.sum(interior)
+                self.assertEqual(border_sum, 0.0)
+            else:
+                border_sum = torch.sum(out) - torch.sum(interior)
+                self.assertEqual(border_sum.item(), 0.0)
+
+            # Non-symmetric padding
+            padder = augmentations.Pad(px=(1, 3, 2, 4, 0, 0), mode="constant", cval=5)
+            out = padder.update().resolve(base)
+
+            self.assertSequenceEqual(out.shape, (H + 1 + 3, W + 2 + 4, D))
+
+            # Check one known padded corner
+            if backend == "numpy":
+                self.assertEqual(out[0, 0, 0], 5)
+            else:
+                self.assertEqual(out[0, 0, 0].item(), 5)
+
+            # Scatterer metadata update
+            position = np.array([4.0, 5.0])
+            output_region = (0, 0, H, W)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={
+                    "position": position.copy(),
+                    "output_region": output_region,
+                },
+            )
+
+            padder = augmentations.Pad(px=(2, 0, 3, 0, 0, 0), mode="constant")
+
+            padded = padder(volume)
+
+            # Shape
+            self.assertSequenceEqual(padded.array.shape, (H + 2 + 0, W + 3 + 0, D))
+
+            # Position shifts with top/left padding
+            expected_pos = np.array([
+                position[0] + 2,
+                position[1] + 3,
+            ])
+
+            got_pos = padded.properties["position"]
+
+            self.assertAlmostEqual(got_pos[0], expected_pos[0])
+            self.assertAlmostEqual(got_pos[1], expected_pos[1])
+
+            # output_region must expand accordingly
+            ymin, xmin, ymax, xmax = output_region
+
+            expected_region = (
+                ymin - 2,
+                xmin - 3,
+                ymax + 0,
+                xmax + 0,
+            )
+
+            self.assertEqual(
+                padded.properties["output_region"],
+                expected_region,
+            )
+
+        
+    def test_PadToMultiplesOf(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            # Simple array test
+            image_np = np.ones((11, 13, 17), dtype=np.float32)
+            image = image_np if backend == "numpy" else torch.tensor(image_np)
+
+            padder = augmentations.PadToMultiplesOf(multiple=4, mode="constant")
+            out = padder.update().resolve(image)
+
+            # 11 → 12
+            # 13 → 16
+            # 17 → 20
+            self.assertSequenceEqual(out.shape, (12, 16, 20))
+
+            # Axis skipping
+            padder = augmentations.PadToMultiplesOf(
+                multiple=(4, -1, None),
+                mode="constant",
+            )
+            out = padder.update().resolve(image)
+
+            # only axis 0 padded
+            self.assertSequenceEqual(out.shape, (12, 13, 17))
+
+            # Scatterer test
+            H, W = 11, 13
+            base_np = np.zeros((H, W, 1), dtype=np.float32)
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            position = np.array([5.0, 6.0])
+            output_region = (0, 0, H, W)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={
+                    "position": position.copy(),
+                    "output_region": output_region,
+                },
+            )
+
+            padder = augmentations.PadToMultiplesOf(
+                multiple=4,
+                mode="constant",
+            )
+
+            padded = padder(volume)
+
+            # Shape check
+            self.assertSequenceEqual(padded.array.shape, (12, 16, 1))
+
+            # Compute expected padding (centered padding logic)
+            pad_y = (-H) % 4
+            pad_x = (-W) % 4
+
+            pad_top = pad_y // 2
+            pad_left = pad_x // 2
+
+            # Position shift
+            expected_pos = np.array([
+                position[0] + pad_top,
+                position[1] + pad_left,
+            ])
+
+            got_pos = padded.properties["position"]
+
+            self.assertAlmostEqual(got_pos[0], expected_pos[0])
+            self.assertAlmostEqual(got_pos[1], expected_pos[1])
+
+            # output_region update
+            ymin, xmin, ymax, xmax = output_region
+
+            expected_region = (
+                ymin - pad_top,
+                xmin - pad_left,
+                ymax + (pad_y - pad_top),
+                xmax + (pad_x - pad_left),
+            )
+
+            self.assertEqual(
+                padded.properties["output_region"],
+                expected_region,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
 
 
-
-
-
-    # def test_ElasticTransformation(self):
-    #     np.random.seed(1000)
-    #     import random
-    #     random.seed(1000)
-    #     # 3D input
-        
-    #     im = np.zeros((10, 8, 2))
-    #     transformer = augmentations.ElasticTransformation(
-    #         alpha=20,
-    #         sigma=2,
-    #         ignore_last_dim=True,
-    #         order=1,
-    #         mode="reflect",
-    #     )
-
-    #     im[:, :, 0] = 1
-
-    #     out_1 = transformer.update().resolve(im)
-    #     self.assertIsNone(np.testing.assert_allclose(out_1, im))
-
-    #     im[:, :, :] = 0
-    #     im[0, :, :] = 1
-    #     out_2 = transformer.update().resolve(im)
-    #     self.assertIsNone(
-    #         np.testing.assert_allclose(out_2[:, :, 0], out_2[:, :, 1])
-    #     )
-
-    #     transformer.ignore_last_dim.set_value(False)
-    #     out_3 = transformer.resolve(im)
-    #     self.assertRaises(
-    #         AssertionError,
-    #         lambda: np.testing.assert_allclose(out_3[:, :, 0], out_3[:, :, 1]),
-    #     )
-
-    #     # 2D input
-    #     im = np.zeros((10, 8))
-    #     transformer = augmentations.ElasticTransformation(
-    #         alpha=20,
-    #         sigma=2,
-    #         ignore_last_dim=False,
-    #         order=1,
-    #         mode="reflect",
-    #     )
-
-    #     out_1 = transformer.update().resolve(im)
-
-    # def test_Crop(self):
-    #     image = np.ones((10, 10, 10))
-
-    #     cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="remove")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (7, 8, 9))
-
-    #     cropper = augmentations.Crop(crop=(3, 2, 1), crop_mode="retain")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (3, 2, 1))
-
-    #     cropper = augmentations.Crop(crop=2, crop_mode="remove")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (8, 8, 8))
-
-    #     cropper = augmentations.Crop(crop=2, crop_mode="retain")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (2, 2, 2))
-
-    #     cropper = augmentations.Crop(crop=12, crop_mode="remove")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (1, 1, 1))
-
-    #     cropper = augmentations.Crop(crop=0, crop_mode="retain")
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (1, 1, 1))
-
-    # def test_CropToMultiple(self):
-    #     image = np.ones((11, 11, 11))
-
-    #     cropper = augmentations.CropToMultiplesOf(multiple=2)
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (10, 10, 10))
-
-    #     cropper = augmentations.CropToMultiplesOf(multiple=-1)
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (11, 11, 11))
-
-    #     cropper = augmentations.CropToMultiplesOf(multiple=(2, 3, 5))
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (10, 9, 10))
-
-    #     cropper = augmentations.CropToMultiplesOf(multiple=(2, -1, 7))
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (10, 11, 7))
-
-    #     cropper = augmentations.CropToMultiplesOf(multiple=(2, 3, None))
-    #     out = cropper.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (10, 9, 11))
-    
-    # def test_Pad(self):
-    #     image = np.ones((10, 10, 10))
-
-    #     padder = augmentations.Pad(px=(2, 0, 2, 0, 0, 0), mode="constant")
-    #     out = padder.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (12, 12, 10))
-
-    #     padder = augmentations.Pad(px=(2, 2, 2, 0, 0, 0), mode="constant")
-    #     out = padder.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (14, 12, 10))
-
-    #     padder = augmentations.Pad(px=(2, 2, 2, 2, 0, 0), mode="constant")
-    #     out = padder.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (14, 14, 10))
-
-    #     padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 0), mode="constant")
-    #     out = padder.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (14, 14, 12))
-
-    #     padder = augmentations.Pad(px=(2, 2, 2, 2, 2, 2), mode="constant")
-    #     out = padder.update().resolve(image)
-    #     self.assertSequenceEqual(out.shape, (14, 14, 14))
-
-# if __name__ == "__main__":
-#     unittest.main()
