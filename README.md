@@ -189,7 +189,7 @@ Specific examples for label-free particle tracking using **LodeSTAR**:
   
 - DTEx231F **[LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
-- DTEx231G **LodeSTAR Detecting Plankton**
+- DTEx231G **[LodeSTAR Detecting Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
 - DTEx231H **LodeSTAR Detecting in 3D Holography**
 
