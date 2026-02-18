@@ -39,7 +39,7 @@ Key Features
 
 Module Structure
 ----------------
-Key Classes: 
+Key Classes:
 
 - `Feature`: Base class for all features in DeepTrack2.
 
@@ -152,7 +152,6 @@ array([[16, 17, 18],
 
 """
 
-
 from __future__ import annotations
 
 import itertools
@@ -245,7 +244,7 @@ class Feature(DeepTrackNode):
     """Base feature class.
 
     Features define the data generation and transformation process.
-    
+
     All features operate on lists of data, often lists of images. Most
     features, such as noise, apply a tranformation to all data in the list.
     The transformation can be additive, such as adding some Gaussian noise or a
@@ -258,12 +257,12 @@ class Feature(DeepTrackNode):
     Whenever a feature is initialized, it wraps all keyword arguments passed to
     the constructor as `Property` objects, and stores them in the `.properties`
     attribute as a `PropertyDict`.
-    
+
     When a feature is resolved, the current value of each property is sent as
     input to the `.get()` method.
 
     **Computational Backends and Data Types**
-    
+
     The `Feature` class also provides mechanisms for managing numerical types
     and computational backends.
 
@@ -750,7 +749,7 @@ class Feature(DeepTrackNode):
             Defaults to `None`, in which case the feature uses the previous set
             of input values or propagates properties.
         **kwargs: Any
-            Additional parameters passed to the pipeline. These override 
+            Additional parameters passed to the pipeline. These override
             properties with matching names. For example, calling
             `feature(x, value=4)` executes `feature` on the input `x` while
             setting the property `value` to `4`. All features in a pipeline are
@@ -768,28 +767,28 @@ class Feature(DeepTrackNode):
         >>> import deeptrack as dt
 
         Define a feature:
-    
+
         >>> feature = dt.Add(b=2)
 
         Call this feature with an input:
-    
+
         >>> import numpy as np
         >>>
         >>> feature(np.array([1, 2, 3]))
         array([3, 4, 5])
 
         Execute the feature with previously set input:
-    
+
         >>> feature()  # Uses stored input
         array([3, 4, 5])
 
         Execute the feature with new input:
-    
+
         >>> feature(np.array([10, 20, 30]))  # Uses new input
         array([12, 22, 32])
 
         Override a property:
-    
+
         >>> feature(np.array([10, 20, 30]), b=1)
         array([11, 21, 31])
 
@@ -834,10 +833,12 @@ class Feature(DeepTrackNode):
                 if isinstance(self.arguments, Feature):
                     for key, value in kwargs.items():
                         if key in self.arguments.properties:
-                            original_values[key] = \
-                                self.arguments.properties[key](_ID=_ID)
-                            self.arguments.properties[key] \
-                                .set_value(value, _ID=_ID)
+                            original_values[key] = self.arguments.properties[
+                                key
+                            ](_ID=_ID)
+                            self.arguments.properties[key].set_value(
+                                value, _ID=_ID
+                            )
 
                 # This executes the feature.
                 # DeepTrackNode will determine if it needs to be recalculated.
@@ -849,8 +850,9 @@ class Feature(DeepTrackNode):
                 # of self.arguments to their original values.
                 if isinstance(self.arguments, Feature):
                     for key, value in original_values.items():
-                        self.arguments.properties[key].set_value(value,
-                                                                 _ID=_ID)
+                        self.arguments.properties[key].set_value(
+                            value, _ID=_ID
+                        )
 
         return output
 
@@ -1746,7 +1748,7 @@ class Feature(DeepTrackNode):
         >>> import random
         >>>
         >>> feature = dt.Value(lambda: random.randint(0, 10))
-        >>> 
+        >>>
         >>> for _ in range(3):
         ...     print(f"output={feature.new()} seed={feature.seed()}")
         output=3 seed=355549663
@@ -1754,7 +1756,7 @@ class Feature(DeepTrackNode):
         output=9 seed=1956541335
 
         Each time `.update()` is called, the internal `_random_seed` is
-        re-sampled and used to reseed the Python `random` module. This 
+        re-sampled and used to reseed the Python `random` module. This
         produces a new deterministic seed, but different output values.
 
         Fix the seed to reuse it later for reproducibility:
@@ -1914,7 +1916,7 @@ class Feature(DeepTrackNode):
             For single images, returns the current axes. For videos, returns
             the animation. In notebook fallback mode, may return an interactive
             widget.
-        
+
         Examples
         --------
         >>> import deeptrack as dt
@@ -2113,13 +2115,13 @@ class Feature(DeepTrackNode):
     ) -> dict[str, Property]:
         """Preprocess the input properties before calling `.get()`.
 
-        This method acts as a preprocessing hook for subclasses, allowing them 
-        to modify or normalize input properties before the feature's main 
+        This method acts as a preprocessing hook for subclasses, allowing them
+        to modify or normalize input properties before the feature's main
         computation.
 
         Notes:
         - Calls `._normalize()` internally to standardize input properties.
-        - Subclasses may override this method to implement additional 
+        - Subclasses may override this method to implement additional
           preprocessing steps.
 
         Parameters
@@ -2282,9 +2284,9 @@ class Feature(DeepTrackNode):
 
         This method allows dynamic access to the feature's properties via
         standard attribute syntax. For example,
-        
+
         >>> feature.my_property
-        
+
         is equivalent to
 
         >>> feature.properties["my_property"]
@@ -2747,7 +2749,7 @@ class Feature(DeepTrackNode):
         This is equivalent to:
 
         >>> pipeline = feature >> dt.Subtract(b=noise)
-        
+
         """
 
         return self >> Subtract(b=other)
@@ -2951,7 +2953,7 @@ class Feature(DeepTrackNode):
     def __truediv__(
         self: Feature,
         other: Any,
-        ) -> Feature:
+    ) -> Feature:
         """Divide a feature (nominator) using `/` by a value (denominator).
 
         This operator is shorthand for chaining with `Divide`. The expression
@@ -3090,37 +3092,37 @@ class Feature(DeepTrackNode):
         other: Any,
     ) -> Feature:
         """Perform floor division of feature with other value using `//`.
-    
+
         It performs the floor division of `feature` (numerator) with `other`
         value (denominator) using `//`.
-    
+
         This operator is shorthand for chaining with `FloorDivide`.
         The expression
-    
+
         >>> feature // other
 
         is equivalent to
 
         >>> feature >> dt.FloorDivide(value=other)
-    
+
         Internally, this method constructs a new `FloorDivide` feature and uses
         the right-shift operator (`>>`) to chain the current feature with it.
-    
+
         Parameters
         ----------
         other: Any
             A constant or `Feature` by which `self` will be floor-divided. It
             is passed as the input to `value`.
-    
+
         Returns
         -------
         Feature
             A new feature that floor divides `self` with `other`.
-    
+
         Examples
         --------
         >>> import deeptrack as dt
-    
+
         Floor divide a feature with a constant:
 
         >>> feature = dt.Value(value=[5, 9, 12])
@@ -3128,11 +3130,11 @@ class Feature(DeepTrackNode):
         >>> result = pipeline()
         >>> result
         [2, 4, 6]
-    
+
         This is equivalent to:
 
         >>> pipeline = feature >> dt.FloorDivide(value=2)
-    
+
         Floor divide a dynamic feature by another feature:
 
         >>> import numpy as np
@@ -3143,7 +3145,7 @@ class Feature(DeepTrackNode):
         >>> result = pipeline()
         >>> result
         [6, 10, 13]
-        
+
         This is equivalent to:
 
         >>> pipeline = (
@@ -3160,38 +3162,38 @@ class Feature(DeepTrackNode):
         other: Any,
     ) -> Feature:
         """Perform floor division of other with feature using '//'.
-    
+
         This operator performs the floor division of `other` (numerator) with
         `feature` (denominator) using '//'.
-    
+
         This operator is shorthand for chaining with `FloorDivide`.
         The expression
-    
+
         >>> other // feature
-    
+
         is equivalent to
-    
+
         >>> dt.Value(value=other) >> dt.FloorDivide(b=feature)
-    
+
         Internally, this method constructs a `Value` feature from `other` and
         chains it into a `FloorDivide` feature that divides with the current
         feature.
-    
+
         Parameters
         ----------
         other: Any
             A constant or `Feature` which will be floor divided with `self`.
             It is passed as the input to `Value`.
-    
+
         Returns
         -------
         Feature
             A new feature that floor divides `other` with `self`.
-    
+
         Examples
         --------
         >>> import deeptrack as dt
-    
+
         Floor divide a feature with a constant:
 
         >>> feature = dt.Value(value=[5, 9, 12])
@@ -3199,11 +3201,11 @@ class Feature(DeepTrackNode):
         >>> result = pipeline()
         >>> result
         [2, 1, 0]
-    
+
         This is equivalent to:
 
         >>> pipeline = dt.Value(value=10) >> dt.FloorDivide(b=feature)
-    
+
         Floor divide a dynamic feature by another feature:
 
         >>> import numpy as np
@@ -3214,14 +3216,14 @@ class Feature(DeepTrackNode):
         >>> result = pipeline()
         >>> result
         [1, 1, 0]
-        
+
         This is equivalent to:
 
         >>> pipeline = (
         ...     dt.Value(value=lambda: np.random.randint(1, 5))
         ...     >> dt.FloorDivide(b=feature)
         ... )
-        
+
         """
 
         return Value(value=other) >> FloorDivide(b=self)
@@ -3283,7 +3285,7 @@ class Feature(DeepTrackNode):
         This is equivalent to
 
         >>> pipeline = feature >> dt.Power(b=random_exponent)
- 
+
         """
 
         return self >> Power(b=other)
@@ -3424,7 +3426,7 @@ class Feature(DeepTrackNode):
         other: Any,
     ) -> Feature:
         """Check if another value is greater than feature using right '>'.
- 
+
         This operator is the right-hand version of `>`, enabling expressions
         where the `Feature` appears on the right-hand side. The expression
 
@@ -4006,7 +4008,7 @@ class Feature(DeepTrackNode):
 
         This is equivalent to:
         >>> pipeline = feature >> dt.Stack(value=random)
- 
+
         """
 
         return self >> Stack(other)
@@ -4071,7 +4073,7 @@ class Feature(DeepTrackNode):
         ...     dt.Value(value=lambda: [randint(0, 3) for _ in range(3)])
         ...     >> dt.Stack(value=feature)
         ... )
-        
+
         """
 
         return Value(other) >> Stack(self)
@@ -4279,7 +4281,7 @@ class Chain(StructuralFeature):
     --------
     >>> import deeptrack as dt
 
-    Create a feature chain where the first feature adds a constant offset, and 
+    Create a feature chain where the first feature adds a constant offset, and
     the second feature multiplies the result by a constant:
 
     >>> A = dt.Add(b=10)
@@ -4355,7 +4357,7 @@ class Chain(StructuralFeature):
             The input data to transform sequentially. Most typically, this is
             a NumPy array or a PyTorch tensor.
         _ID: tuple[int, ...], optional
-            A unique identifier for caching or parallel execution. 
+            A unique identifier for caching or parallel execution.
             Defaults to an empty tuple.
         **kwargs: Any
             Additional parameters passed to or sampled by the features. These
@@ -4383,7 +4385,7 @@ class DummyFeature(Feature):
 
     `DummyFeature` can serve as a container for properties that do not directly
     transform the data but need to be logically grouped.
-    
+
     Any keyword arguments passed to the constructor are stored as `Property`
     instances in `self.properties`, enabling dynamic behavior or
     parameterization without performing any transformations on the input data.
@@ -4393,7 +4395,7 @@ class DummyFeature(Feature):
     inputs: Any, optional
         Optional inputs for the feature. Defaults to an empty list.
     **kwargs: Any
-        Additional keyword arguments are wrapped as `Property` instances and 
+        Additional keyword arguments are wrapped as `Property` instances and
         stored in `self.properties`.
 
     Methods
@@ -4465,7 +4467,7 @@ class Value(Feature):
 
     `Value` holds a constant value (e.g., a scalar or array) and supplies it on
     demand to other parts of the pipeline.
-    
+
     If called with an input, it ignores it and still returns the stored value.
 
     Parameters
@@ -4479,7 +4481,7 @@ class Value(Feature):
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
@@ -4546,7 +4548,7 @@ class Value(Feature):
         value: Any, optional
             The initial value to store. Defaults to 0.
         **kwargs: Any
-            Additional keyword arguments passed to the `Feature` constructor, 
+            Additional keyword arguments passed to the `Feature` constructor,
             such as custom properties or the feature name.
 
         """
@@ -4561,7 +4563,7 @@ class Value(Feature):
     ) -> Any:
         """Return the stored value, ignoring the inputs.
 
-        The `.get()` method simply returns the stored numerical value, allowing 
+        The `.get()` method simply returns the stored numerical value, allowing
         for dynamic overrides when the feature is called.
 
         Parameters
@@ -4569,10 +4571,10 @@ class Value(Feature):
         inputs: Any
             `Value` ignores its input data.
         value: Any
-            The current value to return. This may be the initial value or an 
+            The current value to return. This may be the initial value or an
             overridden value supplied during the method call.
         **kwargs: Any
-            Additional keyword arguments, which are ignored but included for 
+            Additional keyword arguments, which are ignored but included for
             consistency with the `Feature` interface.
 
         Returns
@@ -4611,7 +4613,7 @@ class ArithmeticOperationFeature(Feature):
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
@@ -4729,7 +4731,7 @@ class ArithmeticOperationFeature(Feature):
 
 class Add(ArithmeticOperationFeature):
     """Add a value to the input.
-    
+
     This feature performs element-wise addition (+) to the input.
 
     Parameters
@@ -4748,19 +4750,19 @@ class Add(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Add(b=5)
     >>> pipeline.resolve()
     [6, 7, 8]
-    
+
     Alternatively, the pipeline can be created using operator overloading:
 
     >>> pipeline = dt.Value([1, 2, 3]) + 5
     >>> pipeline.resolve()
-    [6, 7, 8]    
-    
+    [6, 7, 8]
+
     Or:
 
     >>> pipeline = 5 + dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [6, 7, 8]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -4797,7 +4799,7 @@ class Subtract(ArithmeticOperationFeature):
     """Subtract a value from the input.
 
     This feature performs element-wise subtraction (-) from the input.
-    
+
     Parameters
     ----------
     b: PropertyLike[Any | list[Any]], optional
@@ -4814,19 +4816,19 @@ class Subtract(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Subtract(b=2)
     >>> pipeline.resolve()
     [-1, 0, 1]
-    
+
     Alternatively, the pipeline can be created using operator overloading:
 
     >>> pipeline = dt.Value([1, 2, 3]) - 2
     >>> pipeline.resolve()
     [-1, 0, 1]
-    
+
     Or:
 
     >>> pipeline = -2 + dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [-1, 0, 1]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -4863,7 +4865,7 @@ class Multiply(ArithmeticOperationFeature):
     """Multiply the input by a value.
 
     This feature performs element-wise multiplication (*) of the input.
-    
+
     Parameters
     ----------
     b: PropertyLike[Any | list[Any]], optional
@@ -4880,7 +4882,7 @@ class Multiply(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Multiply(b=5)
     >>> pipeline.resolve()
     [5, 10, 15]
-    
+
     Alternatively, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) * 5
@@ -4892,7 +4894,7 @@ class Multiply(ArithmeticOperationFeature):
     >>> pipeline = 5 * dt.Value([1, 2, 3])
     >>> pipeline.resolve()
     [5, 10, 15]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -4929,7 +4931,7 @@ class Divide(ArithmeticOperationFeature):
     """Divide the input with a value.
 
     This feature performs element-wise division (/) of the input.
-    
+
     Parameters
     ----------
     b: PropertyLike[Any | list[Any]], optional
@@ -4946,19 +4948,19 @@ class Divide(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Divide(b=5)
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) / 5
     >>> pipeline.resolve()
     [0.2 0.4 0.6]
-    
+
     Which is not equivalent to:
 
     >>> pipeline = 5 / dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [5.0, 2.5, 1.6666666666666667]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -4995,11 +4997,11 @@ class FloorDivide(ArithmeticOperationFeature):
     """Divide the input with a value.
 
     This feature performs element-wise floor division (//) of the input.
-    
+
     Floor division produces an integer result when both operands are integers,
     but truncates towards negative infinity when operands are floating-point
     numbers.
-    
+
     Parameters
     ----------
     b: PropertyLike[Any | list[Any]], optional
@@ -5016,19 +5018,19 @@ class FloorDivide(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([-3, 3, 6]) >> dt.FloorDivide(b=5)
     >>> pipeline.resolve()
     [-1, 0, 1]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([-3, 3, 6]) // 5
     >>> pipeline.resolve()
     [-1, 0, 1]
-    
+
     Which is not equivalent to:
 
     >>> pipeline = 5 // dt.Value([-3, 3, 6])  # Different result
     >>> pipeline.resolve()
     [-2, 1, 0]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([-3, 3, 6])
@@ -5041,7 +5043,7 @@ class FloorDivide(ArithmeticOperationFeature):
 
     def __init__(
         self: FloorDivide,
-        b: PropertyLike[Any |list[Any]] = 0,
+        b: PropertyLike[Any | list[Any]] = 0,
         **kwargs: Any,
     ):
         """Initialize the FloorDivide feature.
@@ -5082,19 +5084,19 @@ class Power(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Power(b=3)
     >>> pipeline.resolve()
     [1, 8, 27]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) ** 3
     >>> pipeline.resolve()
     [1, 8, 27]
-    
+
     Which is not equivalent to:
 
     >>> pipeline = 3 ** dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [3, 9, 27]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -5148,19 +5150,19 @@ class LessThan(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThan(b=2)
     >>> pipeline.resolve()
     [True, False, False]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) < 2
     >>> pipeline.resolve()
     [True, False, False]
-    
+
     Which is not equivalent to:
 
     >>> pipeline = 2 < dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [False, False, True]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -5214,19 +5216,19 @@ class LessThanOrEquals(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.LessThanOrEquals(b=2)
     >>> pipeline.resolve()
     [True, True, False]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) <= 2
     >>> pipeline.resolve()
     [True, True, False]
-    
+
     Which is not equivalent to:
 
     >>> pipeline = 2 <= dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [False, True, True]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -5283,7 +5285,7 @@ class GreaterThan(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThan(b=2)
     >>> pipeline.resolve()
     [False, False, True]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) > 2
@@ -5295,7 +5297,7 @@ class GreaterThan(ArithmeticOperationFeature):
     >>> pipeline = 2 > dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [True, False, False]
-    
+
     Or, most explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -5349,7 +5351,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.GreaterThanOrEquals(b=2)
     >>> pipeline.resolve()
     [False, True, True]
-    
+
     Equivalently, this pipeline can be created using:
 
     >>> pipeline = dt.Value([1, 2, 3]) >= 2
@@ -5361,7 +5363,7 @@ class GreaterThanOrEquals(ArithmeticOperationFeature):
     >>> pipeline = 2 >= dt.Value([1, 2, 3])  # Different result
     >>> pipeline.resolve()
     [True, True, False]
-    
+
     Or, more explicitly:
 
     >>> input_value = dt.Value([1, 2, 3])
@@ -5419,7 +5421,7 @@ class Equals(ArithmeticOperationFeature):
         The value to compare (==) with the input. Defaults to 0.
     **kwargs: Any
         Additional keyword arguments passed to the parent constructor.
-    
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -5429,19 +5431,19 @@ class Equals(ArithmeticOperationFeature):
     >>> pipeline = dt.Value([1, 2, 3]) >> dt.Equals(b=2)
     >>> pipeline.resolve()
     [False, True, False]
-    
+
     Or:
 
     >>> input_values = [1, 2, 3]
     >>> eq_feature = dt.Equals(value=2)
     >>> output_values = eq_feature(input_values)
     >>> output_values
-    [False, True, False]    
-    
+    [False, True, False]
+
     These are the only correct ways to apply `Equals` in a pipeline.
-    
+
     The following approaches are incorrect:
-    
+
     Using `==` directly on a `Feature` instance does not work because `Feature`
     does not override `__eq__`:
 
@@ -5449,7 +5451,7 @@ class Equals(ArithmeticOperationFeature):
     >>> pipeline.resolve()
     AttributeError: 'bool' object has no attribute 'resolve'
 
-    Similarly, directly calling `Equals` on an input feature immediately 
+    Similarly, directly calling `Equals` on an input feature immediately
     evaluates the comparison, returning a boolean instead of a `Feature`:
 
     >>> pipeline = dt.Equals(b=2)(dt.Value([1, 2, 3]))  # Incorrect
@@ -5485,7 +5487,7 @@ Equal = Equals
 
 class Stack(Feature):
     """Stack the input and the value.
-    
+
     This feature combines the output of the input data (`inputs`) and the
     value produced by the specified feature (`value`). The resulting output
     is a list where the elements of the `inputs` and `value` are concatenated.
@@ -5575,7 +5577,7 @@ class Stack(Feature):
             The feature or data to stack with the input.
         **kwargs: Any
             Additional arguments passed to the parent `Feature` class.
-        
+
         """
 
         super().__init__(value=value, **kwargs)
@@ -5596,7 +5598,7 @@ class Stack(Feature):
         inputs: Any or list[Any]
             The input data to stack. Can be a single element or a list.
         value: Any or list[Any]
-            The feature or data to stack with the input. Can be a single 
+            The feature or data to stack with the input. Can be a single
             element or a list.
         **kwargs: Any
             Additional keyword arguments (not used here).
@@ -5767,7 +5769,7 @@ class Probability(StructuralFeature):
     probability: PropertyLike[float]
         The probability (from 0 to 1) of resolving the feature.
     **kwargs: Any
-        Additional keyword arguments passed to the parent `StructuralFeature` 
+        Additional keyword arguments passed to the parent `StructuralFeature`
         class.
 
     Methods
@@ -5779,7 +5781,7 @@ class Probability(StructuralFeature):
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     In this example, the `Add` feature is applied to the input image with a 70%
     chance.
 
@@ -5888,7 +5890,7 @@ class Repeat(StructuralFeature):
     where each iteration builds upon the previous one. The number of
     repetitions is defined by `N`.
 
-    Each iteration operates with its own set of properties, and the index of 
+    Each iteration operates with its own set of properties, and the index of
     the current iteration is accessible via `_ID`. `_ID` is extended to include
     the current iteration index, ensuring deterministic behavior when needed.
 
@@ -5899,7 +5901,7 @@ class Repeat(StructuralFeature):
     is equivalent to using the `^` operator
 
     >>> A ^ 3
-    
+
     Parameters
     ----------
     feature: Feature
@@ -5923,7 +5925,7 @@ class Repeat(StructuralFeature):
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     Define an `Add` feature that adds `10` to its input:
 
     >>> add_ten_feature = dt.Add(value=10)
@@ -5999,17 +6001,17 @@ class Repeat(StructuralFeature):
         This method applies the feature `N` times, passing the output of each
         iteration as the input to the next. The `_ID` tuple is updated at
         each iteration, ensuring dynamic property updates and reproducibility.
-  
+
         Each iteration uses the output of the previous one. This makes `Repeat`
         suitable for building recursive, cumulative, or progressive
         transformations.
-  
+
         Parameters
         ----------
         x: Any
             The input data to be transformed by the repeated feature.
         N: int
-            The number of times to sequentially apply the feature, where each 
+            The number of times to sequentially apply the feature, where each
             iteration builds on the previous output.
         _ID: tuple[int, ...], optional
             A unique identifier for tracking the iteration index, ensuring
@@ -6021,7 +6023,7 @@ class Repeat(StructuralFeature):
         Returns
         -------
         Any
-            The output of the final iteration after `N` sequential applications 
+            The output of the final iteration after `N` sequential applications
             of the feature.
 
         """
@@ -6052,7 +6054,7 @@ class Combine(StructuralFeature):
         A list of features to combine. Each feature will be applied in order,
         and their outputs collected into a list.
     **kwargs: Any
-        Additional keyword arguments passed to the parent `StructuralFeature` 
+        Additional keyword arguments passed to the parent `StructuralFeature`
         class.
 
     Methods
@@ -6107,7 +6109,7 @@ class Combine(StructuralFeature):
             A list of features to combine. Each feature is added as a
             dependency to ensure proper execution in the computation graph.
         **kwargs: Any
-            Additional keyword arguments passed to the parent 
+            Additional keyword arguments passed to the parent
             `StructuralFeature` class.
 
         """
@@ -6209,7 +6211,7 @@ class Slice(Feature):
         Parameters
         ----------
         slices: Iterable[int or slice or ellipsis]
-            The slicing instructions for each dimension, specified as a 
+            The slicing instructions for each dimension, specified as a
             list or tuple of integers, slice objects, or ellipses (`...`).
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -6279,7 +6281,7 @@ class Bind(StructuralFeature):
     --------
     >>> import deeptrack as dt
 
-    Start by creating a `Gaussian` feature: 
+    Start by creating a `Gaussian` feature:
 
     >>> gaussian_noise = dt.Gaussian()
 
@@ -6386,7 +6388,7 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
     Dynamically modify the behavior of the feature using `BindUpdate`:
 
     >>> bound_feature = dt.BindUpdate(gaussian_noise, mu = 5, sigma=3)
-    
+
     >>> import numpy as np
     >>>
     >>> input_image = np.zeros((512, 512))
@@ -6441,13 +6443,13 @@ class BindUpdate(StructuralFeature):  # DEPRECATED
         inputs: Any
             The input data to process.
         **kwargs: Any
-            Properties or arguments to pass to the child feature during 
+            Properties or arguments to pass to the child feature during
             resolution.
 
         Returns
         -------
         Any
-            The result of resolving the child feature with the provided 
+            The result of resolving the child feature with the provided
             arguments.
 
         """
@@ -6497,7 +6499,7 @@ class ConditionalSetProperty(StructuralFeature):  # DEPRECATED
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     Define an image:
 
     >>> import numpy as np
@@ -6635,12 +6637,12 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     This feature allows dynamically selecting and resolving one of two child
     features depending on whether a specified condition evaluates to `True` or
     `False`.
-    
+
     The `condition` parameter specifies either:
     - A boolean value (default is `True`).
     - The name of a property to listen to. For example, if
     `condition="is_label"`, the selected feature can be toggled as follows:
-    
+
     >>> feature.resolve(is_label=True)   # Resolves `on_true`
     >>> feature.resolve(is_label=False)  # Resolves `on_false`
     >>> feature.update(is_label=True)    # Updates both features
@@ -6684,9 +6686,9 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
 
     >>> true_feature = dt.Gaussian(sigma=0)
     >>> false_feature = dt.Gaussian(sigma=5)
-    
+
     --- Using a boolean condition ---
-    Combine the features into a conditional set feature. 
+    Combine the features into a conditional set feature.
     If not provided explicitely, the condition is assumed to be True:
 
     >>> conditional_feature = dt.ConditionalSetFeature(
@@ -6699,7 +6701,7 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     >>> clean_image = conditional_feature(image)
     >>> round(clean_image.std(), 1)
     0.0
-    
+
     >>> noisy_image = conditional_feature(image, condition=False)
     >>> round(noisy_image.std(), 1)
     5.0
@@ -6712,8 +6714,8 @@ class ConditionalSetFeature(StructuralFeature):  # DEPRECATED
     Define condition as a string:
 
     >>> conditional_feature = dt.ConditionalSetFeature(
-    ...     on_true=true_feature, 
-    ...     on_false=false_feature, 
+    ...     on_true=true_feature,
+    ...     on_false=false_feature,
     ...     condition = "is_noisy",
     ... )
 
@@ -6855,7 +6857,7 @@ class Lambda(Feature):
     Create an array:
 
     >>> import numpy as np
-    >>> 
+    >>>
     >>> input_array = np.ones((2, 3))
     >>> input_array
     array([[1., 1., 1.],
@@ -7046,11 +7048,11 @@ class OneOf(Feature):
     """Resolve one feature from a given collection.
 
     This feature selects and applies one of multiple features from a given
-    collection. The default behavior selects a feature randomly, but this 
-    behavior can be controlled by specifying a `key`, which determines the 
+    collection. The default behavior selects a feature randomly, but this
+    behavior can be controlled by specifying a `key`, which determines the
     index of the feature to apply.
 
-    The `collection` should be an iterable (e.g., list, tuple, or set), and it 
+    The `collection` should be an iterable (e.g., list, tuple, or set), and it
     will be converted to a tuple internally to ensure consistent indexing.
 
     Parameters
@@ -7058,7 +7060,7 @@ class OneOf(Feature):
     collection: Iterable[Feature]
         A collection of features to choose from.
     key: PropertyLike[int | None], optional
-        The index of the feature to resolve from the collection. If not 
+        The index of the feature to resolve from the collection. If not
         provided, a feature is selected randomly at each execution.
     **kwargs: Any
         Additional keyword arguments passed to the parent `Feature` class.
@@ -7067,7 +7069,7 @@ class OneOf(Feature):
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
@@ -7076,7 +7078,7 @@ class OneOf(Feature):
         It processes the properties to determine the selected feature index.
     `get(image, key, _ID, **kwargs) -> Any`
         It applies the selected feature to the input.
-  
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -7085,7 +7087,7 @@ class OneOf(Feature):
 
     >>> feature_1 = dt.Add(b=10)
     >>> feature_2 = dt.Multiply(b=2)
-    
+
     Create a `OneOf` feature that randomly selects a transformation:
 
     >>> one_of_feature = dt.OneOf([feature_1, feature_2])
@@ -7161,7 +7163,7 @@ class OneOf(Feature):
         """Process the properties to determine the feature index.
 
         If `key` is not provided, a random feature index is assigned.
-        
+
         Parameters
         ----------
         propertydict: dict[str, Property]
@@ -7246,7 +7248,7 @@ class OneOfDict(Feature):
         It determines which feature to use based on `key`.
     `get(inputs, key, _ID, **kwargs) -> Any`
         It resolves the selected feature and applies it to the input.
-   
+
     Examples
     --------
     >>> import deeptrack as dt
@@ -7344,8 +7346,9 @@ class OneOfDict(Feature):
 
         # Randomly sample a key if `key` is not specified.
         if property_dict["key"] is None:
-            property_dict["key"] = \
-                np.random.choice(list(self.collection.keys()))
+            property_dict["key"] = np.random.choice(
+                list(self.collection.keys())
+            )
 
         return property_dict
 
@@ -7355,7 +7358,7 @@ class OneOfDict(Feature):
         key: Any,
         _ID: tuple[int, ...] = (),
         **kwargs: Any,
-    )-> Any:
+    ) -> Any:
         """Resolve the selected feature and apply it to the input.
 
         Parameters
@@ -7410,7 +7413,7 @@ class LoadImage(Feature):
     ----------
     __distributed__: bool
         Set to `False`, indicating that this feature’s `.get()` method
-        processes the entire input at once even if it is a list, rather than 
+        processes the entire input at once even if it is a list, rather than
         distributing calls for each item of the list.
 
     Methods
@@ -7941,8 +7944,10 @@ class ChannelFirst2d(Feature):  # DEPRECATED
         # Raise error if not 2D or 3D.
         ndim = array.ndim
         if ndim not in (2, 3):
-            raise ValueError("ChannelFirst2d only supports 2D or 3D images. "
-                             f"Received {ndim}D image.")
+            raise ValueError(
+                "ChannelFirst2d only supports 2D or 3D images. "
+                f"Received {ndim}D image."
+            )
 
         # Add a new dimension for 2D images.
         if ndim == 2:
@@ -8025,7 +8030,7 @@ class Store(Feature):
 
     >>> value_feature.new()
     0.26025510106604566
-    
+
     >>> cached_output = store_feature(None, replace=True)
     >>> cached_output
     0.26025510106604566
@@ -8266,7 +8271,7 @@ class Unsqueeze(Feature):
         Parameters
         ----------
         axis: PropertyLike[int or tuple[int, ...]], optional
-            The axis or axes where new singleton dimensions should be added. 
+            The axis or axes where new singleton dimensions should be added.
             Defaults to -1, which adds a singleton dimension at the last axis.
         **kwargs:: Any
             Additional keyword arguments passed to the parent `Feature` class.
@@ -8280,7 +8285,6 @@ class Unsqueeze(Feature):
         inputs: np.ndarray | torch.Tensor,
         axis: int | tuple[int, ...] | None = -1,
         **kwargs: Any,
-
     ) -> np.ndarray | torch.Tensor:
         """Add singleton dimensions to the input image.
 
@@ -8482,7 +8486,7 @@ class Transpose(Feature):
             If `None` (default), the axes are reversed.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Feature` class.
-        
+
         """
 
         super().__init__(axes=axes, **kwargs)
@@ -8543,7 +8547,7 @@ class OneHot(Feature):
     Examples
     --------
     >>> import deeptrack as dt
-    
+
     Create an input array of class labels:
 
     >>> import numpy as np
@@ -8613,9 +8617,9 @@ class OneHot(Feature):
             image = image[..., 0]
 
         if apc.is_torch_array(image):
-            return (torch.nn.functional
-                    .one_hot(image, num_classes=num_classes)
-                    .to(dtype=torch.float32))
+            return torch.nn.functional.one_hot(
+                image, num_classes=num_classes
+            ).to(dtype=torch.float32)
 
         # Create the one-hot encoded array.
         return xp.eye(num_classes, dtype=np.float32)[image]
@@ -8759,15 +8763,14 @@ class TakeProperties(Feature):
         # Traverse the dependencies of the feature.
         for dep in self.feature.recurse_dependencies():
             # Check if the dependency contains all required property names.
-            if (
-                isinstance(dep, PropertyDict)
-                and all(name in dep for name in names)
+            if isinstance(dep, PropertyDict) and all(
+                name in dep for name in names
             ):
                 for name in names:
                     # Extract property values that match the current _ID.
                     data = dep[name].data.dict
                     for key, value in data.items():
-                        if key[:len(_ID)] == _ID:
+                        if key[: len(_ID)] == _ID:
                             res[name].append(value.current_value())
 
         # Convert the results to tuple.

@@ -182,7 +182,7 @@ if TYPE_CHECKING:
 
 class SourceDeepTrackNode(DeepTrackNode):
     """A node that creates and caches child nodes when attributes are accessed.
-    
+
     `SourceDeepTrackNode` is a specialization of `DeepTrackNode` intended for
     structured access to dictionary-like data. When an attribute is accessed
     and no explicit attribute exists, the node returns a child node that
@@ -671,7 +671,7 @@ class Source:
         """
 
         raise AttributeError(name)
-    
+
     def __len__(
         self: Source,
     ) -> int:
@@ -710,7 +710,7 @@ class Source:
 
     @overload
     def __getitem__(self, index: int) -> SourceItem: ...
-        
+
     @overload
     def __getitem__(self, index: slice) -> list[SourceItem]: ...
 
@@ -765,7 +765,7 @@ class Source:
         [SourceItem({'a': 2, 'b': 20}, 1 callback(s)),
          SourceItem({'a': 3, 'b': 30}, 1 callback(s)),
          SourceItem({'a': 4, 'b': 40}, 1 callback(s))]
- 
+
         >>> [(item["a"], item["b"]) for item in items]
         [(2, 20), (3, 30), (4, 40)]
 
@@ -1075,7 +1075,7 @@ class Source:
         Returns
         -------
         SourceDeepTrackNode
-            A node representing access to the field at the current index.        
+            A node representing access to the field at the current index.
 
         """
 
@@ -1525,8 +1525,7 @@ class Subset(Source):
         self.indices = list(indices)
 
         sliced: dict[str, list[Any]] = {
-            k: [v[i] for i in self.indices]
-            for k, v in source._dict.items()
+            k: [v[i] for i in self.indices] for k, v in source._dict.items()
         }
 
         super().__init__(**sliced)
@@ -1841,7 +1840,7 @@ def random_split(
 
     # Build subsets
     return [
-        Subset(source, indices[offset - subset_length:offset])
+        Subset(source, indices[offset - subset_length : offset])
         for offset, subset_length in zip(
             _accumulate(subset_lengths),
             subset_lengths,
@@ -1851,7 +1850,7 @@ def random_split(
 
 def _accumulate(
     iterable: list[int],
-    fn: Callable [[int, int], int] = lambda x, y: x + y,
+    fn: Callable[[int, int], int] = lambda x, y: x + y,
 ) -> Generator[int, None, None]:
     """Return running totals using a binary accumulation function.
 
@@ -1897,7 +1896,7 @@ def _accumulate(
     6
     24
     120
-    
+
     """
 
     it = iter(iterable)

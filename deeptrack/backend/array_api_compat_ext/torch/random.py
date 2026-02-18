@@ -1,3 +1,131 @@
+"""Random sampling utilities for the PyTorch backend.
+
+This module provides NumPy-compatible random sampling functions implemented
+using PyTorch. It mirrors the API and behavior of `numpy.random` while
+returning `torch.Tensor` objects. The goal is to provide statistical and API
+parity with NumPy so that backend switching does not alter program logic.
+
+The functions support scalar outputs, explicit sample shapes, broadcasting of
+tensor parameters, and integer dtype parity where required (e.g., for
+binomial, multinomial, randint, and poisson).
+
+Key Features
+------------
+- **NumPy API Compatibility**
+
+    Implements common `numpy.random` functions including `rand`, `random`,
+    `randn`, `beta`, `binomial`, `choice`, `multinomial`, `randint`,
+    `uniform`, `normal`, and `poisson`.
+
+- **Scalar and Shape Handling**
+
+    Supports both scalar outputs (`size=None`) and explicit sample shapes.
+    Output shapes follow NumPy semantics: `size + broadcast(parameter_shapes)`.
+
+- **Broadcasting Support**
+
+    Tensor parameters are broadcast according to PyTorch broadcasting rules,
+    matching NumPy behavior.
+
+- **Integer Dtype Parity**
+
+    Discrete distributions return `torch.int64` to match NumPy’s default
+    integer behavior.
+
+- **In-place and Functional Permutations**
+
+    `shuffle` modifies tensors in-place along the first axis, while
+    `permutation` returns a shuffled copy.
+
+Module Structure
+----------------
+Functions:
+
+- `rand(*size) -> torch.Tensor`
+
+    Uniform samples in `[0, 1)` using positional shape arguments.
+
+- `random(size=None) -> torch.Tensor`
+
+    Uniform samples in `[0, 1)` using a tuple shape.
+
+- `randn(*size) -> torch.Tensor`
+
+    Samples from a standard normal distribution.
+
+- `beta(a, b, size=None) -> torch.Tensor`
+
+    Samples from a Beta distribution.
+
+- `binomial(n, p, size=None) -> torch.Tensor`
+
+    Samples from a Binomial distribution (int64 output).
+
+- `choice(a, size=None, replace=True, p=None) -> torch.Tensor`
+
+    Samples elements from a 1D tensor or `range(a)`.
+
+- `multinomial(n, pvals, size=None) -> torch.Tensor`
+
+    Multinomial draws returning integer counts.
+
+- `randint(low, high=None, size=None) -> torch.Tensor`
+
+    Uniform discrete sampling (int64 output).
+
+- `shuffle(x) -> None`
+
+    In-place shuffle along the first axis.
+
+- `permutation(x) -> torch.Tensor`
+
+    Returns a permuted copy of a tensor or `range(x)`.
+
+- `uniform(low, high, size=None) -> torch.Tensor`
+
+    Uniform samples in `[low, high)`.
+
+- `normal(loc, scale, size=None) -> torch.Tensor`
+
+    Samples from a normal distribution.
+
+- `poisson(lam, size=None) -> torch.Tensor`
+
+    Samples from a Poisson distribution (int64 output).
+
+Examples
+--------
+>>> import deeptrack.backend.array_api_compat_ext.torch.random as rnd
+
+Scalar sampling:
+
+>>> rnd.rand()
+tensor(0.4963)
+
+Explicit shape:
+
+>>> rnd.normal(0.0, 1.0, (2, 3)).shape
+torch.Size([2, 3])
+
+Broadcasted tensor parameters:
+
+>>> import torch
+>>>
+>>> loc = torch.tensor([0.0, 1.0])
+>>> scale = torch.tensor([1.0, 2.0])
+>>> rnd.normal(loc, scale, (4,)).shape
+torch.Size([4, 2])
+
+Discrete sampling with integer parity:
+
+>>> rnd.randint(5)
+tensor(3)
+
+>>> rnd.poisson(3.0).dtype
+torch.int64
+
+"""
+
 from __future__ import annotations
 
 import torch

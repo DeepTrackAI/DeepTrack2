@@ -27,7 +27,6 @@ class TestProperties(unittest.TestCase):
             SequentialProperty,
         )
 
-
     def test_Property_constant_list_nparray_tensor(self):
         P = properties.Property(42)
         self.assertEqual(P(), 42)
@@ -143,8 +142,8 @@ class TestProperties(unittest.TestCase):
     def test_Property_dict(self):
         P = properties.Property(
             {
-                "a": 1, 
-                "b": lambda: 2, 
+                "a": 1,
+                "b": lambda: 2,
                 "c": properties.Property(3),
             }
         )
@@ -259,7 +258,6 @@ class TestProperties(unittest.TestCase):
         self.assertNotIn(P, y.recurse_children())
         self.assertIn(P, x.recurse_children())
 
-
     def test_PropertyDict_basics(self):
 
         PD = properties.PropertyDict(
@@ -291,7 +289,7 @@ class TestProperties(unittest.TestCase):
         PD = properties.PropertyDict(a=1, b=2)
         self.assertEqual(len(PD), 2)
         self.assertEqual(set(PD.keys()), {"a", "b"})
-        self.assertEqual(set(PD().keys()), {"a", "b"})        
+        self.assertEqual(set(PD().keys()), {"a", "b"})
 
         # Test that dependency resolution works regardless of kwarg order
         PD = properties.PropertyDict(
@@ -355,7 +353,6 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(PD()["first"], None)
         self.assertEqual(PD()["second"], None)
         self.assertEqual(PD()["constant"], 1)
-
 
     def test_SequentialProperty_init(self):
         # Test basic initialization and children/dependencies
@@ -437,9 +434,9 @@ class TestProperties(unittest.TestCase):
 
         for step in range(sp.sequence_length()):
             self.assertEqual(sp(), expected[step])
-            self.assertEqual(sp.sequence(), expected[:step + 1])
+            self.assertEqual(sp.sequence(), expected[: step + 1])
             self.assertEqual(sp(), expected[step])
-            self.assertEqual(sp.sequence(), expected[:step + 1])
+            self.assertEqual(sp.sequence(), expected[: step + 1])
 
             advanced = sp.next_step()
 
@@ -576,11 +573,11 @@ class TestProperties(unittest.TestCase):
         id1 = (1,)
 
         # Seed different progress.
-        sp(_ID=id0)                 # step 0 -> 5
+        sp(_ID=id0)  # step 0 -> 5
         self.assertTrue(sp.next_step(_ID=id0))
-        sp(_ID=id0)                 # step 1 -> 15
+        sp(_ID=id0)  # step 1 -> 15
 
-        sp(_ID=id1)                 # step 0 -> 5 (no step advance)
+        sp(_ID=id1)  # step 0 -> 5 (no step advance)
 
         # previous_value depends on per-ID index/history.
         self.assertEqual(sp.previous_value(_ID=id0), 5)

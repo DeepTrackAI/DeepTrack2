@@ -23,7 +23,6 @@ class TestConfig(unittest.TestCase):
         _config.config.set_device(self.original_device)
         _config.config.set_backend(self.original_backend)
 
-
     def test___all__(self):
         from deeptrack import (
             config,
@@ -40,30 +39,29 @@ class TestConfig(unittest.TestCase):
             xp,
         )
 
-
     def test_TORCH_AVAILABLE(self):
         try:
             import torch
+
             self.assertTrue(_config.TORCH_AVAILABLE)
         except ImportError:
             self.assertFalse(_config.TORCH_AVAILABLE)
 
-
     def test_DEEPLAY_AVAILABLE(self):
         try:
             import deeplay
+
             self.assertTrue(_config.DEEPLAY_AVAILABLE)
         except ImportError:
             self.assertFalse(_config.DEEPLAY_AVAILABLE)
 
-
     def test_OPENCV_AVAILABLE(self):
         try:
             import cv2
+
             self.assertTrue(_config.OPENCV_AVAILABLE)
         except ImportError:
             self.assertFalse(_config.OPENCV_AVAILABLE)
-
 
     def test__Proxy_set_backend(self):
 
@@ -317,7 +315,6 @@ class TestConfig(unittest.TestCase):
             self.assertIn("arange", attrs_torch)
             self.assertIn("ones", attrs_torch)
 
-
     def test_Config_set_device(self):
 
         _config.config.set_device("cpu")
@@ -334,6 +331,7 @@ class TestConfig(unittest.TestCase):
 
         if _config.TORCH_AVAILABLE:
             import torch
+
             _config.config.set_backend_torch()
             dev = torch.device("cuda:0")
             _config.config.set_device(dev)

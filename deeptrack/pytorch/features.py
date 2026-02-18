@@ -229,7 +229,7 @@ class ToTensor(Feature):
                 and numpy_dtype.kind not in ("i", "u")
             ):
                 should_permute = True
-            
+
         if should_permute:
             tensor = tensor.permute(-1, *range(tensor.dim() - 1))
 

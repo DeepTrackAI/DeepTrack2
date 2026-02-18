@@ -185,9 +185,8 @@ def hasmethod(
 
     """
 
-    return (
-        hasattr(obj, method_name)
-        and callable(getattr(obj, method_name, None))
+    return hasattr(obj, method_name) and callable(
+        getattr(obj, method_name, None)
     )
 
 
@@ -513,9 +512,7 @@ def safe_call(
 
     # Filter kwargs to include only keys present in the function's signature.
     input_arguments = {
-        key: kwargs[key]
-        for key in get_kwarg_names(function)
-        if key in kwargs
+        key: kwargs[key] for key in get_kwarg_names(function) if key in kwargs
     }
 
     return function(*positional_args, **input_arguments)

@@ -47,7 +47,7 @@ DISALLOW_COMPLEX_NUMPY = {"Floor", "Ceil", "Round"}
 DISALLOW_COMPLEX_TORCH = {"Floor", "Ceil", "Round", "Sign"}
 
 
-def _is_complex_input(x:np.ndarray | torch.Tensor) -> bool:
+def _is_complex_input(x: np.ndarray | torch.Tensor) -> bool:
     if TORCH_AVAILABLE and isinstance(x, torch.Tensor):
         return torch.is_complex(x)
     return np.iscomplexobj(x)
@@ -72,9 +72,7 @@ def _numpy_expected(function_name: str, x: NDArray) -> NDArray:
 def grid_test_features(
     elementwise_class: type[elementwise.ElementwiseFeature],
     feature_inputs: Iterable[
-        NDArray[np.floating]
-        | NDArray[np.complexfloating] 
-        | torch.Tensor
+        NDArray[np.floating] | NDArray[np.complexfloating] | torch.Tensor
     ],
     function_name: str,
 ):
@@ -103,8 +101,8 @@ def grid_test_features(
             if TORCH_AVAILABLE and isinstance(feature_input, torch.Tensor):
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)
-                    expected_result = (
-                        _torch_expected(function_name, feature_input)
+                    expected_result = _torch_expected(
+                        function_name, feature_input
                     )
 
                 try:
@@ -122,16 +120,15 @@ def grid_test_features(
                     )
                 except:
                     print(
-                        f"Result: {result} \n"
-                        f"Expect: {expected_result}\n\n"
+                        f"Result: {result} \n" f"Expect: {expected_result}\n\n"
                     )
 
             # NumPy branch
             else:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore", RuntimeWarning)
-                    expected_result = (
-                        _numpy_expected(function_name, feature_input)
+                    expected_result = _numpy_expected(
+                        function_name, feature_input
                     )
 
                 np.testing.assert_allclose(
@@ -190,9 +187,8 @@ elementwise_classes = sorted(
 )
 
 for _, elementwise_class in elementwise_classes:
-    if (
-        elementwise_class is elementwise.ElementwiseFeature
-        or not issubclass(elementwise_class, elementwise.ElementwiseFeature)
+    if elementwise_class is elementwise.ElementwiseFeature or not issubclass(
+        elementwise_class, elementwise.ElementwiseFeature
     ):
         continue
 

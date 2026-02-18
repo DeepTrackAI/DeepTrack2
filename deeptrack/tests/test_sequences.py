@@ -24,7 +24,6 @@ class TestSequences(unittest.TestCase):
     def test___all__(self):
         from deeptrack import Sequence
 
-
     def test_Sequence__negative_sequence_length_raises(self):
         class Dummy(features.Feature):
             __distributed__ = False
@@ -264,7 +263,7 @@ class TestSequences(unittest.TestCase):
             rotation=get_rotation,
             intensity=get_intensity,
         )
-        
+
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse,
@@ -347,7 +346,7 @@ class TestSequences(unittest.TestCase):
             rotation=get_rotation,
             intensity=get_intensity,
         )
-        
+
         imaged_rotating_ellipse = optics(rotating_ellipse ^ 2)
         imaged_rotating_ellipse_sequence = sequences.Sequence(
             imaged_rotating_ellipse,

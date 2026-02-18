@@ -18,8 +18,11 @@ if TORCH_AVAILABLE:
 
 
 class DummyClass:
-    def method(self): pass
-    def __len__(self): return 42
+    def method(self):
+        pass
+
+    def __len__(self):
+        return 42
 
 
 class TestUtils(unittest.TestCase):
@@ -37,13 +40,12 @@ class TestUtils(unittest.TestCase):
         self.assertTrue(utils.hasmethod([], "append"))
         self.assertFalse(utils.hasmethod([], "not_a_real_method"))
 
-
     def test_as_list(self):
         # Scalars
         self.assertEqual(utils.as_list(1), [1])
         self.assertEqual(utils.as_list(None), [None])
-        self.assertEqual(utils.as_list(3.14), [3.14])        
-        
+        self.assertEqual(utils.as_list(3.14), [3.14])
+
         # Containers
         self.assertEqual(utils.as_list([1, 2]), [1, 2])
         self.assertEqual(utils.as_list((1, 2)), [1, 2])
@@ -71,27 +73,40 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(len(result), 2)
             self.assertTrue(all(isinstance(x, torch.Tensor) for x in result))
 
-
     def test_get_kwarg_names(self):
-        def f1(): pass
+        def f1():
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f1), [])
 
-        def f2(a): pass
+        def f2(a):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f2), ["a"])
 
-        def f3(a, b=1): pass
+        def f3(a, b=1):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f3), ["a", "b"])
 
-        def f4(a, *args, b=2): pass
+        def f4(a, *args, b=2):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f4), ["b"])
 
-        def f5(*args, b, c=2): pass
+        def f5(*args, b, c=2):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f5), ["b", "c"])
 
-        def f6(a, b, *args): pass
+        def f6(a, b, *args):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f6), [])
 
-        def f7(a, b=1, c=3, **kwargs): pass
+        def f7(a, b=1, c=3, **kwargs):
+            pass
+
         self.assertEqual(utils.get_kwarg_names(f7), ["a", "b", "c"])
 
         # Built-in function (should not raise)
@@ -104,18 +119,20 @@ class TestUtils(unittest.TestCase):
         # Method
         self.assertIn("self", utils.get_kwarg_names(DummyClass.method))
 
-
     def test_kwarg_has_default(self):
-        def f1(a, b=2): pass
+        def f1(a, b=2):
+            pass
+
         self.assertFalse(utils.kwarg_has_default(f1, "a"))
         self.assertTrue(utils.kwarg_has_default(f1, "b"))
 
         # Not in function
         self.assertFalse(utils.kwarg_has_default(f1, "c"))
 
-
     def test_safe_call(self):
-        def f(a, b=2, c=3): return a + b + c
+        def f(a, b=2, c=3):
+            return a + b + c
+
         # All args present
         self.assertEqual(utils.safe_call(f, positional_args=[1], b=2, c=3), 6)
         # Only some kwargs present
@@ -128,15 +145,21 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(utils.safe_call(f, a=1, b=2, c=3), 6)
 
         # Should ignore kwargs not in function signature
-        def g(a): return a
+        def g(a):
+            return a
+
         self.assertEqual(utils.safe_call(g, a=42, extrakw=1), 42)
 
         # Missing required arg should raise error
-        def h(a): return a
+        def h(a):
+            return a
+
         with self.assertRaises(TypeError):
             utils.safe_call(h)
 
-        def k(a, *, b): return a + b
+        def k(a, *, b):
+            return a + b
+
         with self.assertRaises(TypeError):
             utils.safe_call(k, a=1)  # Missing b
 

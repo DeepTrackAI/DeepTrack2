@@ -225,8 +225,7 @@ class TestRandom(unittest.TestCase):
         self.assertEqual(tuple(y.shape), (3, 4))
         self.assertTrue(
             torch.all(
-                torch.sort(y[:, 0]).values
-                == torch.sort(original[:, 0]).values
+                torch.sort(y[:, 0]).values == torch.sort(original[:, 0]).values
             ).item()
         )
         self.assertTrue(torch.all(x == original).item())

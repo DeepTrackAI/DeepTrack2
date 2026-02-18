@@ -125,10 +125,7 @@ class Dataset(torch.utils.data.Dataset):
         inputs: Sequence[Any] | None = None,
         length: int | None = None,
         replace: (
-            bool
-            | float
-            | Callable[[], bool]
-            | Callable[[int], bool]
+            bool | float | Callable[[], bool] | Callable[[int], bool]
         ) = False,
         float_dtype: torch.dtype | str | None = "default",
     ) -> None:
@@ -199,7 +196,7 @@ class Dataset(torch.utils.data.Dataset):
         if out is None:  # pragma: no cover
             raise RuntimeError("Dataset cache invariant broken.")
         return out
-    
+
     def _as_tensor(
         self: Dataset,
         x: Any,
@@ -235,7 +232,10 @@ class Dataset(torch.utils.data.Dataset):
             tensor = torch.from_numpy(x)
 
             if tensor.ndim > 2 and numpy_dtype not in (
-                np.uint8, np.uint16, np.uint32, np.uint64,
+                np.uint8,
+                np.uint16,
+                np.uint32,
+                np.uint64,
             ):
                 tensor = tensor.permute(-1, *range(tensor.ndim - 1))
         else:

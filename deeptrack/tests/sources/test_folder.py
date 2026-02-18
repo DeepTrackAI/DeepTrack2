@@ -14,7 +14,6 @@ class TestFolder(unittest.TestCase):
     def test___all__(self):
         from deeptrack.sources import ImageFolder
 
-
     def setUp(self):
         self.root_dir = "temp_test_dir"
         self.classes = ["cat", "dog", "bird"]
@@ -63,10 +62,12 @@ class TestFolder(unittest.TestCase):
         cat_names = set([item["label_name"] for item in cat_ds])
         dog_names = set([item["label_name"] for item in dog_ds])
 
-        self.assertEqual(cat_names,
-                         {"image_0.jpg", "image_1.jpg", "image_2.jpg"})
-        self.assertEqual(dog_names,
-                         {"image_0.jpg", "image_1.jpg", "image_2.jpg"})
+        self.assertEqual(
+            cat_names, {"image_0.jpg", "image_1.jpg", "image_2.jpg"}
+        )
+        self.assertEqual(
+            dog_names, {"image_0.jpg", "image_1.jpg", "image_2.jpg"}
+        )
         self.assertEqual(len(cat_ds), 3)
         self.assertEqual(len(dog_ds), 3)
 

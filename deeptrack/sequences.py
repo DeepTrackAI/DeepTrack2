@@ -102,7 +102,6 @@ Generate and display the result:
 
 """
 
-
 from __future__ import annotations
 
 from typing import Any
@@ -436,11 +435,10 @@ def Sequential(feature: Feature, **kwargs: Any) -> Feature:  # DEPRECATED
             prop.initial_sampling_rule = prop.create_action(
                 sampling_rule,
                 **{
-                    k:all_kwargs[k]
-                    for k
-                    in all_kwargs
+                    k: all_kwargs[k]
+                    for k in all_kwargs
                     if k != "previous_value"
-                }
+                },
             )
 
         prop.current = prop.create_action(sampling_rule, **all_kwargs)

@@ -169,6 +169,7 @@ if TYPE_CHECKING:
 
 try:
     import torch
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
@@ -180,6 +181,7 @@ except ImportError:
 
 try:
     import deeplay
+
     DEEPLAY_AVAILABLE = True
 except ImportError:
     DEEPLAY_AVAILABLE = False
@@ -191,6 +193,7 @@ except ImportError:
 
 try:
     import cv2
+
     OPENCV_AVAILABLE = True
 except ImportError:
     OPENCV_AVAILABLE = False
@@ -219,7 +222,7 @@ class _Proxy(types.ModuleType):
         Name of the proxy object. This is used when printing the object.
     backend: types.ModuleType
         The backend to use.
-        
+
     Attributes
     ----------
     _backend: backend module
@@ -261,7 +264,7 @@ class _Proxy(types.ModuleType):
     >>> array = xp.arange(5)
     >>> array
     array([0, 1, 2, 3, 4])
- 
+
     >>> type(array)
     numpy.ndarray
 
@@ -276,13 +279,13 @@ class _Proxy(types.ModuleType):
 
     >>> xp.get_float_dtype()
     dtype('float64')
-    
+
     >>> xp.get_int_dtype()
     dtype('int64')
-    
+
     >>> xp.get_complex_dtype()
     dtype('complex128')
-    
+
     >>> xp.get_bool_dtype()
     dtype('bool')
 
@@ -364,7 +367,7 @@ class _Proxy(types.ModuleType):
         Examples
         --------
         >>> from deeptrack.backend._config import _Proxy
-    
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
@@ -389,9 +392,9 @@ class _Proxy(types.ModuleType):
         self._backend_info = backend.__array_namespace_info__()
 
         # Auto-detect backend name from module
-        if hasattr(backend, '__name__'):
+        if hasattr(backend, "__name__"):
             # Get 'numpy' or 'torch' from 'array_api_compat.numpy'
-            backend_name = backend.__name__.split('.')[-1]
+            backend_name = backend.__name__.split(".")[-1]
             self.__name__ = backend_name
 
     def get_float_dtype(
@@ -413,7 +416,7 @@ class _Proxy(types.ModuleType):
         -------
         str
             The name of the floating data type for the current backend.
-    
+
         Examples
         --------
         >>> from deeptrack.backend._config import _Proxy
@@ -640,7 +643,7 @@ class _Proxy(types.ModuleType):
         array([0, 1, 2, 3])
 
         Now switch to a PyTorch backend:
-    
+
         >>> from array_api_compat import torch as apc_torch
         >>>
         >>> xp.set_backend(apc_torch)
@@ -667,7 +670,7 @@ class _Proxy(types.ModuleType):
         >>> from deeptrack.backend._config import _Proxy
 
         List the attributes (functions, constants, etc.) in the NumPy backend:
-    
+
         >>> from array_api_compat import numpy as apc_np
         >>>
         >>> xp = _Proxy("numpy", apc_np)
@@ -676,7 +679,7 @@ class _Proxy(types.ModuleType):
         ...]
 
         List the attributes in the PyTorch backend:
-    
+
         >>> from array_api_compat import torch as apc_torch
         >>>
         >>> xp.set_backend(apc_torch)
@@ -945,7 +948,7 @@ class Config:
         >>> array = xp.arange(5)
         >>> type(array)
         numpy.ndarray
-    
+
         """
 
         self.set_backend("numpy")
@@ -1019,7 +1022,7 @@ class Config:
         >>> tensor = xp.arange(4)
         >>> type(tensor)
         torch.Tensor
-    
+
         """
 
         # This import is only necessary when using the torch backend.
@@ -1132,7 +1135,7 @@ class Config:
 
         >>> config.get_backend()
         'numpy'
-    
+
         """
 
         self_backend = self.backend

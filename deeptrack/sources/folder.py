@@ -395,7 +395,8 @@ class ImageFolder(Source):
 
         # Filter for valid image files using known extensions
         paths = [
-            path for path in paths
+            path
+            for path in paths
             if os.path.isfile(path) and _has_known_extension(path)
         ]
         # Ensure consistent order across runs
@@ -414,8 +415,7 @@ class ImageFolder(Source):
 
         # Extract category name from path (1 level down from root)
         category_per_path = [
-            self.get_category_name(path, 0)
-            for path in self._paths
+            self.get_category_name(path, 0) for path in self._paths
         ]
         # Compute the set of unique category names
         unique_categories = sorted(set(category_per_path))

@@ -29,7 +29,7 @@ Elementwise features can be created in two ways:
    `xp.floor`), a custom subclass of `ElementwiseFeature` can be defined
    explicitly.
 
-   These subclasses manually dispatch to the appropriate backend function 
+   These subclasses manually dispatch to the appropriate backend function
    (e.g., `torch.floor`, `np.floor`) depending on the input type and device,
    ensuring robust and backend-safe behavior.
 
@@ -68,7 +68,7 @@ Module Structure
 Classes:
 
 - `ElementwiseFeature`
-    
+
     Base class for features that apply mathematical operations elementwise to
     NumPy arrays or PyTorch tensors. Accepts a function and an optional
     input `Feature`.
@@ -196,7 +196,6 @@ This is equivalent to:
 >>> pipeline = Abs(value)
 
 """
-
 
 from __future__ import annotations
 
@@ -330,16 +329,14 @@ class ElementwiseFeature(Feature):
         self: ElementwiseFeature,
         data: NDArray[Any],
         **kwargs: Any,
-    ) -> NDArray[Any]:
-        ...
+    ) -> NDArray[Any]: ...
 
     @overload
     def get(
         self: ElementwiseFeature,
         data: torch.Tensor,
         **kwargs: Any,
-    ) -> torch.Tensor:
-        ...
+    ) -> torch.Tensor: ...
 
     def get(
         self: ElementwiseFeature,
@@ -549,7 +546,7 @@ Sin = create_elementwise_class(
 
     >>> pipeline = Sin(value)
 
-    """
+    """,
 )
 
 
@@ -609,7 +606,7 @@ Cos = create_elementwise_class(
 
     >>> pipeline = Cos(value)
 
-    """
+    """,
 )
 
 
@@ -669,7 +666,7 @@ Tan = create_elementwise_class(
 
     >>> pipeline = Tan(value)
 
-    """
+    """,
 )
 
 
@@ -732,7 +729,7 @@ Arcsin = create_elementwise_class(
 
     >>> pipeline = Arcsin(value)
 
-    """
+    """,
 )
 
 
@@ -792,7 +789,7 @@ Arctan = create_elementwise_class(
 
     >>> pipeline = Arctan(value)
 
-    """
+    """,
 )
 
 
@@ -853,7 +850,7 @@ Sinh = create_elementwise_class(
 
     >>> pipeline = Sinh(value)
 
-    """
+    """,
 )
 
 
@@ -914,7 +911,7 @@ Cosh = create_elementwise_class(
 
     >>> pipeline = Cosh(value)
 
-    """
+    """,
 )
 
 
@@ -975,7 +972,7 @@ Tanh = create_elementwise_class(
 
     >>> pipeline = Tanh(value)
 
-    """
+    """,
 )
 
 
@@ -1036,7 +1033,7 @@ Arcsinh = create_elementwise_class(
 
     >>> pipeline = Arcsinh(value)
 
-    """
+    """,
 )
 
 
@@ -1100,7 +1097,7 @@ Arccosh = create_elementwise_class(
 
     >>> pipeline = Arccosh(value)
 
-    """
+    """,
 )
 
 
@@ -1164,7 +1161,7 @@ Arctanh = create_elementwise_class(
 
     >>> pipeline = Arctanh(value)
 
-    """
+    """,
 )
 
 
@@ -1228,7 +1225,7 @@ Round = create_elementwise_class(
 
     >>> pipeline = Round(value)
 
-    """
+    """,
 )
 
 
@@ -1520,7 +1517,7 @@ Exp = create_elementwise_class(
 
     >>> pipeline = Exp(value)
 
-    """
+    """,
 )
 
 
@@ -1585,7 +1582,7 @@ Log = create_elementwise_class(
 
     >>> pipeline = Log(value)
 
-    """
+    """,
 )
 
 
@@ -1648,7 +1645,7 @@ Log10 = create_elementwise_class(
 
     >>> pipeline = Log10(value)
 
-    """
+    """,
 )
 
 
@@ -1711,7 +1708,7 @@ Log2 = create_elementwise_class(
 
     >>> pipeline = Log2(value)
 
-    """
+    """,
 )
 
 
@@ -1882,7 +1879,7 @@ Real = create_elementwise_class(
 
     >>> pipeline = Real(value)
 
-    """
+    """,
 )
 
 
@@ -2051,7 +2048,7 @@ Abs = create_elementwise_class(
 
     >>> pipeline = Abs(value)
 
-    """
+    """,
 )
 
 
@@ -2112,7 +2109,7 @@ Conj = create_elementwise_class(
 
     >>> pipeline = Conj(value)
 
-    """
+    """,
 )
 
 
@@ -2178,7 +2175,7 @@ Sqrt = create_elementwise_class(
 
     >>> pipeline = Sqrt(value)
 
-    """
+    """,
 )
 
 
@@ -2238,7 +2235,7 @@ Square = create_elementwise_class(
 
     >>> pipeline = Square(value)
 
-    """
+    """,
 )
 
 

@@ -1,7 +1,7 @@
 # pylint: disable=C0115:missing-class-docstring
 # pylint: disable=C0116:missing-function-docstring
 # pylint: disable=C0103:invalid-name
- 
+
 # Use this only when running the test locally.
 # import sys
 # sys.path.append(".")  # Adds the module to path.
@@ -24,7 +24,6 @@ class TestCore(unittest.TestCase):
             DeepTrackDataObject,
             DeepTrackNode,
         )
-
 
     def test_DeepTrackDataObject(self):
         dataobj = core.DeepTrackDataObject()
@@ -52,7 +51,6 @@ class TestCore(unittest.TestCase):
         dataobj.store(2)
         self.assertEqual(dataobj.current_value(), 2)
         self.assertEqual(dataobj.is_valid(), True)
-
 
     def test_DeepTrackDataDict(self):
         datadict = core.DeepTrackDataDict()
@@ -248,7 +246,6 @@ class TestCore(unittest.TestCase):
 
         d.invalidate((1, 1))  # missing exact key => no-op
         self.assertTrue(d[(0, 0)].is_valid())
-
 
     def test_DeepTrackNode_basics(self):
         ## Without _ID
@@ -605,9 +602,7 @@ class TestCore(unittest.TestCase):
 
         A = core.DeepTrackNode(action=lambda: 10)
         B = core.DeepTrackNode(action=lambda _ID: A(_ID[:-1]) + 5)
-        C = core.DeepTrackNode(
-            action=lambda _ID: B(_ID[:-1]) * (_ID[-1] + 1)
-        )
+        C = core.DeepTrackNode(action=lambda _ID: B(_ID[:-1]) * (_ID[-1] + 1))
         A.add_child(B)
         B.add_child(C)
 
@@ -617,9 +612,9 @@ class TestCore(unittest.TestCase):
 
         # Compute values for C at nested IDs.
         C_0_1_2 = C(_ID=(0, 1, 2))  # B((0, 1)) * (2 + 1)
-                                    # (A((0,)) + 5) * (2 + 1)
-                                    # (3 + 5) * (2 + 1)
-                                    # 24
+        # (A((0,)) + 5) * (2 + 1)
+        # (3 + 5) * (2 + 1)
+        # 24
         self.assertEqual(C_0_1_2, 24)
 
     def test_DeepTrackNode_invalidate_prefix_affects_descendants(self):
@@ -704,7 +699,6 @@ class TestCore(unittest.TestCase):
         parent.invalidate((1, 7, 999))
         self.assertFalse(child.is_valid((1, 7)))
 
-
     def test__equivalent(self):
         # Identity check (same object)
         a = [1, 2, 3]
@@ -731,7 +725,6 @@ class TestCore(unittest.TestCase):
 
         # One empty list, one non-list empty container
         self.assertFalse(core._equivalent([], ()))
-
 
     def test__create_node_with_operator(self):
         import operator

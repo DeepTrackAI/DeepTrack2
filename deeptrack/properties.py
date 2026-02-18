@@ -14,8 +14,8 @@ Key Features
     functions, lists, dictionaries, iterators, or slices, allowing for dynamic
     and context-dependent evaluations.
 
-- **Sequential Sampling** 
-    
+- **Sequential Sampling**
+
     The `SequentialProperty` class enables the creation of properties that
     evolve over a sequence, useful for applications like creating dynamic
     features in videos or time-series data.
@@ -28,7 +28,7 @@ Classes:
 
     Defines a single property of a feature, supporting various data types and
     dynamic evaluations.
-    
+
 - `PropertyDict`: Property dictionary.
 
     A dictionary of properties with utilities for dependency management and
@@ -91,7 +91,6 @@ Sequence at step 4: [19, 10, 11, 14, 12]
 
 """
 
-
 from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
@@ -122,7 +121,7 @@ class Property(DeepTrackNode):
     tensors, slices, and `DeepTrackNode` objects.
 
     The behavior of a `Property` depends on the type of the sampling rule:
-    
+
     - **Constant values** (including tuples, NumPy arrays, and PyTorch
         tensors) always return the same value.
     - **Functions** are evaluated dynamically, potentially using other
@@ -132,10 +131,10 @@ class Property(DeepTrackNode):
     - **Iterators** return the next value in the sequence, repeating the final
         value indefinitely.
     - **Slices** sample the `start`, `stop`, and `step` values individually.
-    - **DeepTrackNode's** (e.g., other properties or features) use the value 
+    - **DeepTrackNode's** (e.g., other properties or features) use the value
         computed by the node.
 
-    Dependencies between properties are tracked automatically, enabling 
+    Dependencies between properties are tracked automatically, enabling
     efficient recomputation when dependencies change.
 
     Parameters
@@ -147,8 +146,8 @@ class Property(DeepTrackNode):
     node_name: str | None
         The name of this node. Defaults to None.
     **dependencies: Property
-        Additional dependencies passed as named arguments. These dependencies 
-        can be used as inputs to functions or other dynamic components of the 
+        Additional dependencies passed as named arguments. These dependencies
+        can be used as inputs to functions or other dynamic components of the
         sampling rule.
 
     Methods
@@ -176,20 +175,20 @@ class Property(DeepTrackNode):
     (1, 2, 3)
 
     >>> import numpy as np
-    >>> 
+    >>>
     >>> const_prop = dt.Property(np.array([1, 2, 3]))  # NumPy array
     >>> const_prop()
     array([1, 2, 3])
 
     >>> import torch
-    >>> 
+    >>>
     >>> const_prop = dt.Property(torch.Tensor([1, 2, 3]))  # PyTorch tensor
     >>> const_prop()
     tensor([1., 2., 3.])
 
     Dynamic property typically use functions and can also depend on other
     properties:
-    
+
     >>> dynamic_prop = dt.Property(lambda: np.random.rand())
     >>> dynamic_prop()  # Returns random value
     0.37700241766131415
@@ -208,7 +207,7 @@ class Property(DeepTrackNode):
 
     >>> def func(x):
     ...     return 2 * x
-    >>> 
+    >>>
     >>> const_prop = dt.Property(5)
     >>> dynamic_prop = dt.Property(func, x=const_prop)
     >>> dynamic_prop()
@@ -327,15 +326,15 @@ class Property(DeepTrackNode):
     def __init__(
         self: Property,
         sampling_rule: (
-            Callable[..., Any] |
-            list[Any] |
-            dict[Any, Any] |
-            tuple[Any, ...] |
-            np.ndarray |
-            torch.Tensor |
-            slice |
-            DeepTrackNode |
-            Any
+            Callable[..., Any]
+            | list[Any]
+            | dict[Any, Any]
+            | tuple[Any, ...]
+            | np.ndarray
+            | torch.Tensor
+            | slice
+            | DeepTrackNode
+            | Any
         ),
         node_name: str | None = None,
         **dependencies: Property,
@@ -353,7 +352,7 @@ class Property(DeepTrackNode):
             The name of this node. Defaults to None.
         **dependencies: Property
             Additional named dependencies used in the sampling rule.
-        
+
         """
 
         super().__init__()
@@ -365,15 +364,15 @@ class Property(DeepTrackNode):
     def create_action(
         self: Property,
         sampling_rule: (
-            Callable[..., Any] |
-            list[Any] |
-            dict[Any, Any] |
-            tuple[Any, ...] |
-            np.ndarray |
-            torch.Tensor |
-            slice |
-            DeepTrackNode |
-            Any
+            Callable[..., Any]
+            | list[Any]
+            | dict[Any, Any]
+            | tuple[Any, ...]
+            | np.ndarray
+            | torch.Tensor
+            | slice
+            | DeepTrackNode
+            | Any
         ),
         **dependencies: Property,
     ) -> Callable[..., Any]:
@@ -422,8 +421,7 @@ class Property(DeepTrackNode):
                 for rule in sampling_rule
             ]
             return lambda _ID=(): [
-                action(_ID=_ID)
-                for action in list_of_actions
+                action(_ID=_ID) for action in list_of_actions
             ]
 
         # Tuple
@@ -434,8 +432,7 @@ class Property(DeepTrackNode):
                 for rule in sampling_rule
             )
             return lambda _ID=(): tuple(
-                action(_ID=_ID)
-                for action in tuple_of_actions
+                action(_ID=_ID) for action in tuple_of_actions
             )
 
         # Iterable
@@ -481,8 +478,7 @@ class Property(DeepTrackNode):
             # Extract the arguments that are also properties.
             used_dependencies = dict(
                 (key, dependency)
-                for key, dependency
-                in dependencies.items()
+                for key, dependency in dependencies.items()
                 if key in knames
             )
 
@@ -492,9 +488,10 @@ class Property(DeepTrackNode):
 
             # Create the action.
             return lambda _ID=(): sampling_rule(
-                **{key: dependency(_ID=_ID)
-                   for key, dependency
-                   in used_dependencies.items()},
+                **{
+                    key: dependency(_ID=_ID)
+                    for key, dependency in used_dependencies.items()
+                },
                 **({"_ID": _ID} if "_ID" in knames else {}),
             )
 
@@ -549,7 +546,7 @@ class PropertyDict(DeepTrackNode, dict):
 
     >>> prop_dict["random"]()
     0.33112452108057056
-    
+
     """
 
     def __init__(
@@ -562,8 +559,8 @@ class PropertyDict(DeepTrackNode, dict):
         Iteratively converts the input dictionary's values into `Property`
         instances while iteratively resolving dependencies between the
         properties.
-        
-        An `action` is created to evaluate and return the dictionary with 
+
+        An `action` is created to evaluate and return the dictionary with
         sampled values.
 
         Parameters
@@ -571,7 +568,7 @@ class PropertyDict(DeepTrackNode, dict):
         node_name: str or None
             The name of this node. Defaults to `None`.
         **kwargs: Any
-            Key-value pairs used to initialize the dictionary. Values can be 
+            Key-value pairs used to initialize the dictionary. Values can be
             constants, functions, or other `Property`-compatible types.
 
         """
@@ -623,7 +620,7 @@ class PropertyDict(DeepTrackNode, dict):
             dict[str, Any]
                 A dictionary where each value is sampled from its respective
                 `Property`.
-            
+
             """
 
             return dict((key, prop(_ID=_ID)) for key, prop in self.items())
@@ -660,7 +657,7 @@ class PropertyDict(DeepTrackNode, dict):
         `dict` class. This ensures that the standard dictionary behavior is
         used to retrieve values, bypassing any custom logic in `PropertyDict`
         that might otherwise cause infinite recursion or unexpected results.
-        
+
         """
 
         # Directly invoke the built-in dictionary method to retrieve the value.
@@ -795,7 +792,7 @@ class SequentialProperty(Property):
         **kwargs: Property,
     ) -> None:
         """Create a SequentialProperty.
-        
+
         Parameters
         ----------
         node_name: str or None, optional
@@ -812,7 +809,7 @@ class SequentialProperty(Property):
             The length of the sequence. Defaults to `None`.
         **kwargs: Property
             Additional named dependencies for callable sampling rules.
-        
+
         """
 
         # Set sampling_rule=None to the base constructor.
@@ -901,7 +898,7 @@ class SequentialProperty(Property):
         -------
         Any
             The sampled value for the current step.
-        
+
         """
 
         if (
@@ -927,7 +924,7 @@ class SequentialProperty(Property):
         value: Any
             The value to store, e.g., the output from calling `self()`.
         _ID: tuple[int, ...], optional
-            A unique identifier that allows the property to keep separate 
+            A unique identifier that allows the property to keep separate
             histories for different parallel evaluations.
 
         """

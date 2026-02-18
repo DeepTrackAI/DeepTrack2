@@ -45,8 +45,8 @@ def grid_test_features(
     assert (
         len(feature_a_inputs) > 0 and len(feature_b_inputs) > 0
     ), "Feature input lists cannot be empty"
-    assert (
-        callable(expected_result_function)
+    assert callable(
+        expected_result_function
     ), "Result function must be callable"
 
     for f_a_input, f_b_input in itertools.product(
@@ -85,7 +85,7 @@ def grid_test_features(
                 "Output {output} different from expected {expected_result}.\n "
                 "Using arguments \n"
                 "\tFeature_1: {f_a_input}\n"
-                "\t Feature_2: {f_b_input}"
+                "\t Feature_2: {f_b_input}",
             )
 
 
@@ -122,8 +122,9 @@ def test_operator(self, operator, emulated_operator=None):
             {"value": np.inf},
             {"value": np.random.rand(10, 10)},
         ],
-        expected_result_function= \
-            lambda a, b: emulated_operator(a["value"], b["value"]),
+        expected_result_function=lambda a, b: emulated_operator(
+            a["value"], b["value"]
+        ),
         assessed_operator=operator,
     )
 
@@ -146,8 +147,9 @@ def test_operator(self, operator, emulated_operator=None):
                 {"value": torch.tensor(float("inf"))},
                 {"value": torch.rand(10, 10)},
             ],
-            expected_result_function= \
-                lambda a, b: emulated_operator(a["value"], b["value"]),
+            expected_result_function=lambda a, b: emulated_operator(
+                a["value"], b["value"]
+            ),
             assessed_operator=operator,
         )
 
@@ -205,7 +207,6 @@ class TestFeatures(unittest.TestCase):
             OneHot,
             TakeProperties,
         )
-
 
     def test_Feature_init(self):
         # Default init
@@ -315,9 +316,9 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(
             values,
             (
-                [0, 3, 6, 9],          # x depends on non-sequential scale
-                [10, 10, 10, 10],      # y unchanged (not sequential)
-                [3, 3, 3, 3],          # scale unchanged (not sequential)
+                [0, 3, 6, 9],  # x depends on non-sequential scale
+                [10, 10, 10, 10],  # y unchanged (not sequential)
+                [3, 3, 3, 3],  # scale unchanged (not sequential)
             ),
         )
 
@@ -473,9 +474,8 @@ class TestFeatures(unittest.TestCase):
 
         arguments = features.Arguments(scale=2.0)
 
-        pipeline = (
-            features.Value(value=3)
-            >> features.Add(b=1 * arguments.scale)
+        pipeline = features.Value(value=3) >> features.Add(
+            b=1 * arguments.scale
         )
         pipeline.bind_arguments(arguments)
 
@@ -531,7 +531,7 @@ class TestFeatures(unittest.TestCase):
 
         self.assertAlmostEqual(length_nm, 5000.0)
         self.assertAlmostEqual(time_ms, 2000.0)
-            
+
         # Stored property remains unchanged (still in micrometers).
         stored_length = derived.length()
 
@@ -987,22 +987,22 @@ class TestFeatures(unittest.TestCase):
 
         # __pow__
         feature = features.Value(value=[1, 2, 3])
-        pipeline = feature ** 3 
+        pipeline = feature**3
         self.assertEqual(pipeline(), [1, 8, 27])
 
         feature1 = features.Value(value=[1, 2, 3])
         feature2 = features.Value(value=[3, 2, 1])
-        pipeline = feature1 ** feature2
+        pipeline = feature1**feature2
         self.assertEqual(pipeline(), [1, 4, 3])
 
         # __rpow__
         feature = features.Value(value=[2, 3, 4])
-        pipeline = 10 ** feature
+        pipeline = 10**feature
         self.assertEqual(pipeline(), [100, 1_000, 10_000])
 
         # __gt__
         feature = features.Value(value=[1, 2, 3])
-        pipeline = feature > 2 
+        pipeline = feature > 2
         self.assertEqual(pipeline(), [False, False, True])
 
         feature1 = features.Value(value=[1, 2, 3])
@@ -1017,7 +1017,7 @@ class TestFeatures(unittest.TestCase):
 
         # __lt__
         feature = features.Value(value=[1, 2, 3])
-        pipeline = feature < 2 
+        pipeline = feature < 2
         self.assertEqual(pipeline(), [True, False, False])
 
         feature1 = features.Value(value=[1, 2, 3])
@@ -1032,7 +1032,7 @@ class TestFeatures(unittest.TestCase):
 
         # __le__
         feature = features.Value(value=[1, 2, 3])
-        pipeline = feature <= 2 
+        pipeline = feature <= 2
         self.assertEqual(pipeline(), [True, True, False])
 
         feature1 = features.Value(value=[1, 2, 3])
@@ -1047,7 +1047,7 @@ class TestFeatures(unittest.TestCase):
 
         # __ge__
         feature = features.Value(value=[1, 2, 3])
-        pipeline = feature >= 2 
+        pipeline = feature >= 2
         self.assertEqual(pipeline(), [False, True, True])
 
         feature1 = features.Value(value=[1, 2, 3])
@@ -1153,14 +1153,14 @@ class TestFeatures(unittest.TestCase):
         F = features.DummyFeature()
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
-        self.assertEqual(F.properties(), {'name': 'DummyFeature'})
+        self.assertEqual(F.properties(), {"name": "DummyFeature"})
 
         F = features.DummyFeature(a=1, b=2)
         self.assertIsInstance(F, features.Feature)
         self.assertIsInstance(F.properties, properties.PropertyDict)
         self.assertEqual(
             F.properties(),
-            {'a': 1, 'b': 2, 'name': 'DummyFeature'},
+            {"a": 1, "b": 2, "name": "DummyFeature"},
         )
 
         F = features.DummyFeature(prop_int=1, prop_bool=True, prop_str="a")
@@ -1168,15 +1168,19 @@ class TestFeatures(unittest.TestCase):
         self.assertIsInstance(F.properties, properties.PropertyDict)
         self.assertEqual(
             F.properties(),
-            {'prop_int': 1, 'prop_bool': True, 'prop_str': 'a',
-             'name': 'DummyFeature'},
+            {
+                "prop_int": 1,
+                "prop_bool": True,
+                "prop_str": "a",
+                "name": "DummyFeature",
+            },
         )
         self.assertIsInstance(F.properties["prop_int"](), int)
         self.assertEqual(F.properties["prop_int"](), 1)
         self.assertIsInstance(F.properties["prop_bool"](), bool)
         self.assertEqual(F.properties["prop_bool"](), True)
         self.assertIsInstance(F.properties["prop_str"](), str)
-        self.assertEqual(F.properties["prop_str"](), 'a')
+        self.assertEqual(F.properties["prop_str"](), "a")
 
     def test_Feature_properties_update_new(self):
 
@@ -1208,6 +1212,7 @@ class TestFeatures(unittest.TestCase):
 
         class ConcreteFeature(features.Feature):
             __distributed__ = False
+
             def get(self, data, **kwargs):
                 list_of_inputs.append(data)
                 return data
@@ -1287,6 +1292,7 @@ class TestFeatures(unittest.TestCase):
 
         class ConcreteFeature(features.Feature):
             __distributed__ = False
+
             def get(self, data, **kwargs):
                 return data
 
@@ -1349,6 +1355,7 @@ class TestFeatures(unittest.TestCase):
         class FeatureAppendImageOfShape(features.Feature):
             __distributed__ = False
             __list_merge_strategy__ = features.MERGE_STRATEGY_APPEND
+
             def get(self, *args, shape, **kwargs):
                 data = np.zeros(shape)
                 return data
@@ -1449,7 +1456,6 @@ class TestFeatures(unittest.TestCase):
 
         self.assertEqual(D.total(), A.r() + B.r() + C.r() + D.r())
 
-
     def test_propagate_data_to_dependencies(self):
         feature = (
             features.Value(value=np.ones((2, 2)))
@@ -1479,17 +1485,18 @@ class TestFeatures(unittest.TestCase):
         out_ID_1 = feature(_ID=(1,))  # (1 + 3) * 3 = 12
         np.testing.assert_array_equal(out_ID_1, 12.0 * np.ones((2, 2)))
 
-
     def test_Chain(self):
 
         class Addition(features.Feature):
             """Simple feature that adds a constant."""
+
             def get(self, inputs, **kwargs):
                 # 'addend' is a property set via self.properties (default: 0).
                 return inputs + self.properties.get("addend", 0)()
 
         class Multiplication(features.Feature):
             """Simple feature that multiplies by a constant."""
+
             def get(self, inputs, **kwargs):
                 # 'multiplier' is a property set via self.properties
                 # (default: 1).
@@ -1519,8 +1526,10 @@ class TestFeatures(unittest.TestCase):
         self.assertTrue(
             np.array_equal(
                 chain_MA(inputs),
-                (np.ones((2, 3)) * M.properties["multiplier"]()
-                + A.properties["addend"]()),
+                (
+                    np.ones((2, 3)) * M.properties["multiplier"]()
+                    + A.properties["addend"]()
+                ),
             )
         )
         self.assertTrue(
@@ -1552,8 +1561,10 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(
                 torch.allclose(
                     chain_MA(inputs),
-                    (torch.ones((2, 3)) * M.properties["multiplier"]()
-                    + A.properties["addend"]()),
+                    (
+                        torch.ones((2, 3)) * M.properties["multiplier"]()
+                        + A.properties["addend"]()
+                    ),
                 )
             )
             self.assertTrue(
@@ -1562,7 +1573,6 @@ class TestFeatures(unittest.TestCase):
                     (M >> A)(inputs),
                 )
             )
-
 
     def test_DummyFeature(self):
         # DummyFeature properties must be callable and updatable.
@@ -1612,7 +1622,6 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(feature.get(tensor_list), tensor_list)
             self.assertEqual(feature(tensor_list), tensor_list)
 
-
     def test_Value(self):
         # Scalar value tests
         value = features.Value(value=1)
@@ -1644,25 +1653,25 @@ class TestFeatures(unittest.TestCase):
 
         # PyTorch tensor value tests
         if TORCH_AVAILABLE:
-            tensor = torch.tensor([1., 2., 3.])
+            tensor = torch.tensor([1.0, 2.0, 3.0])
             value_tensor = features.Value(value=tensor)
             self.assertTrue(torch.equal(value_tensor(), tensor))
             self.assertTrue(torch.equal(value_tensor.value(), tensor))
             # Override with a new tensor
-            override_tensor = torch.tensor([10., 20., 30.])
-            self.assertTrue(torch.equal(
-                value_tensor(value=override_tensor), override_tensor
-            ))
+            override_tensor = torch.tensor([10.0, 20.0, 30.0])
+            self.assertTrue(
+                torch.equal(
+                    value_tensor(value=override_tensor), override_tensor
+                )
+            )
             self.assertTrue(torch.equal(value_tensor(), override_tensor))
-            self.assertTrue(torch.equal(
-                value_tensor.value(), override_tensor
-            ))
-
+            self.assertTrue(torch.equal(value_tensor.value(), override_tensor))
 
     def test_ArithmeticOperationFeature(self):
         # Basic addition with lists
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, b=10,
+            operator.add,
+            b=10,
         )
         input_values = [1, 2, 3, 4]
         expected_output = [11, 12, 13, 14]
@@ -1680,14 +1689,16 @@ class TestFeatures(unittest.TestCase):
 
         # List input, list value (same length)
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, b=[1, 2, 3],
+            operator.add,
+            b=[1, 2, 3],
         )
         input_values = [10, 20, 30]
         self.assertEqual(addition_feature(input_values), [11, 22, 33])
 
         # List input, list value (different lengths, value list cycles)
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, b=[1, 2],
+            operator.add,
+            b=[1, 2],
         )
         input_values = [10, 20, 30, 40, 50]
         # value cycles as 1,2,1,2,1
@@ -1695,23 +1706,30 @@ class TestFeatures(unittest.TestCase):
 
         # NumPy array input, scalar value
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, b=5,
+            operator.add,
+            b=5,
         )
         arr = np.array([1, 2, 3])
         self.assertEqual(addition_feature(arr.tolist()), [6, 7, 8])
 
         # NumPy array input, NumPy array value
         addition_feature = features.ArithmeticOperationFeature(
-            operator.add, b=[4, 5, 6],
+            operator.add,
+            b=[4, 5, 6],
         )
         arr_input = [
-            np.array([1, 2]), np.array([3, 4]), np.array([5, 6]),
+            np.array([1, 2]),
+            np.array([3, 4]),
+            np.array([5, 6]),
         ]
         arr_value = [
-            np.array([10, 20]), np.array([30, 40]), np.array([50, 60]),
+            np.array([10, 20]),
+            np.array([30, 40]),
+            np.array([50, 60]),
         ]
         feature = features.ArithmeticOperationFeature(
-            lambda a, b: np.add(a, b), b=arr_value,
+            lambda a, b: np.add(a, b),
+            b=arr_value,
         )
         for output, expected in zip(
             feature(arr_input),
@@ -1722,7 +1740,8 @@ class TestFeatures(unittest.TestCase):
         # PyTorch tensor input (if available)
         if TORCH_AVAILABLE:
             addition_feature = features.ArithmeticOperationFeature(
-                lambda a, b: a + b, b=5,
+                lambda a, b: a + b,
+                b=5,
             )
             tensors = [torch.tensor(1), torch.tensor(2), torch.tensor(3)]
             expected = [torch.tensor(6), torch.tensor(7), torch.tensor(8)]
@@ -1734,7 +1753,8 @@ class TestFeatures(unittest.TestCase):
             t_input = [torch.tensor([1.0, 2.0]), torch.tensor([3.0, 4.0])]
             t_value = [torch.tensor([10.0, 20.0]), torch.tensor([30.0, 40.0])]
             feature = features.ArithmeticOperationFeature(
-                lambda a, b: a + b, b=t_value,
+                lambda a, b: a + b,
+                b=t_value,
             )
             for output, expected in zip(
                 feature(t_input),
@@ -1742,46 +1762,35 @@ class TestFeatures(unittest.TestCase):
             ):
                 self.assertTrue(torch.equal(output, expected))
 
-
     def test_Add(self):
         test_operator(self, operator.add)
-
 
     def test_Subtract(self):
         test_operator(self, operator.sub)
 
-
     def test_Multiply(self):
         test_operator(self, operator.add)
-
 
     def test_Divide(self):
         test_operator(self, operator.truediv)
 
-
     def test_FloorDivide(self):
         test_operator(self, operator.floordiv)
-
 
     def test_Power(self):
         test_operator(self, operator.pow)
 
-
     def test_LessThan(self):
         test_operator(self, operator.lt)
-
 
     def test_LessThanOrEquals(self):
         test_operator(self, operator.le)
 
-
     def test_GreaterThan(self):
         test_operator(self, operator.gt)
 
-
     def test_GreaterThanOrEquals(self):
         test_operator(self, operator.ge)
-
 
     def test_Equals(self):
         """
@@ -1801,7 +1810,6 @@ class TestFeatures(unittest.TestCase):
         input_values = np.array([1, 2, 3])
         output_values = equals_feature(input_values)
         self.assertTrue(np.array_equal(output_values, [False, True, False]))
-
 
     def test_Stack(self):
         value = features.Value(value=2)
@@ -1877,7 +1885,9 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(result, [1, 2])
 
         # Stack using Value feature
-        pipeline = features.Value([1, 2]) >> features.Stack(value=features.Value([3, 4]))
+        pipeline = features.Value([1, 2]) >> features.Stack(
+            value=features.Value([3, 4])
+        )
         result = pipeline()
         self.assertEqual(result, [1, 2, 3, 4])
 
@@ -1908,7 +1918,6 @@ class TestFeatures(unittest.TestCase):
             self.assertTrue(torch.equal(result[0], t1))
             self.assertTrue(torch.equal(result[1], t2))
 
-
     def test_Arguments(self):
         from tempfile import NamedTemporaryFile
         from PIL import Image as PIL_Image
@@ -1922,10 +1931,9 @@ class TestFeatures(unittest.TestCase):
         try:  # Ensure removal of test image.
             # Test pipeline behavior when toggling `is_label`.
             arguments = features.Arguments(is_label=False)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name)
-                >> Gaussian(sigma=(1 - arguments.is_label) * 5)
-            )
+            image_pipeline = features.LoadImage(
+                path=temp_png.name
+            ) >> Gaussian(sigma=(1 - arguments.is_label) * 5)
             image_pipeline.bind_arguments(arguments)
 
             # Test noisy image
@@ -1938,12 +1946,11 @@ class TestFeatures(unittest.TestCase):
 
             # Test pipeline behavior with dynamically computed sigma.
             arguments = features.Arguments(is_label=False)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name)
-                >> Gaussian(
-                    is_label=arguments.is_label,
-                    sigma=lambda is_label: 0 if is_label else 5,
-                )
+            image_pipeline = features.LoadImage(
+                path=temp_png.name
+            ) >> Gaussian(
+                is_label=arguments.is_label,
+                sigma=lambda is_label: 0 if is_label else 5,
             )
             image_pipeline.bind_arguments(arguments)
 
@@ -1957,13 +1964,13 @@ class TestFeatures(unittest.TestCase):
 
             # Test passing arguments dynamically using **arguments.properties.
             arguments = features.Arguments(is_label=False, noise_sigma=5)
-            image_pipeline = (
-                features.LoadImage(path=temp_png.name) >>
-                Gaussian(
-                    sigma=lambda is_label, noise_sigma:
-                        0 if is_label else noise_sigma,
-                    **arguments.properties,
-                )
+            image_pipeline = features.LoadImage(
+                path=temp_png.name
+            ) >> Gaussian(
+                sigma=lambda is_label, noise_sigma: (
+                    0 if is_label else noise_sigma
+                ),
+                **arguments.properties,
             )
             image_pipeline.bind_arguments(arguments)
 
@@ -2004,18 +2011,18 @@ class TestFeatures(unittest.TestCase):
 
         # Assertions
         self.assertEqual(f1.properties["p1"](), "foo")  # Check that p1 is set
-                                                        # correctly
+        # correctly
         self.assertEqual(f1.properties["p2"](), "foobaz")  # Check lambda
-                                                           # evaluation
+        # evaluation
         self.assertEqual(f2.properties["p1"](), "foobaz")  # Check dependency
-                                                           # resolution
+        # resolution
 
         # Ensure p2 in f2 is a valid float between 0 and 1
         self.assertTrue(0 <= f2.properties["p2"]() <= 1)
 
         # Ensure `c` was computed correctly
         self.assertEqual(arguments.c(), "foobar")  # Should concatenate
-                                                   # "foo" + "bar"
+        # "foo" + "bar"
 
         # Test that d is dynamic (generates new values)
         first_d = arguments.d.update()()
@@ -2047,7 +2054,6 @@ class TestFeatures(unittest.TestCase):
         result_binding = pipeline(x=20)
         self.assertEqual(result_binding, 121)  # 100 + 20 + 1
 
-
     def test_Probability(self):
         # Set seed for reproducibility of random trials
         np.random.seed(42)
@@ -2061,8 +2067,7 @@ class TestFeatures(unittest.TestCase):
 
         # 1. Test probabilistic application over many runs
         probabilistic_feature = features.Probability(
-            feature=add_feature,
-            probability=0.7
+            feature=add_feature, probability=0.7
         )
 
         applied_count = 0
@@ -2076,24 +2081,29 @@ class TestFeatures(unittest.TestCase):
                 self.assertTrue(np.array_equal(output_image, input_array))
 
         observed_probability = applied_count / total_runs
-        self.assertTrue(0.65 <= observed_probability <= 0.75,
-                        f"Observed probability: {observed_probability}")
+        self.assertTrue(
+            0.65 <= observed_probability <= 0.75,
+            f"Observed probability: {observed_probability}",
+        )
 
         # 2. Edge case: probability = 0 (feature should never apply)
-        never_applied = features.Probability(feature=add_feature,
-                                             probability=0.0)
+        never_applied = features.Probability(
+            feature=add_feature, probability=0.0
+        )
         output = never_applied.update().resolve(input_array)
         self.assertTrue(np.array_equal(output, input_array))
 
         # 3. Edge case: probability = 1 (feature should always apply)
-        always_applied = features.Probability(feature=add_feature,
-                                              probability=1.0)
+        always_applied = features.Probability(
+            feature=add_feature, probability=1.0
+        )
         output = always_applied.update().resolve(input_array)
         self.assertTrue(is_transformed(output))
 
         # 4. Cached behavior: result is the same without update()
-        cached_feature = features.Probability(feature=add_feature,
-                                              probability=1.0)
+        cached_feature = features.Probability(
+            feature=add_feature, probability=1.0
+        )
         output_1 = cached_feature.update().resolve(input_array)
         output_2 = cached_feature.resolve(input_array)  # same random number
         self.assertTrue(np.array_equal(output_1, output_2))
@@ -2108,7 +2118,6 @@ class TestFeatures(unittest.TestCase):
         # Should apply (0.1 < 0.5)
         output = manual.resolve(input_array, random_number=0.1)
         self.assertTrue(is_transformed(output))
-
 
     def test_Repeat(self):
         # Define a simple feature and pipeline
@@ -2131,7 +2140,6 @@ class TestFeatures(unittest.TestCase):
         output_override = pipeline(input_data, N=2)
         self.assertEqual(output_override, [21, 22, 23])
 
-
     def test_Combine(self):
 
         noise_feature = Gaussian(mu=0, sigma=2)
@@ -2152,7 +2160,6 @@ class TestFeatures(unittest.TestCase):
 
         self.assertFalse(np.all(noisy_image == 1))
         self.assertTrue(np.allclose(added_image, input_array + 10))
-
 
     def test_Slice_constant(self):
         inputs = np.arange(9).reshape((3, 3))
@@ -2233,7 +2240,6 @@ class TestFeatures(unittest.TestCase):
         dinamic_output = dynamic_slicing.resolve(inputs)
         self.assertTrue(np.array_equal(dinamic_output, expected_output))
 
-
     def test_Bind(self):
 
         value = features.Value(
@@ -2268,16 +2274,15 @@ class TestFeatures(unittest.TestCase):
         self.assertAlmostEqual(output_mean, -5, delta=0.2)
         self.assertAlmostEqual(output_std, 2, delta=0.2)
 
-
     def test_BindUpdate(self):  # DEPRECATED
         value = features.Value(
-            value=lambda input_value: input_value, 
+            value=lambda input_value: input_value,
             input_value=10,
-            )
+        )
         value = features.Value(
-            value=lambda input_value: input_value, 
+            value=lambda input_value: input_value,
             input_value=10,
-            )
+        )
         pipeline = (value + 10) / value
 
         with self.assertWarns(DeprecationWarning):
@@ -2316,7 +2321,6 @@ class TestFeatures(unittest.TestCase):
         self.assertAlmostEqual(output_mean, 5, delta=0.5)
         self.assertAlmostEqual(output_std, 3, delta=0.5)
 
-
     def test_ConditionalSetProperty(self):  # DEPRECATED
 
         # Set up a Gaussian feature and a test image before each test.
@@ -2326,7 +2330,8 @@ class TestFeatures(unittest.TestCase):
         # Test that sigma is correctly applied when condition is a boolean.
         with self.assertWarns(DeprecationWarning):
             conditional_feature = features.ConditionalSetProperty(
-                gaussian_noise, sigma=5,
+                gaussian_noise,
+                sigma=5,
             )
 
         # Test with condition met (should apply sigma=5)
@@ -2340,7 +2345,9 @@ class TestFeatures(unittest.TestCase):
         # Test sigma is correctly applied when condition is string property.
         with self.assertWarns(DeprecationWarning):
             conditional_feature = features.ConditionalSetProperty(
-                gaussian_noise, sigma=5, condition="is_noisy",
+                gaussian_noise,
+                sigma=5,
+                condition="is_noisy",
             )
 
         # Test with condition met (should apply sigma=5)
@@ -2351,11 +2358,10 @@ class TestFeatures(unittest.TestCase):
         clean_image = conditional_feature.update()(image, is_noisy=False)
         self.assertEqual(clean_image.std(), 0)
 
-
     def test_ConditionalSetFeature(self):  # DEPRECATED
         # Set up Gaussian noise features and test image before each test.
-        true_feature = Gaussian(sigma=0)    # Clean image (no noise)
-        false_feature = Gaussian(sigma=5)   # Noisy image (sigma=5)
+        true_feature = Gaussian(sigma=0)  # Clean image (no noise)
+        false_feature = Gaussian(sigma=5)  # Noisy image (sigma=5)
         image = np.ones((512, 512))
 
         # Test using a direct boolean condition.
@@ -2393,7 +2399,6 @@ class TestFeatures(unittest.TestCase):
         clean_image = conditional_feature(image, is_noisy=True)
         self.assertEqual(clean_image.std(), 0)
 
-
     def test_Lambda_dependence(self):
         # Without Lambda
         A = features.DummyFeature(a=1, b=2, c=3)
@@ -2425,6 +2430,7 @@ class TestFeatures(unittest.TestCase):
                 return (
                     A.a() if key == "a" else (A.b() if key == "b" else A.c())
                 )
+
             return func
 
         B = features.Lambda(function=func_factory, key="a")
@@ -2478,7 +2484,8 @@ class TestFeatures(unittest.TestCase):
         )
 
         C = features.DummyFeature(
-            B_prop=B.prop2, prop=lambda B_prop: B_prop * 2,
+            B_prop=B.prop2,
+            prop=lambda B_prop: B_prop * 2,
         )
 
         C.update()
@@ -2497,6 +2504,7 @@ class TestFeatures(unittest.TestCase):
         def scale_function_factory(scale=2):
             def scale_function(image):
                 return image * scale
+
             return scale_function
 
         lambda_feature = features.Lambda(
@@ -2514,12 +2522,12 @@ class TestFeatures(unittest.TestCase):
         output_image = lambda_feature.resolve(input_image)
         self.assertTrue(np.array_equal(output_image, np.ones((5, 5)) * 3))
 
-
     def test_Merge(self):
 
         def merge_function_factory():
             def merge_function(list_of_inputs):
                 return np.mean(np.stack(list_of_inputs), axis=0)
+
             return merge_function
 
         merge_feature = features.Merge(function=merge_function_factory)
@@ -2529,7 +2537,8 @@ class TestFeatures(unittest.TestCase):
         output = merge_feature.resolve([array_1, array_2])
         self.assertIsNone(
             np.testing.assert_array_almost_equal(
-                output, np.ones((5, 5)) * 3,
+                output,
+                np.ones((5, 5)) * 3,
             )
         )
 
@@ -2542,10 +2551,10 @@ class TestFeatures(unittest.TestCase):
         output = merge_feature.resolve([array])
         self.assertIsNone(
             np.testing.assert_array_almost_equal(
-                output, array,
+                output,
+                array,
             )
         )
-
 
     def test_OneOf(self):
         # Set up the features and input image for testing.
@@ -2669,7 +2678,6 @@ class TestFeatures(unittest.TestCase):
 
         self.assertRaises(IndexError, lambda: values.update().resolve(key=3))
 
-
     def test_OneOfDict_basic(self):
 
         values = features.OneOfDict(
@@ -2723,8 +2731,12 @@ class TestFeatures(unittest.TestCase):
             input_image + 10,  # "add"
             input_image * 2,  # "multiply"
         ]
-        self.assertTrue(any(np.array_equal(output_image, expected)
-                            for expected in expected_outputs))
+        self.assertTrue(
+            any(
+                np.array_equal(output_image, expected)
+                for expected in expected_outputs
+            )
+        )
 
         # Test OneOfDict selects the correct feature when a key is specified.
         controlled_feature = features.OneOfDict(features_dict, key="add")
@@ -2741,7 +2753,6 @@ class TestFeatures(unittest.TestCase):
             KeyError,
             lambda: controlled_feature.new(key="not a key!!!"),
         )
-
 
     def test_LoadImage(self):
         import os
@@ -2885,7 +2896,6 @@ class TestFeatures(unittest.TestCase):
                 if os.path.exists(file):
                     os.remove(file)
 
-
     def test_AsType(self):
 
         # Test for Numpy arrays.
@@ -2953,7 +2963,6 @@ class TestFeatures(unittest.TestCase):
                     expected = torch.tensor([1, 2, 3], dtype=expected_dtype)
                     self.assertTrue(torch.equal(output_tensor, expected))
 
-
     def test_ChannelFirst2d(self):  # DEPRECATED
 
         with self.assertWarns(DeprecationWarning):
@@ -2972,7 +2981,9 @@ class TestFeatures(unittest.TestCase):
         input_image = np.array([[[1, 2, 3], [4, 5, 6]]])
         output_image = channel_first_feature.get(input_image, axis=-1)
         self.assertEqual(output_image.shape, (3, 1, 2))
-        np.testing.assert_array_equal(output_image, np.moveaxis(input_image, -1, 0))
+        np.testing.assert_array_equal(
+            output_image, np.moveaxis(input_image, -1, 0)
+        )
 
         if TORCH_AVAILABLE:
             # Torch shapes
@@ -2988,8 +2999,9 @@ class TestFeatures(unittest.TestCase):
             input_image = torch.tensor([[[1, 2, 3], [4, 5, 6]]])
             output_image = channel_first_feature.get(input_image, axis=-1)
             self.assertEqual(output_image.shape, (3, 1, 2))
-            self.assertTrue(torch.equal(output_image, input_image.permute(2, 0, 1)))
-
+            self.assertTrue(
+                torch.equal(output_image, input_image.permute(2, 0, 1))
+            )
 
     def test_Store(self):
         value_feature = features.Value(lambda: np.random.rand())
@@ -3013,7 +3025,8 @@ class TestFeatures(unittest.TestCase):
             value_feature = features.Value(lambda: torch.rand(1))
 
             store_feature = features.Store(
-                feature=value_feature, key="example",
+                feature=value_feature,
+                key="example",
             )
 
             output = store_feature(None)
@@ -3029,7 +3042,6 @@ class TestFeatures(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 torch.testing.assert_close(cached_output, output)
             torch.testing.assert_close(cached_output, value_feature())
-
 
     def test_Squeeze(self):
         ### Test with NumPy array
@@ -3080,7 +3092,6 @@ class TestFeatures(unittest.TestCase):
             expected_tensor = input_tensor.squeeze(3).squeeze(1)
             torch.testing.assert_close(output_tensor, expected_tensor)
 
-
     def test_Unsqueeze(self):
         ### Test with NumPy array
         input_array = np.array([1, 2, 3])
@@ -3110,14 +3121,16 @@ class TestFeatures(unittest.TestCase):
             unsqueeze_feature = features.Unsqueeze(axis=0)
             output_tensor = unsqueeze_feature(input_tensor)
             self.assertEqual(output_tensor.shape, (1, 3))
-            torch.testing.assert_close(output_tensor,
-                                       input_tensor.unsqueeze(0))
+            torch.testing.assert_close(
+                output_tensor, input_tensor.unsqueeze(0)
+            )
 
             unsqueeze_feature = features.Unsqueeze()
             output_tensor = unsqueeze_feature(input_tensor)
             self.assertEqual(output_tensor.shape, (3, 1))
-            torch.testing.assert_close(output_tensor,
-                                       input_tensor.unsqueeze(-1))
+            torch.testing.assert_close(
+                output_tensor, input_tensor.unsqueeze(-1)
+            )
 
             # Multiple axes
             unsqueeze_feature = features.Unsqueeze(axis=(0, 2))
@@ -3125,7 +3138,6 @@ class TestFeatures(unittest.TestCase):
             self.assertEqual(output_tensor.shape, (1, 3, 1))
             expected_tensor = input_tensor.unsqueeze(0).unsqueeze(2)
             torch.testing.assert_close(output_tensor, expected_tensor)
-
 
     def test_MoveAxis(self):
         ### Test with NumPy array
@@ -3142,7 +3154,6 @@ class TestFeatures(unittest.TestCase):
             move_axis_feature = features.MoveAxis(source=0, destination=2)
             output_tensor = move_axis_feature(input_tensor)
             self.assertEqual(output_tensor.shape, (3, 4, 2))
-
 
     def test_Transpose(self):
         ### Test with NumPy array
@@ -3180,18 +3191,16 @@ class TestFeatures(unittest.TestCase):
             expected_tensor = input_tensor.permute(2, 1, 0)
             self.assertTrue(torch.allclose(output_tensor, expected_tensor))
 
-
     def test_OneHot(self):
         ### Test with NumPy array
         input_image = np.array([0, 1, 2])
         one_hot_feature = features.OneHot(num_classes=3)
         output_image = one_hot_feature(input_image)
 
-        expected_output = np.array([
-            [1.0, 0.0, 0.0],
-            [0.0, 1.0, 0.0],
-            [0.0, 0.0, 1.0]
-        ], dtype=np.float32)
+        expected_output = np.array(
+            [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+            dtype=np.float32,
+        )
 
         self.assertEqual(output_image.shape, (3, 3))
         np.testing.assert_array_equal(output_image, expected_output)
@@ -3207,11 +3216,10 @@ class TestFeatures(unittest.TestCase):
             input_tensor = torch.tensor([0, 1, 2])
             output_tensor = one_hot_feature(input_tensor)
 
-            expected_tensor = torch.tensor([
-                [1.0, 0.0, 0.0],
-                [0.0, 1.0, 0.0],
-                [0.0, 0.0, 1.0]
-            ], dtype=torch.float32)
+            expected_tensor = torch.tensor(
+                [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]],
+                dtype=torch.float32,
+            )
 
             self.assertEqual(output_tensor.shape, (3, 3))
             torch.testing.assert_close(output_tensor, expected_tensor)
@@ -3221,7 +3229,6 @@ class TestFeatures(unittest.TestCase):
             output_tensor = one_hot_feature(input_tensor)
             self.assertEqual(output_tensor.shape, (3, 3))
             torch.testing.assert_close(output_tensor, expected_tensor)
-
 
     def test_TakeProperties(self):
         # with custom feature
@@ -3251,6 +3258,7 @@ class TestFeatures(unittest.TestCase):
 
         ### Test with PyTorch tensor (if available)
         if TORCH_AVAILABLE:
+
             class ExampleFeature(features.Feature):
                 def __init__(self, my_property, **kwargs):
                     super().__init__(my_property=my_property, **kwargs)
@@ -3280,7 +3288,9 @@ class TestFeatures(unittest.TestCase):
             noise_feature = Gaussian(mu=random_mu, sigma=random_sigma)
 
             take_properties = features.TakeProperties(
-                noise_feature, "mu", "sigma",
+                noise_feature,
+                "mu",
+                "sigma",
             )
             output = take_properties(None)
             torch.testing.assert_close(output, ([random_mu], [random_sigma]))

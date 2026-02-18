@@ -32,7 +32,6 @@ class TestBase(unittest.TestCase):
             random_split,
         )
 
-
     def test_SourceDeepTrackNode(self):
         source = base.SourceDeepTrackNode(
             lambda: {"a": {"b": 1}, "_x": 2},
@@ -81,7 +80,6 @@ class TestBase(unittest.TestCase):
         self.assertIn(source, deps_b)
         self.assertEqual(len(deps_b), 3)
 
-
     def test_SourceItem(self):
         called: list[base.SourceItem] = []
 
@@ -111,7 +109,6 @@ class TestBase(unittest.TestCase):
         item()
         self.assertEqual(called, [item])
 
-
     def test_Source(self):
         # Prepare test data
         data_variants = {
@@ -122,7 +119,8 @@ class TestBase(unittest.TestCase):
 
         if TORCH_AVAILABLE:
             data_variants["torch"] = (
-                torch.tensor([1, 2, 3]), torch.tensor([10, 20, 30]),
+                torch.tensor([1, 2, 3]),
+                torch.tensor([10, 20, 30]),
             )
 
         for a, b in data_variants.values():
@@ -164,7 +162,6 @@ class TestBase(unittest.TestCase):
             item()
             self.assertEqual(source.a(), a[2])
             self.assertEqual(source.b(), b[2])
-
 
     def test_Product(self):
         data_variants = {
@@ -213,7 +210,6 @@ class TestBase(unittest.TestCase):
         source = base.Source(x=[1, 2])
         with self.assertRaises(ValueError):
             base.Product(source, x=[10, 20])
-
 
     def test_Subset(self):
         data_variants = {
@@ -277,21 +273,24 @@ class TestBase(unittest.TestCase):
             with self.assertRaises(IndexError):
                 base.Subset(source, [100])
 
-
     def test_Sources(self):
         data_variants = {
             "list": ([1, 2], [10, 20], [3, 4], [30, 40]),
             "tuple": ((1, 2), (10, 20), (3, 4), (30, 40)),
             "numpy": (
-                np.array([1, 2]), np.array([10, 20]),
-                np.array([3, 4]), np.array([30, 40]),
+                np.array([1, 2]),
+                np.array([10, 20]),
+                np.array([3, 4]),
+                np.array([30, 40]),
             ),
         }
 
         if TORCH_AVAILABLE:
             data_variants["torch"] = (
-                torch.tensor([1, 2]), torch.tensor([10, 20]),
-                torch.tensor([3, 4]), torch.tensor([30, 40]),
+                torch.tensor([1, 2]),
+                torch.tensor([10, 20]),
+                torch.tensor([3, 4]),
+                torch.tensor([30, 40]),
             )
 
         for a1, b1, a2, b2 in data_variants.values():
@@ -320,7 +319,6 @@ class TestBase(unittest.TestCase):
             feature = dt.Value(joined.a) + dt.Value(joined.b)
             self.assertEqual(feature(train[0]), a1[0] + b1[0])
             self.assertEqual(feature(val[1]), a2[1] + b2[1])
-
 
     def test_random_split(self):
         data_variants = {
@@ -424,7 +422,6 @@ class TestBase(unittest.TestCase):
             self.assertEqual(len(set(all_a)), len(expected))
             self.assertEqual(sorted(all_a), sorted(expected))
 
-
     def test__accumulate(self):
         # Default cumulative sum
         self.assertEqual(
@@ -434,7 +431,7 @@ class TestBase(unittest.TestCase):
 
         # Custom operator (multiplication)
         import operator
-        
+
         self.assertEqual(
             list(base._accumulate([1, 2, 3, 4, 5], fn=operator.mul)),
             [1, 2, 6, 24, 120],
