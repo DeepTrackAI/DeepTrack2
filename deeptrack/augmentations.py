@@ -1,4 +1,4 @@
-"""Classes to augment images.
+""" Classes to augment images.
 
 This module provides the `augmentations` DeepTrack2 classes
 that manipulates a scatterer or array object with various transformations.
@@ -611,149 +611,6 @@ class Affine(Augmentation):
             **kwargs,
         )
 
-    # def _process_properties(
-    #     self: Affine,
-    #     properties: dict
-    # ) -> dict:
-        
-    #     properties = super()._process_properties(properties)
-    #     # Make translate tuple.
-    #     translate = properties["translate"]
-    #     if isinstance(translate, (float, int)):
-    #         translate = (translate, translate)
-    #     if isinstance(translate, dict):
-    #         translate = (translate["x"], translate["y"])
-    #     properties["translate"] = translate
-
-    #     # Make scale tuple.
-    #     scale = properties["scale"]
-    #     if isinstance(scale, (float, int)):
-    #         scale = (scale, scale)
-    #     if isinstance(scale, dict):
-    #         scale = (scale["x"], scale["y"])
-    #     properties["scale"] = scale
-
-    #     return properties
-
-    # def get(
-    #     self: Affine,
-    #     image: Image | np.ndarray,
-    #     scale: float,
-    #     translate: float,
-    #     rotate: float,
-    #     shear: float,
-    #     **kwargs
-    # ) -> Image:
-    #     """Abstract method which performs the `Affine` augmentation.
-        
-    #     Affine transformations include:
-    #     - `Translation`
-    #     - `Scaling`
-    #     - `Rotation`
-    #     - `Shearing`
-
-    #     """    
-    #     assert (
-    #         image.ndim == 2 or image.ndim == 3
-    #     ), "Affine only supports 2-dimensional or 3-dimension inputs, got {0}"\
-    #     .format(image.ndim)
-
-    #     dx, dy = translate
-    #     fx, fy = scale
-
-    #     cr = np.cos(rotate)
-    #     sr = np.sin(rotate)
-
-    #     k = np.tan(shear)
-
-    #     scale_map = np.array([[1 / fx, 0], [0, 1 / fy]])
-    #     rotation_map = np.array([[cr, sr], [-sr, cr]])
-    #     shear_map = np.array([[1, 0], [-k, 1]])
-
-    #     mapping = scale_map @ rotation_map @ shear_map
-
-    #     shape = image.shape
-    #     center = np.array(shape[:2]) / 2
-
-    #     d = center - np.dot(mapping, center) - np.array([dy, dx])
-
-    #     # Clean up kwargs.
-    #     kwargs.pop("input", False)
-    #     kwargs.pop("matrix", False)
-    #     kwargs.pop("offset", False)
-    #     kwargs.pop("output", False)
-
-    #     # Call affine_transform.
-    #     if image.ndim == 2:
-    #         new_image = utils.safe_call(
-    #             ndimage.affine_transform,
-    #             input=image,
-    #             matrix=mapping,
-    #             offset=d,
-    #             **kwargs,
-    #         )
-
-    #         new_image = Image(new_image)
-    #         new_image.merge_properties_from(image)
-    #         image = new_image
-
-    #     elif image.ndim == 3:
-    #         for z in range(shape[-1]):
-    #             image[:, :, z] = utils.safe_call(
-    #                 ndimage.affine_transform,
-    #                 input=image[:, :, z],
-    #                 matrix=mapping,
-    #                 offset=d,
-    #                 **kwargs,
-    #             )
-
-    #     # Map positions.
-    #     if hasattr(image, "properties"):
-    #         inverse_mapping = np.linalg.inv(mapping)
-    #         for prop in image.properties:
-    #             if "position" in prop:
-    #                 position = np.array(prop["position"])
-
-    #                 inverted = (
-    #                     np.dot(
-    #                         inverse_mapping,
-    #                         (position[..., :2] - center + np.array([dy, dx]))[
-    #                             ..., np.newaxis
-    #                         ],
-    #                     )
-    #                     .squeeze()
-    #                     .transpose()
-    #                 ) + center
-
-    #                 position[..., :2] = inverted
-
-    #                 prop["position"] = position
-
-    #     return image
-
-    def _build_mapping(self, array, scale, translate, rotate, shear):
-
-        xp = np if isinstance(array, np.ndarray) else torch
-
-        dx, dy = translate
-        fx, fy = scale
-
-        cr = xp.cos(xp.asarray(rotate))
-        sr = xp.sin(xp.asarray(rotate))
-        k = xp.tan(xp.asarray(shear))
-
-        scale_map = xp.asarray([[1 / fx, 0], [0, 1 / fy]])
-        rotation_map = xp.asarray([[cr, sr], [-sr, cr]])
-        shear_map = xp.asarray([[1, 0], [-k, 1]])
-
-        mapping = scale_map @ rotation_map @ shear_map
-
-        shape = array.shape
-        center = xp.asarray(shape[:2]) / 2
-        offset = center - mapping @ center - xp.asarray([dy, dx])
-
-        return mapping, offset
-
     def _get_numpy(
         self,
         array: np.ndarray,
@@ -769,26 +626,38 @@ class Affine(Augmentation):
 
         from scipy.ndimage import affine_transform
 
-        dx, dy = translate
-        fx, fy = scale
+        # Normalize translate
+        if isinstance(translate, (int, float)):
+            dx = dy = translate
+        else:
+            dx, dy = translate
+
+        # Normalize scale
+        if isinstance(scale, (int, float)):
+            fx = fy = scale
+        else:
+            fx, fy = scale
 
         cr = np.cos(rotate)
         sr = np.sin(rotate)
         k = np.tan(shear)
 
-        scale_map = np.array([[1 / fx, 0], [0, 1 / fy]])
+        scale_map = np.array([[1 / fy, 0], [0, 1 / fx]])
         rotation_map = np.array([[cr, sr], [-sr, cr]])
         shear_map = np.array([[1, 0], [-k, 1]])
 
         matrix = scale_map @ rotation_map @ shear_map
 
         shape = array.shape
-        center = np.array(shape[:2]) / 2
-        offset = center - matrix @ center - np.array([dy, dx])
+        center = (np.array(shape[:2], dtype=float) -1)/ 2
+        offset = center - matrix @ center - np.array([dy, dx], dtype=float)
+
+        forward = np.linalg.inv(matrix)
+        forward_offset = - forward @ offset
 
         self._last_affine = {
-            "mapping": matrix,
-            "offset": offset,
+            "forward": forward,
+            "forward_offset": forward_offset,
         }
 
         if array.ndim == 2:
@@ -834,42 +703,60 @@ class Affine(Augmentation):
         **kwargs,
     ):
 
-        import torch.nn.functional as F
-
         if array.ndim not in (2, 3):
             raise ValueError("Affine only supports 2D or 3D tensors.")
 
         device = array.device
         dtype = array.dtype
 
-        dx, dy = translate
-        fx, fy = scale
+        if isinstance(translate, (int, float)):
+            dx = dy = float(translate)
+        else:
+            dx, dy = translate
 
+        if isinstance(scale, (int, float)):
+            fx = fy = float(scale)
+        else:
+            fx, fy = scale
+
+        # --- Build affine matrix exactly as numpy ---
         cr = torch.cos(torch.tensor(rotate, dtype=dtype, device=device))
         sr = torch.sin(torch.tensor(rotate, dtype=dtype, device=device))
         k = torch.tan(torch.tensor(shear, dtype=dtype, device=device))
 
-        scale_map = torch.tensor([[1 / fx, 0], [0, 1 / fy]], dtype=dtype, device=device)
+        scale_map = torch.tensor([[1 / fy, 0], [0, 1 / fx]], dtype=dtype, device=device)
+
         rotation_map = torch.stack([
             torch.stack([cr, sr]),
             torch.stack([-sr, cr])
         ])
+
         shear_map = torch.tensor([[1, 0], [-k, 1]], dtype=dtype, device=device)
 
         matrix = scale_map @ rotation_map @ shear_map
 
+        # --- IMPORTANT: use (H-1)/2 center ---
         H, W = array.shape[:2]
-        center = torch.tensor([H / 2, W / 2], dtype=dtype, device=device)
+        center = torch.tensor(
+            [(H - 1) / 2, (W - 1) / 2],
+            dtype=dtype,
+            device=device,
+        )
 
-        offset = center - matrix @ center - torch.tensor([dy, dx], dtype=dtype, device=device)
+        offset = center - matrix @ center - torch.tensor(
+            [dy, dx], dtype=dtype, device=device
+        )
 
-        # Store transform BEFORE grid_sample
+        # Store for metadata update
+        forward = torch.linalg.inv(matrix)
+        forward_offset = - forward @ offset
+
         self._last_affine = {
-            "mapping": matrix,
-            "offset": offset,
+            "forward": forward,
+            "forward_offset": forward_offset,
         }
 
-        # Build grid
+        # --- Build output pixel coordinate grid (pixel space) ---
         yy, xx = torch.meshgrid(
             torch.arange(H, dtype=dtype, device=device),
             torch.arange(W, dtype=dtype, device=device),
@@ -878,19 +765,32 @@ class Affine(Augmentation):
 
         coords = torch.stack([yy, xx], dim=-1).reshape(-1, 2)
 
-        inv_matrix = torch.linalg.inv(matrix)
-
-        warped = (inv_matrix @ (coords - offset).T).T
+        # --- Apply exact SciPy mapping in pixel space ---
+        warped = (matrix @ coords.T).T + offset
 
         y_warp = warped[:, 0]
         x_warp = warped[:, 1]
 
-        # Align_corners=True assumption
-        x_norm = 2 * x_warp / (W - 1) - 1
-        y_norm = 2 * y_warp / (H - 1) - 1
+        # --- Optional wrap mode support ---
+        if mode == "wrap":
+            x_warp = torch.remainder(x_warp, W)
+            y_warp = torch.remainder(y_warp, H)
+            padding_mode = "zeros"
+        else:
+            padding_mode = {
+                "reflect": "reflection",
+                "nearest": "border",
+                "constant": "zeros",
+            }.get(mode, "reflection")
 
-        grid = torch.stack([x_norm, y_norm], dim=-1).view(1, H, W, 2)
+        # --- Convert to normalized coordinates ---
+        x_norm = 2.0 * x_warp / (W - 1) - 1.0
+        y_norm = 2.0 * y_warp / (H - 1) - 1.0
 
+        grid = torch.stack([x_norm, y_norm], dim=-1)
+        grid = grid.view(1, H, W, 2)
+
+        # --- Prepare tensor for grid_sample ---
         if array.ndim == 2:
             tensor = array.unsqueeze(0).unsqueeze(0)
         else:
@@ -901,18 +801,12 @@ class Affine(Augmentation):
             1: "bilinear",
         }
 
-        padding_mode = {
-            "reflect": "reflection",
-            "nearest": "border",
-            "constant": "zeros",
-        }.get(mode, "reflection")
-
         out = F.grid_sample(
             tensor,
             grid,
             mode=mode_map.get(order, "bilinear"),
             padding_mode=padding_mode,
-            align_corners=True,  # DO NOT CHANGE
+            align_corners=True,
         )
 
         if array.ndim == 2:
@@ -927,68 +821,56 @@ class Affine(Augmentation):
         new_shape,
         **kwargs,
     ):
-        """
-        Update geometric metadata (positions, directions) after affine transform.
+        """Update geometric metadata (positions, directions) after affine transform.
 
-        Convention A:
             - All metadata (positions, directions) are NumPy arrays.
             - Backend affects only image resampling, not metadata.
         """
 
-        if not hasattr(element, "properties"):
+        if not isinstance(element.properties, dict):
             return element
 
-        # Retrieve mapping and offset used for resampling
-        mapping = self._last_affine["mapping"]
-        offset = self._last_affine["offset"]
+        props = element.properties
+
+        # Nothing to do if no position/direction
+        if "position" not in props and "direction" not in props:
+            return element
+
+        forward = self._last_affine["forward"]
+        forward_offset = self._last_affine["forward_offset"]
+
 
         # If backend was torch, convert transform to numpy
         if self.get_backend() == "torch":
-            mapping = mapping.detach().cpu().numpy()
-            offset = offset.detach().cpu().numpy()
+            forward = forward.detach().cpu().numpy()
+            forward_offset = forward_offset.detach().cpu().numpy()
 
-        inverse_mapping = np.linalg.inv(mapping)
+        # Update positions
+        if "position" in props:
 
-        for prop in element.properties:
+            pos = np.asarray(props["position"], dtype=float).copy()
+            coords = pos[..., :2]
 
-            # Update positions
-            if "position" in prop:
+            transformed = (
+                forward @ coords[..., None]
+            ).squeeze(-1) + forward_offset
 
-                pos = prop["position"]
+            pos[..., :2] = transformed
+            props["position"] = pos
 
-                # Enforce numpy metadata convention
-                if not isinstance(pos, np.ndarray):
-                    pos = np.asarray(pos)
+        # Update direction vectors
+        if "direction" in props:
 
-                new_pos = pos.copy()
+            direction = np.asarray(props["direction"], dtype=float).copy()
 
-                coords = new_pos[..., :2]
+            coords = direction[..., :2]
 
-                transformed = (
-                    inverse_mapping @ (coords - offset)[..., None]
-                ).squeeze(-1)
+            transformed_dir = (
+                forward @ coords[..., None]
+            ).squeeze(-1)
 
-                new_pos[..., :2] = transformed
-                prop["position"] = new_pos
-
-            # Update direction vectors
-            if "direction" in prop:
-
-                direction = prop["direction"]
-
-                if not isinstance(direction, np.ndarray):
-                    direction = np.asarray(direction)
-
-                new_dir = direction.copy()
-
-                coords = new_dir[..., :2]
-
-                transformed_dir = (
-                    inverse_mapping @ coords[..., None]
-                ).squeeze(-1)
-
-                new_dir[..., :2] = transformed_dir
-                prop["direction"] = new_dir
+            direction[..., :2] = transformed_dir
+            props["direction"] = direction
 
         return element
 
@@ -1121,20 +1003,142 @@ class ElasticTransformation(Augmentation):
                 ) + tuple(range(2, grid.ndim))) + delta
             coordinates.append(np.reshape(dDim, (-1, 1)))
 
+        shape_full = image.shape
+
         if ignore_last_dim:
+            out = np.empty_like(image)
             for z in range(image.shape[-1]):
-                image[..., z] = utils.safe_call(
+                out[..., z] = utils.safe_call(
                     map_coordinates,
                     input=image[..., z],
                     coordinates=coordinates,
                     **kwargs,
                 ).reshape(shape)
         else:
-            image = utils.safe_call(
-                map_coordinates, input=image, coordinates=coordinates, **kwargs
-            ).reshape(shape)
+            out = utils.safe_call(
+                map_coordinates,
+                input=image,
+                coordinates=coordinates,
+                **kwargs,
+            ).reshape(shape_full)
 
-        return image
+        return out
+    
+    def _get_torch(
+        self,
+        image: torch.Tensor,
+        sigma: float,
+        alpha: float,
+        ignore_last_dim: bool,
+        order: int = 1,
+        cval: float = 0.0,
+        mode: str = "constant",
+        **kwargs,
+    ) -> torch.Tensor:
+        
+        if image.ndim not in (2, 3):
+            raise ValueError("ElasticTransformation only supports 2D or 3D tensors.")
+
+        device = image.device
+        dtype = image.dtype
+
+        if image.ndim == 2:
+            H, W = image.shape
+            C = 1
+            image_ = image.unsqueeze(0).unsqueeze(0)
+        else:
+            H, W, C = image.shape
+            image_ = image.permute(2, 0, 1).unsqueeze(0)
+
+        spatial_shape = (H, W)
+
+        # Create random field
+        noise_y = torch.rand(spatial_shape, device=device, dtype=dtype)
+        noise_x = torch.rand(spatial_shape, device=device, dtype=dtype)
+
+        # Gaussian smoothing
+        def gaussian_kernel_1d(sigma):
+            radius = int(3 * sigma)
+            coords = torch.arange(-radius, radius + 1, device=device, dtype=dtype)
+            kernel = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
+            kernel = kernel / kernel.sum()
+            return kernel
+
+        kernel = gaussian_kernel_1d(sigma)
+        kernel_x = kernel.view(1, 1, 1, -1)
+        kernel_y = kernel.view(1, 1, -1, 1)
+
+        def smooth(field):
+            field = field.unsqueeze(0).unsqueeze(0)
+
+            # horizontal
+            field = F.conv2d(
+                field,
+                kernel_x,
+                padding=(0, kernel_x.shape[-1] // 2),
+            )
+
+            # vertical
+            field = F.conv2d(
+                field,
+                kernel_y,
+                padding=(kernel_y.shape[-2] // 2, 0),
+            )
+
+            return field.squeeze(0).squeeze(0)
+
+
+        delta_y = smooth(noise_y) * alpha
+        delta_x = smooth(noise_x) * alpha
+
+
+        # Build sampling grid
+        yy, xx = torch.meshgrid(
+            torch.arange(H, device=device, dtype=dtype),
+            torch.arange(W, device=device, dtype=dtype),
+            indexing="ij",
+        )
+
+        yy = yy + delta_y
+        xx = xx + delta_x
+
+        if mode == "wrap":
+            yy = torch.remainder(yy, H)
+            xx = torch.remainder(xx, W)
+
+        # Normalize to [-1, 1]
+        xx = 2.0 * xx / (W - 1) - 1.0
+        yy = 2.0 * yy / (H - 1) - 1.0
+
+        grid = torch.stack([xx, yy], dim=-1)
+        grid = grid.unsqueeze(0)
+
+        # 4. grid_sample
+        mode_map = {
+            0: "nearest",
+            1: "bilinear",
+            3: "bicubic",
+        }
+
+        padding_mode = {
+            "constant": "zeros",
+            "nearest": "border",
+            "reflect": "reflection",
+            "wrap": "zeros",
+        }.get(mode, "zeros")
+
+        out = F.grid_sample(
+            image_,
+            grid,
+            mode=mode_map.get(order, "bilinear"),
+            padding_mode=padding_mode,
+            align_corners=True,
+        )
+
+        if image.ndim == 2:
+            return out.squeeze(0).squeeze(0)
+
+        return out.squeeze(0).permute(1, 2, 0)
 
 
 class Crop(Augmentation):

@@ -46,6 +46,61 @@ class TestAugmentations(unittest.TestCase):
             for a in arrays[1:]:
                 out = out + a
             return out
+    
+    @staticmethod
+    def make_ellipse(H, W, cy, cx, ry, rx):
+        yy, xx = np.meshgrid(
+            np.arange(H),
+            np.arange(W),
+            indexing="ij"
+        )
+        mask = ((yy - cy) / ry) ** 2 + ((xx - cx) / rx) ** 2 <= 1
+        return mask.astype(np.float32)[..., None]
+
+    @staticmethod
+    def center_of_mass(img):
+        """
+        Backend-agnostic center of mass.
+        Works for:
+            - np.ndarray (H, W) or (H, W, C)
+            - torch.Tensor (H, W) or (H, W, C)
+        """
+
+        if img.ndim == 3:
+            img = img[..., 0]
+
+        if hasattr(img, "detach"):  # torch
+            import torch
+
+            H, W = img.shape
+            device = img.device
+            dtype = img.dtype
+
+            ys = torch.arange(H, dtype=dtype, device=device)
+            xs = torch.arange(W, dtype=dtype, device=device)
+
+            Y, X = torch.meshgrid(ys, xs, indexing="ij")
+
+            mass = img.sum()
+            cy = (img * Y).sum() / mass
+            cx = (img * X).sum() / mass
+
+            return float(cy), float(cx)
+
+        else:  # numpy
+            import numpy as np
+
+            H, W = img.shape
+            ys = np.arange(H)
+            xs = np.arange(W)
+            Y, X = np.meshgrid(ys, xs, indexing="ij")
+
+            mass = img.sum()
+            cy = (img * Y).sum() / mass
+            cx = (img * X).sum() / mass
+
+            return float(cy), float(cx)
+
 
     def test_Reuse(self):
 
@@ -413,7 +468,7 @@ class TestAugmentations(unittest.TestCase):
 
             volume = scatterers.ScatteredVolume(
                 array=base,
-                properties=[{"position": position.copy()}],
+                properties={"position": position.copy()},
             )
 
             transformed_volume = affine(volume)
@@ -430,19 +485,16 @@ class TestAugmentations(unittest.TestCase):
                     out,
                 ))
 
-            # Position update check (explicit forward equation)
-            mapping = affine._last_affine["mapping"]
-            offset = affine._last_affine["offset"]
+            # Position update check
+            forward = affine._last_affine["forward"]
+            forward_offset = affine._last_affine["forward_offset"]
 
             if backend == "numpy":
-                inv_mapping = np.linalg.inv(mapping)
-                expected_pos = (inv_mapping @ (position - offset).T).T
+                expected_pos = (forward @ position + forward_offset)
             else:
-                inv_mapping = torch.linalg.inv(mapping)
                 pos_t = torch.tensor(position)
-                expected_pos = (inv_mapping @ (pos_t - offset)).detach()
-
-            got_pos = transformed_volume.properties[0]["position"]
+                expected_pos = (forward @ pos_t + forward_offset).detach()
+            got_pos = transformed_volume.properties["position"]
 
             self.assertAlmostEqual(float(got_pos[0]), float(expected_pos[0]), places=4)
             self.assertAlmostEqual(float(got_pos[1]), float(expected_pos[1]), places=4)
@@ -501,9 +553,176 @@ class TestAugmentations(unittest.TestCase):
             if backend == "numpy":
                 np.testing.assert_array_equal(out_id, base)
             else:
-                self.assertLess(torch.max(torch.abs(out_id - base)), 5e-5)
+                self.assertTrue(torch.allclose(out_id, base, atol=1e-12))
+
+            # Deterministic: Pure translation
+            H = W = 64
+
+            base_np = self.make_ellipse(
+                H, W,
+                cy=34,
+                cx=28,
+                ry=6,
+                rx=10,
+            )
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            shift_y = 7
+            shift_x = -5
+
+            translation = augmentations.Affine(
+                scale=(1.0, 1.0),
+                translate=(shift_x, shift_y),
+                rotate=0.0,
+                shear=0.0,
+                order=0,
+            )
+
+            out_trans = translation(base)
+
+            cy0, cx0 = self.center_of_mass(base)
+            cy1, cx1 = self.center_of_mass(out_trans)
+            self.assertAlmostEqual(cy1, cy0 + shift_y, places=4)
+            self.assertAlmostEqual(cx1, cx0 + shift_x, places=4)
+
+            # Deterministic position update (translation)
+            position = np.array([5.0, 7.0], dtype=np.float32)
+
+            volume = scatterers.ScatteredVolume(
+                array=base,
+                properties={"position": position.copy()},
+            )
+
+            translated_volume = translation(volume)
+            got_pos = translated_volume.properties["position"]
+
+            expected_pos = np.array([
+                position[0] + shift_y,
+                position[1] + shift_x,
+            ], dtype=np.float32)
+
+            self.assertAlmostEqual(float(got_pos[0]), float(expected_pos[0]), places=5)
+            self.assertAlmostEqual(float(got_pos[1]), float(expected_pos[1]), places=5)
+
+            # Deterministic: 90-degree rotation
+            rot = augmentations.Affine(
+                scale=1.0,
+                translate=(0, 0),
+                rotate=np.pi / 2,
+                shear=0.0,
+                order=0,
+            )
+
+            out_rot = rot(base)
+
+            if backend == "numpy":
+                expected = np.rot90(base, k=1, axes=(0, 1))
+                self.assertTrue(np.array_equal(out_rot, expected))
+            else:
+                expected = torch.rot90(base, k=1, dims=(0, 1))
+                self.assertTrue(torch.equal(out_rot, expected))
+
+            # Deterministic: scaling
+            scale = (0.75, 3.5)
+
+            scaling = augmentations.Affine(
+                scale=scale,
+                translate=(0.0, 0.0),
+                rotate=0.0,
+                shear=0.0,
+                order=1,
+            )
+
+            out_scaled = scaling(base)
+
+            cy0, cx0 = self.center_of_mass(base)
+            cy1, cx1 = self.center_of_mass(out_scaled)
+            center_y = (H - 1) / 2
+            center_x = (W - 1) / 2
+            expected_cy = center_y + scale[1] * (cy0 - center_y)
+            expected_cx = center_x + scale[0] * (cx0 - center_x)
+
+            self.assertAlmostEqual(cy1, expected_cy, places=1)
+            self.assertAlmostEqual(cx1, expected_cx, places=1)
 
 
+    def test_ElasticTransformation(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            H, W, C = 64, 64, 3
+
+            # Deterministic seed
+            np.random.seed(0)
+            if backend == "torch":
+                torch.manual_seed(0)
+
+            # Simple structured image (ellipse)
+            base_np = self.make_ellipse(
+                H, W,
+                cy=32,
+                cx=28,
+                ry=12,
+                rx=20,
+            )
+
+            base_np = np.repeat(base_np, C, axis=-1)
+
+            base = base_np if backend == "numpy" else torch.tensor(base_np)
+
+            elastic = augmentations.ElasticTransformation(
+                alpha=15,
+                sigma=3,
+                ignore_last_dim=True,
+                order=1,
+                # mode="reflect",
+            )
+
+            out = elastic(base)
+
+            # Shape preserved
+            self.assertEqual(out.shape, base.shape)
+
+            # No NaNs or inf
+            if backend == "numpy":
+                self.assertFalse(np.isnan(out).any())
+                self.assertFalse(np.isinf(out).any())
+            else:
+                self.assertFalse(torch.isnan(out).any())
+                self.assertFalse(torch.isinf(out).any())
+
+            # Non-trivial deformation
+            if backend == "numpy":
+                diff = np.mean(np.abs(out - base))
+                self.assertGreater(diff, 1e-3)
+            else:
+                diff = torch.mean(torch.abs(out - base))
+                self.assertGreater(diff.item(), 1e-3)
+
+            # Channel consistency (ignore_last_dim=True)
+            if backend == "numpy":
+                self.assertTrue(np.allclose(out[..., 0], out[..., 1]))
+                self.assertTrue(np.allclose(out[..., 1], out[..., 2]))
+            else:
+                self.assertTrue(torch.allclose(out[..., 0], out[..., 1]))
+                self.assertTrue(torch.allclose(out[..., 1], out[..., 2]))
+
+            # Differentiability (torch only)
+            if backend == "torch":
+                x = torch.tensor(base_np, requires_grad=True)
+                y = elastic(x)
+
+                loss = y.mean()
+                loss.backward()
+
+                self.assertIsNotNone(x.grad)
+                self.assertFalse(torch.isnan(x.grad).any())
 
 
 if __name__ == "__main__":
@@ -512,39 +731,6 @@ if __name__ == "__main__":
 
 
 
-
-
-
-    # def test_Affine(self):
-    #     opt = optics.Fluorescence(magnification=10)
-    #     particle = scatterers.PointParticle(
-    #         position=lambda image_size: np.random.rand(2) * image_size[-2:],
-    #         image_size=opt.output_region,
-    #     )
-
-    #     augmentation = augmentations.Affine(
-    #         scale=lambda: 0.25 + np.random.rand(2) * 0.25,
-    #         rotation=lambda: np.random.rand() * np.pi * 2,
-    #         shear=lambda: np.random.rand() * np.pi / 2 - np.pi / 4,
-    #         translate=lambda: np.random.rand(2) * 20 - 10,
-    #         mode="constant",
-    #     )
-
-    #     pipe = opt(particle) >> augmentation
-    #     pipe.store_properties(True)
-
-    #     for _ in range(10):
-    #         image = pipe.update().resolve()
-    #         pmax = np.unravel_index(
-    #             np.argmax(image[:, :, 0], axis=None),
-    #             shape=image[:, :, 0].shape
-    #         )
-
-    #         dist = np.sum(
-    #             np.abs(np.array(image.get_property("position"))- pmax)
-    #         )
-
-    #         self.assertLess(dist, 3)
 
     # def test_ElasticTransformation(self):
     #     np.random.seed(1000)
