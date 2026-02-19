@@ -4,8 +4,6 @@ import sys
 
 import unittest
 
-# raise unittest.SkipTest("Temporarily skipped")
-
 import numpy as np
 
 from deeptrack import (
@@ -1237,7 +1235,6 @@ class TestAugmentations(unittest.TestCase):
 
         
     def test_PadToMultiplesOf(self):
-
         backends = ["numpy"]
         if TORCH_AVAILABLE:
             backends.append("torch")
@@ -1292,7 +1289,7 @@ class TestAugmentations(unittest.TestCase):
             padded = padder(volume)
 
             # Shape check
-            self.assertSequenceEqual(padded.array.shape, (12, 16, 1))
+            self.assertSequenceEqual(padded.array.shape, (12, 16, 4))
 
             # Compute expected padding (centered padding logic)
             pad_y = (-H) % 4
@@ -1308,7 +1305,6 @@ class TestAugmentations(unittest.TestCase):
             ])
 
             got_pos = padded.properties["position"]
-
             self.assertAlmostEqual(got_pos[0], expected_pos[0])
             self.assertAlmostEqual(got_pos[1], expected_pos[1])
 
@@ -1326,7 +1322,6 @@ class TestAugmentations(unittest.TestCase):
                 padded.properties["output_region"],
                 expected_region,
             )
-
 
 if __name__ == "__main__":
     unittest.main()

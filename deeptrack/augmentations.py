@@ -211,13 +211,13 @@ class Augmentation(Feature):
 
     def _augment_array(self, array, **kwargs):
 
-        # TBE *CM* this is a bit hacky, but it allows us to use the old style get() method for augmentations 
-        # that haven't been updated yet, while still allowing new style get() methods to work. We check for 
-        # the old style get() method first, and if it exists, we use it. If not, we check for the backend 
-        # and use the appropriate method. This way, we can gradually update augmentations to the new style 
-        # without breaking existing ones.
-        if hasattr(self, "get") and type(self).get is not Augmentation.get:
-            return self.get(array, **kwargs)
+        # # TBE *CM* this is a bit hacky, but it allows us to use the old style get() method for augmentations 
+        # # that haven't been updated yet, while still allowing new style get() methods to work. We check for 
+        # # the old style get() method first, and if it exists, we use it. If not, we check for the backend 
+        # # and use the appropriate method. This way, we can gradually update augmentations to the new style 
+        # # without breaking existing ones.
+        # if hasattr(self, "get") and type(self).get is not Augmentation.get:
+        #     return self.get(array, **kwargs)
 
         backend = self.get_backend()
 
@@ -1538,8 +1538,6 @@ class Pad(Augmentation):
         if image.ndim < 2:
             raise ValueError("Pad expects at least 2D array (H, W[, C])")
 
-        spatial_ndim = image.ndim - 1  # channel-last
-
         if callable(px):
             px = px(image)
 
@@ -1550,9 +1548,11 @@ class Pad(Augmentation):
             for idx in range(0, len(px), 2):
                 padding.append((px[idx], px[idx + 1]))
 
-            # Fill missing dims with zero padding
-            while len(padding) < image.ndim:
-                padding.append((0, 0))
+        # Fill missing dims with zero padding
+        while len(padding) < image.ndim:
+            padding.append((0, 0))
+
+        self._last_padding = padding
 
         return np.pad(
             image,
@@ -1589,8 +1589,10 @@ class Pad(Augmentation):
             while len(padding) < image.ndim:
                 padding.append((0, 0))
 
-        pad_list = []
+        # Store SAME format as numpy
+        self._last_padding = padding
 
+        pad_list = []
         for before, after in reversed(padding):
             pad_list.extend([before, after])
 
@@ -1606,25 +1608,13 @@ class Pad(Augmentation):
         element,
         old_shape,
         new_shape,
-        px,
         **kwargs,
     ):
 
         if not isinstance(element.properties, dict):
             return element
 
-        if callable(px):
-            px = px(element.array)
-
-        if isinstance(px, int):
-            padding = [(px, px)] * element.array.ndim
-        else:
-            padding = []
-            for idx in range(0, len(px), 2):
-                padding.append((px[idx], px[idx + 1]))
-
-            while len(padding) < element.array.ndim:
-                padding.append((0, 0))
+        padding = self._last_padding
 
         props = element.properties
 
@@ -1667,43 +1657,6 @@ class PadToMultiplesOf(Pad):
 
     """
 
-    # def __init__(
-    #     self: PadToMultiplesOf,
-    #     multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
-    #     **kwargs
-    # ) -> None:
-        
-    #     def amount_to_pad(
-    #         image: np.ndarray | torch.Tensor
-    #     ) -> list[int]:
-    #         """Method to calculate number of pixels.
-        
-    #         Calculates the number of pixels needed to pad an image 
-    #         for its height/width to be a multiple of a value.
-        
-    #         """
-    #         shape = image.shape
-    #         multiple = self.multiple()
-
-    #         if not isinstance(multiple, (list, tuple, np.ndarray)):
-    #             multiple = (multiple,) * image.ndim
-    #         new_shape = [0] * (image.ndim * 2)
-    #         idx = 0
-    #         for dim, mul in zip(shape, multiple):
-    #             if mul is not None and mul != -1:
-    #                 to_add = -dim % mul
-    #                 to_add_first = to_add // 2
-    #                 to_add_after = to_add - to_add_first
-    #                 new_shape[idx * 2] = to_add_first
-    #                 new_shape[idx * 2 + 1] = to_add_after
-
-    #             idx += 1
-
-    #         return new_shape
-
-    #     super().__init__(multiple=multiple, px=lambda: amount_to_pad, **kwargs)
-
-
     def __init__(
         self,
         multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
@@ -1713,25 +1666,33 @@ class PadToMultiplesOf(Pad):
         def amount_to_pad(image: np.ndarray | torch.Tensor) -> list[int]:
 
             shape = image.shape
-            multiple_value = self.multiple()
+            multiple_value = multiple#self.multiple()
 
             if not isinstance(multiple_value, (list, tuple, np.ndarray)):
                 multiple_value = (multiple_value,) * image.ndim
+
+            if len(multiple_value) < image.ndim:
+                multiple_value = tuple(multiple_value) + (None,) * (image.ndim - len(multiple_value))
 
             px = [0] * (image.ndim * 2)
 
             for i, (dim, mul) in enumerate(zip(shape, multiple_value)):
 
-                if mul is not None and mul != -1:
-                    to_add = (-dim) % mul
-                    before = to_add // 2
-                    after = to_add - before
+                if mul is None or mul == -1:
+                    continue
 
-                    px[2 * i] = before
-                    px[2 * i + 1] = after
+                to_add = (-dim) % mul
+
+                before = to_add // 2
+                after = to_add - before
+
+                px[2 * i] = before
+                px[2 * i + 1] = after
 
             return px
-
+        
         super().__init__(px=lambda: amount_to_pad, multiple=multiple, **kwargs)
+
+       
 
 # TODO: add resizing by rescaling
