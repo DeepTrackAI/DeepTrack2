@@ -66,6 +66,18 @@ class TestRandom(unittest.TestCase):
         # Should contain finite values.
         self.assertTrue(torch.isfinite(x).all().item())
 
+    def test_standard_normal(self):
+        torch.manual_seed(0)
+
+        # Scalar case
+        x0 = rnd.standard_normal()
+        self.assertEqual(x0.ndim, 0)
+
+        # Shape case
+        x = rnd.standard_normal((3, 4))
+        self.assertEqual(tuple(x.shape), (3, 4))
+        self.assertTrue(torch.isfinite(x).all().item())
+
     def test_beta_tensor_parameters(self):
         torch.manual_seed(0)
 
