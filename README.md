@@ -41,7 +41,7 @@ The following quick start guide is intended for complete beginners to understand
 
 # Installation
 
-DeepTrack2 2.0 requires at least python 3.9.
+DeepTrack2 requires at least python 3.9.
 
 To install DeepTrack2, open a terminal or command prompt and run:
 ```bash
@@ -59,7 +59,7 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Overview of how to use DeepTrack 2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
+  Overview of how to use DeepTrack2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
 
 - DTGS106 **[Simulating Different Image Modalities](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -287,7 +287,7 @@ Here you will find a series of notebooks tailored for DeepTrack2's developers:
 The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
 
 # Cite us!
-If you use DeepTrack 2.1 in your project, please cite us:
+If you use DeepTrack2 in your project, please cite us:
 
 <https://pubs.aip.org/aip/apr/article/8/1/011310/238663>
 ```
