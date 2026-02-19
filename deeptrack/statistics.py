@@ -77,7 +77,8 @@ from __future__ import annotations
 
 import numpy as np
 
-from deeptrack import Feature, Image
+from deeptrack.features import Feature
+from deeptrack.image import Image
 
 
 #TODO ***??*** revise Reducer - torch, typing, docstring, unit test
