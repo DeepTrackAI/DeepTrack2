@@ -137,6 +137,7 @@ __all__ = [
     "random",
     "random_sample",
     "randn",
+    "standard_normal",
     "beta",
     "binomial",
     "choice",
@@ -264,6 +265,41 @@ def randn(*size: int) -> torch.Tensor:
         return torch.randn(())
 
     return torch.randn(*size)
+
+
+def standard_normal(
+    size: tuple[int, ...] | None = None,
+) -> torch.Tensor:
+    """Sample from the standard normal distribution.
+
+    Mirrors `numpy.random.standard_normal`.
+
+    Parameters
+    ----------
+    size: tuple[int, ...] | None, optional
+        Output shape. If `None`, returns a scalar tensor.
+
+    Returns
+    -------
+    torch.Tensor
+        Samples drawn from N(0, 1).
+
+    Examples
+    --------
+    >>> import deeptrack.backend.array_api_compat_ext.torch.random as rnd
+
+    >>> rnd.standard_normal((2, 3)).shape
+    torch.Size([2, 3])
+
+    >>> rnd.standard_normal()
+    tensor(-1.2938)
+
+    """
+
+    if size is None:
+        return torch.randn(())
+
+    return torch.randn(size)
 
 
 def beta(
