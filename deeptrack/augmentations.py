@@ -1693,6 +1693,5 @@ class PadToMultiplesOf(Pad):
         
         super().__init__(px=lambda: amount_to_pad, multiple=multiple, **kwargs)
 
-       
 
 # TODO: add resizing by rescaling
