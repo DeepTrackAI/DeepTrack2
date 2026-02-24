@@ -183,10 +183,12 @@ class Augmentation(Feature):
             return out
 
         # flat list (most common in pipelines)
-        if time_consistent:
-            self.seed()
-        return [self._augment_element(x, **kwargs) for x in elements]
-           
+        out = []
+        for x in elements:
+            if time_consistent:
+                self.seed()
+            out.append(self._augment_element(x, **kwargs))
+        return out  
     
     def _augment_element(
         self: Augmentation, 
@@ -210,14 +212,6 @@ class Augmentation(Feature):
         return self._augment_array(element, **kwargs)
 
     def _augment_array(self, array, **kwargs):
-
-        # # TBE *CM* this is a bit hacky, but it allows us to use the old style get() method for augmentations 
-        # # that haven't been updated yet, while still allowing new style get() methods to work. We check for 
-        # # the old style get() method first, and if it exists, we use it. If not, we check for the backend 
-        # # and use the appropriate method. This way, we can gradually update augmentations to the new style 
-        # # without breaking existing ones.
-        # if hasattr(self, "get") and type(self).get is not Augmentation.get:
-        #     return self.get(array, **kwargs)
 
         backend = self.get_backend()
 
@@ -1193,6 +1187,7 @@ class Crop(Augmentation):
             corner=corner,
             **kwargs,
         )
+
 
     def _get_xp(
         self: Crop, 
