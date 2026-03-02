@@ -42,6 +42,7 @@ from deeptrack.scatterers import *
 from deeptrack.elementwise import *
 from deeptrack.statistics import *
 from deeptrack.holography import *
+from deeptrack.wrappers import *
 
 if TORCH_AVAILABLE:
     import deeptrack.pytorch
