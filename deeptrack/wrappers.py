@@ -1,3 +1,24 @@
+"""Wrappers for arrays with properties.
+
+Wrappers are classes that wrap around arrays (either numpy or torch) and provide additional 
+properties and methods.
+Wrappers are designed to be flexible and can be used to represent various types of data. 
+They allow for easy access to properties and support arithmetic operations while maintaining 
+the underlying array structure.
+
+Module Structure
+----------------
+Classes:
+
+- `Wrapper`: Base class for any structure needing properties. It provides methods for accessing the underlying array, getting properties, and performing arithmetic operations.
+
+Example
+-------
+
+>>> 
+
+"""
+
 
 from __future__ import annotations
 
@@ -84,11 +105,6 @@ class Wrapper:
     def get_property(self, key: str, default: Any = None) -> Any:
         return getattr(self, key, self.properties.get(key, default))
     
-
-
-    # -------------------------
-    # Core helpers
-    # -------------------------
 
     def _binary_op(self, other, op, reverse=False):
         a = self.array
