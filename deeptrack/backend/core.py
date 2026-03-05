@@ -108,13 +108,13 @@ False
 
 """
 
-
 from __future__ import annotations
 
 from collections.abc import ItemsView, Iterator, KeysView, ValuesView
 import operator  # Operator overloading for computation nodes
 from weakref import WeakSet  # To manage relationships between nodes without
-                             # creating circular dependencies
+
+# creating circular dependencies
 from typing import Any, Callable
 import warnings
 
@@ -609,9 +609,9 @@ class DeepTrackDataDict:
         """
 
         # Ensure _ID is a tuple of integers.
-        assert isinstance(_ID, tuple), (
-            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
-        )
+        assert isinstance(
+            _ID, tuple
+        ), f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         assert all(isinstance(i, int) for i in _ID), (
             f"Data index {_ID} is not a tuple of integers. "
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
@@ -662,16 +662,14 @@ class DeepTrackDataDict:
 
         # Check if the given _ID is valid.
         # (Also: Ensure _ID is a tuple of integers.)
-        assert self.valid_index(_ID), (
-            f"{_ID} is not a valid index for {self}."
-        )
+        assert self.valid_index(_ID), f"{_ID} is not a valid index for {self}."
 
         # If `_ID` already exists, issue a warning and skip creation.
         if _ID in self._dict:
             warnings.warn(
                 f"Index {_ID!r} already exists in {self}. "
                 "No new entry was created.",
-                UserWarning
+                UserWarning,
             )
             return
 
@@ -715,9 +713,9 @@ class DeepTrackDataDict:
         """
 
         # Ensure `_ID` is a tuple of integers.
-        assert isinstance(_ID, tuple), (
-            f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
-        )
+        assert isinstance(
+            _ID, tuple
+        ), f"Data index {_ID} is not a tuple. Got: {type(_ID).__name__}."
         assert all(isinstance(i, int) for i in _ID), (
             f"Data index {_ID} is not a tuple of integers. "
             f"Got a tuple of types: {[type(i).__name__ for i in _ID]}."
