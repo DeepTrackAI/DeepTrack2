@@ -11,6 +11,7 @@ from deeptrack import (
     config,
     features,
     scatterers,
+    sources,
     TORCH_AVAILABLE,
 )
 # from deeptrack import units_registry as u
@@ -242,7 +243,7 @@ class TestAugmentations(unittest.TestCase):
                 expected_grad = torch.flip(w, dims=[1])
                 self.assertTrue(torch.equal(x.grad, expected_grad))
 
-            # check "pptics-like" geometry consistency with list inputs
+            # check "optics-like" geometry consistency with list inputs
             # (projection commutes with FlipLR for linear sum)
             project = self._ProjectSum()
 
@@ -904,6 +905,70 @@ class TestAugmentations(unittest.TestCase):
                 cropped.properties["output_region"],
                 expected_region,
             )
+
+    def test_Crop_time_consistent_bind(self):
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            # Deterministic base image
+            img = np.arange(64 * 64).reshape(64, 64).astype(np.float32)
+
+            if backend == "torch":
+                img = torch.tensor(img)
+
+            f1 = features.Value(img)
+
+            stacked = f1 & f1
+            crop = stacked >> augmentations.Crop(
+                crop=32,
+                crop_mode="retain",
+                corner="random",
+                time_consistent=True,
+            )
+
+            out1, out2 = crop.resolve()
+
+            # Must be identical
+            if backend == "torch":
+                self.assertTrue(torch.equal(out1, out2))
+            else:
+                self.assertTrue(np.array_equal(out1, out2))
+
+            # with source time_consistent is automatic because source is shared
+            source = sources.Source(
+                a=img
+            )
+
+            source = source.product(crop=[True])
+
+            # Create features from the source:
+            f1 = features.Value(source.a)
+
+            stacked = f1 & f1
+            crop = stacked >> augmentations.Crop(
+                source.crop,
+                crop=32,
+                crop_mode="retain",
+                corner="random",
+            )
+
+            out1, out2 = crop.resolve()
+
+            # Must be identical
+            if backend == "torch":
+                self.assertTrue(torch.equal(out1, out2))
+            else:
+                self.assertTrue(np.array_equal(out1, out2))
+
+
+
+
 
     def test_CropToMultiplesOf(self):
 

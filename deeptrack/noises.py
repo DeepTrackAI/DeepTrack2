@@ -40,6 +40,7 @@ import numpy as np
 
 from deeptrack import Feature, PropertyLike, TORCH_AVAILABLE
 
+
 if TORCH_AVAILABLE:
     import torch
 
@@ -58,7 +59,47 @@ if TYPE_CHECKING:
 
 
 class Noise(Feature):
-    """Base abstract noise class."""
+    """Base abstract noise class operating on array domains."""
+
+    def _process_and_get(self, inputs, **properties):
+        """Override Feature._process_and_get.
+         
+        Transparently supports ScatteredVolume / ScatteredField objects.
+
+        Subclasses must implement `get(array, **properties)` and
+        return a numpy array or torch tensor.
+        """
+
+        results = []
+
+        # Lazy import avoids circular dependency
+        try:
+            from deeptrack.scatterers import ScatteredVolume, ScatteredField
+            scattered_types = (ScatteredVolume, ScatteredField)
+        except Exception:
+            scattered_types = ()
+
+        for x in inputs:
+
+            # --- unwrap if scattered ---
+            if scattered_types and isinstance(x, scattered_types):
+                obj = x.copy()
+                arr = obj.array
+            else:
+                obj = None
+                arr = x
+
+            # --- apply noise on array ---
+            out = self.get(arr, **properties)
+
+            # --- rewrap if needed ---
+            if obj is not None:
+                obj.array = out
+                results.append(obj)
+            else:
+                results.append(out)
+
+        return results
 
 
 class Background(Noise):
@@ -385,47 +426,89 @@ class Poisson(Noise):
 
     def get(
         self: Poisson,
-        image: np.ndarray | torch.Tensor,
+        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
         snr: float,
         background: float,
         max_val: float,
         **kwargs: Any,
-    ) -> np.ndarray | torch.Tensor:
+    ) -> np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField:
+        
+        # # --- unwrap scattered objects ---
+        # is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
+        # if is_scattered:
+        #     obj = image.copy()
+        #     image = obj.array  # work on underlying array
 
-        # For a numpy backend.
-        if self.get_backend() == "numpy":
-            image[image < 0] = 0
+        backend = self.get_backend()
+
+        if backend == "numpy":
+            image = np.clip(image, 0, None)
             image_max = np.max(image)
             peak = np.abs(image_max - background)
 
-            rescale = snr ** 2 / peak ** 2
+            rescale = snr**2 / peak**2
             rescale = np.clip(
                 rescale, 1e-10, max_val / np.abs(image_max)
             )
-            try:
-                noisy_image = np.random.poisson(image * rescale) / rescale
-                return noisy_image
-            except ValueError:
-                raise ValueError(
-                    "NumPy poisson function errored due to too large value. "
-                    "Set max_val in dt.Poisson to a lower value to fix."
-                )
 
-        # For a Torch backend.
-        elif self.get_backend() == "torch":
+            noisy = np.random.poisson(image * rescale) / rescale
+
+        elif backend == "torch":
             image = torch.clamp(image, min=0)
             image_max = torch.max(image)
             peak = torch.abs(image_max - background)
 
-            rescale = snr ** 2 / peak ** 2
+            rescale = snr**2 / peak**2
             rescale = torch.clamp(
                 rescale, min=1e-10, max=max_val / torch.abs(image_max)
             )
-            try:
-                noisy_image = torch.poisson(image * rescale) / rescale
-                return noisy_image
-            except ValueError:
-                raise ValueError(
-                    "Torch Poisson function errored due to too large value. "
-                    "Set max_val in dt.Poisson to a lower value to fix."
-                )
+
+            noisy = torch.poisson(image * rescale) / rescale
+
+        else:
+            raise RuntimeError(f"Unknown backend: {backend}")
+
+        # # --- rewrap if needed ---
+        # if is_scattered:
+        #     obj.array = noisy
+        #     return obj
+
+        return noisy
+
+        # # For a numpy backend.
+        # if self.get_backend() == "numpy":
+        #     image[image < 0] = 0
+        #     image_max = np.max(image)
+        #     peak = np.abs(image_max - background)
+
+        #     rescale = snr ** 2 / peak ** 2
+        #     rescale = np.clip(
+        #         rescale, 1e-10, max_val / np.abs(image_max)
+        #     )
+        #     try:
+        #         noisy_image = np.random.poisson(image * rescale) / rescale
+        #         return noisy_image
+        #     except ValueError:
+        #         raise ValueError(
+        #             "NumPy poisson function errored due to too large value. "
+        #             "Set max_val in dt.Poisson to a lower value to fix."
+        #         )
+
+        # # For a Torch backend.
+        # elif self.get_backend() == "torch":
+        #     image = torch.clamp(image, min=0)
+        #     image_max = torch.max(image)
+        #     peak = torch.abs(image_max - background)
+
+        #     rescale = snr ** 2 / peak ** 2
+        #     rescale = torch.clamp(
+        #         rescale, min=1e-10, max=max_val / torch.abs(image_max)
+        #     )
+        #     try:
+        #         noisy_image = torch.poisson(image * rescale) / rescale
+        #         return noisy_image
+        #     except ValueError:
+        #         raise ValueError(
+        #             "Torch Poisson function errored due to too large value. "
+        #             "Set max_val in dt.Poisson to a lower value to fix."
+        #         )

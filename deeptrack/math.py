@@ -104,8 +104,6 @@ from scipy import ndimage
 import skimage
 import skimage.measure
 
-from deeptrack.backend.units import get_active_voxel_size
-
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
@@ -579,7 +577,6 @@ class NormalizeStandard(Feature):
 
 
     # ------ NumPy backend ------
-    
     def _get_numpy(
         self,
         image: np.ndarray,
@@ -605,7 +602,6 @@ class NormalizeStandard(Feature):
         return out
 
     # ------ Torch backend ------
-
     def _get_torch(
         self,
         image: torch.Tensor,
@@ -880,6 +876,13 @@ class Blur(Feature):
         **kwargs,
     ):
         backend = self.get_backend()
+        from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
+        # --- unwrap scattered objects ---
+        is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
+        if is_scattered:
+            obj = image.copy()
+            image = obj.array  # operate on underlying array
 
         if backend == "torch":
             # ---- HARD GUARD: torch only ----
@@ -888,7 +891,7 @@ class Blur(Feature):
                     "Torch backend selected but image is not a torch.Tensor"
                 )
 
-            return self._get_torch(
+            result = self._get_torch(
                 image,
                 **kwargs,
             )
@@ -900,13 +903,20 @@ class Blur(Feature):
                     "NumPy backend selected but image is not a np.ndarray"
                 )
 
-            return self._get_numpy(
+            result = self._get_numpy(
                 image,
                 **kwargs,
             )
 
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
+        
+            # --- rewrap if needed ---
+        if is_scattered:
+            obj.array = result
+            return obj
+        
+        return result
 
     def _get_numpy(self, image: np.ndarray, **kwargs):
         raise NotImplementedError
@@ -1135,19 +1145,21 @@ class GaussianBlur(Blur):
 
         """
 
-        self.sigma = float(sigma)
-        super().__init__(None, **kwargs)
+        # self.sigma = float(sigma)
+        # super().__init__(None, **kwargs)
+        super().__init__(sigma=sigma, **kwargs)
 
     # ---------- NumPy backend ----------
 
     def _get_numpy(
         self,
         image: np.ndarray,
+        sigma: float,
         **kwargs: Any,
     ) -> np.ndarray:
         return ndimage.gaussian_filter(
             image,
-            sigma=self.sigma,
+            sigma=sigma,
             mode=kwargs.get("mode", "reflect"),
             cval=kwargs.get("cval", 0),
         )
@@ -1174,12 +1186,12 @@ class GaussianBlur(Blur):
     def _get_torch(
         self,
         image: torch.Tensor,
+        sigma: float,
         **kwargs: Any,
     ) -> torch.Tensor:
-        import torch.nn.functional as F
 
         kernel_1d = self._gaussian_kernel_1d(
-            self.sigma,
+            sigma=sigma,
             device=image.device,
             dtype=image.dtype,
         )
