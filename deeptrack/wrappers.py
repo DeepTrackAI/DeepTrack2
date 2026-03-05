@@ -223,23 +223,6 @@ class Wrapper:
         """Shape of the wrapped array."""
         return self.array.shape
 
-    # TODO CM: pos3d and position should be in the subclass used for light
-    # microscopy, right?
-
-    # @property
-    # def pos3d(self) -> np.ndarray:
-    #    return np.array([*self.position, self.z], dtype=float)
-
-    # @property
-    # def position(self) -> np.ndarray:
-    #    pos = self.properties.get("position", None)
-    #    if pos is None:
-    #        return None
-    #    pos = np.asarray(pos, dtype=float)
-    #    if pos.ndim == 2 and pos.shape[0] == 1:
-    #        pos = pos[0]
-    #    return pos
-
     def copy(
         self: Wrapper,
         *,
@@ -466,23 +449,3 @@ class Wrapper:
 
     def __rxor__(self: Wrapper, other: Any) -> Wrapper:
         return self._binary_op(other, operator.xor, reverse=True)
-
-    # TODO CM: Can we erase this?
-
-    # def _apply(x, y):
-
-    # x_wrapped = hasattr(x, "array")
-    # if x_wrapped:
-    #     x_obj = x.copy()
-    #     x = x_obj.array
-
-    # if hasattr(y, "array"):
-    #     y = y.array
-
-    # result = self.op(x, y)
-
-    # if x_wrapped:
-    #     x_obj.array = result
-    #     return x_obj
-
-    # return result
