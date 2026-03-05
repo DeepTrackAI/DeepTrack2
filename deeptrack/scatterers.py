@@ -1531,96 +1531,23 @@ class MieStratifiedSphere(MieScatterer):
 @dataclass
 class ScatteredVolume(Wrapper):
     """Voxelized volume produced by a VolumeScatterer."""
-    pass
+
+    @property
+    def pos3d(self) -> np.ndarray:
+        return np.array([*self.position, self.z], dtype=float)
+
+    @property
+    def position(self) -> np.ndarray:
+        pos = self.properties.get("position", None)
+        if pos is None:
+            return None
+        pos = np.asarray(pos, dtype=float)
+        if pos.ndim == 2 and pos.shape[0] == 1:
+            pos = pos[0]
+        return pos
 
 
 @dataclass
 class ScatteredField(Wrapper):
     """Complex field produced by a FieldScatterer."""
     pass
-
-# @dataclass
-# class ScatteredBase:
-#     """Base class for scatterers (volumes and fields)."""
-
-#     array: np.ndarray | torch.Tensor
-#     properties: dict[str, Any] = field(default_factory=dict)
-
-#     @property
-#     def ndim(self) -> int:
-#         """Number of dimensions of the underlying array."""
-#         return self.array.ndim
-
-#     @property
-#     def shape(self) -> tuple[int, ...]:
-#         """Number of dimensions of the underlying array."""
-#         return self.array.shape
-
-#     @property
-#     def pos3d(self) -> np.ndarray:
-#         return np.array([*self.position, self.z], dtype=float)
-
-#     @property
-#     def position(self) -> np.ndarray:
-#         pos = self.properties.get("position", None)
-#         if pos is None:
-#             return None
-#         pos = np.asarray(pos, dtype=float)
-#         if pos.ndim == 2 and pos.shape[0] == 1:
-#             pos = pos[0]
-#         return pos
-
-#     def copy(
-#         self,
-#         *,
-#         array=None,
-#         properties=None,
-#     ) -> ScatteredBase:
-#         """Return a shallow copy of the ScatteredBase.
-
-#         Parameters
-#         ----------
-#         array : np.ndarray | torch.Tensor | None
-#             Optional replacement for the internal array.
-#             If None, the existing array is reused.
-#         properties : dict | None
-#             Optional replacement for properties.
-#             If None, a shallow copy of the current properties is used.
-
-#         Returns
-#         -------
-#         ScatteredBase
-#             A new ScatteredBase instance.
-#         """
-#         return type(self)(
-#             array=self.array if array is None else array,
-#             properties=self.properties.copy() if properties is None else properties,
-#         )
-
-
-#     def as_array(self) -> np.ndarray | torch.Tensor:
-#         """Return the underlying array.
-
-#         Notes
-#         -----
-#         The raw array is also directly available as ``scatterer.array``.
-#         This method exists mainly for API compatibility and clarity.
-
-#         """
-        
-#         return self.array
-
-#     def get_property(self, key: str, default: Any = None) -> Any:
-#         return getattr(self, key, self.properties.get(key, default))
-
-
-# @dataclass
-# class ScatteredVolume(ScatteredBase):
-#     """Voxelized volume produced by a VolumeScatterer."""
-#     pass
-
-
-# @dataclass
-# class ScatteredField(ScatteredBase):
-#     """Complex field produced by a FieldScatterer."""
-#     pass

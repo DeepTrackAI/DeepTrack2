@@ -967,9 +967,6 @@ class TestAugmentations(unittest.TestCase):
                 self.assertTrue(np.array_equal(out1, out2))
 
 
-
-
-
     def test_CropToMultiplesOf(self):
 
         backends = ["numpy"]
