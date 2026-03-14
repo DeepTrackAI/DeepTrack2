@@ -1,8 +1,9 @@
-""" Classes to augment images.
+""" Augmentation utilities.
 
-This module provides the `augmentations` DeepTrack2 classes
-that manipulates a scatterer or array object with various transformations.
-
+This module provides feature classes for applying spatial transformations
+and augmentations to images, arrays, scattered fields, or scattered volumes.
+Supported transformations include flipping, affine transformations,
+elastic deformations, cropping, and padding.
 When used in a training pipeline, these augmentations synthetically
 increase the volume of training data for data-driven learning models.
 
@@ -24,48 +25,37 @@ Key Features
 
 - **Caching**
 
-    To avoid redundant computations, the `Reuse class` offers
-    caching functionality to save the outputs of feature outputs to be reused
-    later, saving time and computational resources.
+    To avoid redundant computations, the `Reuse` feature caches a fixed number 
+    of outputs (`storage`) and reuses each cached output a specified number of 
+    times (`uses`) before recomputing.
 
 - **Cropping**
 
     Enables different methods to crop an image. Region-specific cropping, 
-    cropping based on multiples of height/width of and image, and crop to 
+    cropping based on multiples of the height/width of an image, and crop to 
     remove empty space at edges of an image.
 
 - **Padding**
 
     Padding operations allow you to extend the shape of an image by
     adding extra pixels around its edges, which is essential for ensuring
-    that the shape of the image stay consistent.
+    that the shape of the image stays consistent.
 
 Module Structure
 ----------------
 
 - `Augmentation`: Base class for augmentations.
-
 - `Reuse`: Stores and reuses feature outputs.
-
 - `FlipLR`: Flips image left to right.
-
-- `FlipUD`: Flips image up to down.
-
+- `FlipUD`: Flips an image up-down.
 - `FlipDiagonal`: Flips image along the diagonal.
-
 - `Affine`: Translation, scaling, rotation, shearing.
-
-- 'ElasticTransformation': Transform using a displacement field.
-
+- `ElasticTransformation`: Transform using a displacement field.
 - `Crop`: Crop regions of an image.
-
 - `CropToMultiplesOf`: Crops image until height/width is multiple of a value.
-
-- `CropTight`: Crops to remove empty space at start and end of a 3D array.
-
+- `CropTight`: Crops an array to remove empty space along its edges.
 - `Pad`: Pads image with values.
-
-- `PadMultiplesOf`: Pad images until height/width is a multiple of a value.
+- `PadToMultiplesOf`: Pad images until height/width is a multiple of a value.
 
 Examples
 --------
@@ -75,21 +65,28 @@ Flip an image of a particle up-down then flips left-right:
 
     >>> particle = dt.PointParticle()
     >>> optics = dt.Fluorescence()
-    >>> image = dt.Value(optics(particle)) 
-    ...     >> dt.FlipUD(p=1.0) >> dt.FlipLR(p=1.0)
+    >>> image = optics(particle)
+    ...     >> dt.FlipUD(p=1.0) 
+    ...     >> dt.FlipLR(p=1.0)
     image.plot()
 
 
 Reuse the output of a pipeline twice, augmented randomly by FlipLR.
 
     >>> import deeptrack as dt
-    
+    >>> import matplotlib.pyplot as plt
+
     >>> particle = dt.PointParticle()
     >>> optics = dt.Fluorescence()
-    >>> pipeline = dt.Reuse(pipeline, uses=2) >> dt.FlipLR()    
-    >>> image = optics(particle) >> pipeline
-    >>> image.plot()
-
+    >>> base = optics(particle) 
+    >>> pipeline = dt.Reuse(base, uses=2) >> dt.FlipLR()  
+    >>> fig, ax = plt.subplots(1, 8, figsize=(12,3))  
+    >>> for i in range(8):
+    >>>     img = pipeline.update()()
+    >>>     ax[i].imshow(img, cmap="gray")
+    >>>     ax[i].axis("off")
+    >>> plt.tight_layout()
+    >>> plt.show()
 
 """
 
@@ -112,42 +109,102 @@ if TORCH_AVAILABLE:
     import torch
     import torch.nn.functional as F
 
+__all__ = [
+    "Augmentation",
+    "Reuse",
+    "FlipLR",
+    "FlipUD",
+    "FlipDiagonal",
+    "Affine",
+    "ElasticTransformation",
+    "Crop",
+    "CropToMultiplesOf",
+    "CropTight",
+    "Pad",
+    "PadToMultiplesOf",
+]
+
 
 class Augmentation(Feature):
-    """Base abstract augmentation class.
+    """Base class for augmentation features.
 
-    This class provides the template for the other augmentation
-    classes to inherit from.
+    This class defines the interface for spatial augmentations applied to
+    arrays, scattered fields, or scattered volumes. Subclasses implement the
+    actual transformation logic while this class handles dispatching,
+    batching, and backend selection.
+
+    Supported inputs include:
+    - NumPy arrays
+    - Torch tensors
+    - `ScatteredVolume` and `ScatteredField` objects
+
+    When applied to scattered objects, both the underlying array and relevant
+    metadata (e.g. positions) may be updated.
 
     Parameters
     ----------
-    time_consistent: boolean
-       Whether to augment all images in a sequence equally.
+    time_consistent: bool, default=False
+        If True, the same augmentation parameters are applied to all elements
+        in a sequence. This is useful for time-series data where each frame
+        must undergo the same transformation.
 
     Methods
     -------
-    `_process_and_get(elements, time_consistent, **kwargs) -> list[list]`
-        Augments a list of scatterers or arrays and returns an output of the same type.   
-
-    `_augment_element(element, **kwargs)`
+    `_process_and_get(elements, time_consistent, **kwargs) --> list`
+        Augments a list of scatterers or arrays and returns an output of the 
+        same type.   
+    `_augment_element(element, **kwargs) -> ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor`
         Augments a single scatterer or array element.
+    `_augment_array(array, **kwargs) -> np.ndarray | torch.Tensor`
+        Augments a single array element, dispatching to the appropriate backend 
+        method.
+    `_get_xp(array, xp, **kwargs) -> np.ndarray | torch.Tensor`
+        Backend-agnostic implementation using the provided array module
+        (`numpy` or `torch`).
+    `_get_numpy(array, **kwargs) -> np.ndarray`
+        NumPy-specific implementation.
+    `_get_torch(array, **kwargs) -> torch.Tensor`
+        PyTorch-specific implementation.
+    `_update_properties(element, old_shape, new_shape, **kwargs) -> ScatteredVolume | ScatteredField`
+        Updates the properties of a `ScatteredVolume` or `ScatteredField`
+        after the array has been augmented.
 
-    `_augment_array(array, **kwargs)`
-        Augments a single array element, dispatching to the appropriate backend method.
+    Notes
+    -----
+    Subclasses typically implement one of the following:
+    - `_get_xp(array, xp, **kwargs)`
+    - `_get_numpy(array, **kwargs)`
+    - `_get_torch(array, **kwargs)`
+    If `_get_xp` is implemented it will be used for both backends.
 
-    # `_get_numpy(data, **kwargs) -> np.ndarray`
-    #     Abstract method to augment a single array element using numpy.
-
-    # `_get_torch(data, **kwargs) -> torch.Tensor`
-    #     Abstract method to augment a single array element using torch.
-    
     """
 
     def __init__(
         self: Augmentation,
         time_consistent: bool = False,
-        **kwargs,
-    ) -> None:
+        **kwargs: Any,
+    ):
+        """Initializes the Augmentation feature.
+
+        This constructor initializes the augmentation feature with the 
+        specified parameters. The `time_consistent` parameter determines 
+        whether the same augmentation parameters are applied to all elements in 
+        a sequence, which is important for time-series data.
+
+        Parameters
+        ----------
+        time_consistent: bool, default=False
+            If True, the same augmentation parameters are applied to all elements
+            in a sequence. This is useful for time-series data where each frame
+            must undergo the same transformation.
+        **kwargs: Any
+            Keyword arguments used to configure the feature. Each keyword
+            argument is wrapped as a `Property` and added to the feature's
+            `properties` attribute. These properties are resolved dynamically
+            at call time and passed to the `.get()` method.
+
+        """
+
         super().__init__(time_consistent=time_consistent, **kwargs)
 
 
@@ -155,16 +212,33 @@ class Augmentation(Feature):
         self: Augmentation,
         elements: list[ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor] | ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor | None,
         time_consistent: PropertyLike[bool],
-        **kwargs
-    ) -> list[list]:
-        """Augments a list of scatterers or arrays and returns an output of the same type.
-        
-        This method processes the input elements, which can be a single scatterer or array, a list of scatterers or 
-        arrays, or a list of lists of scatterers or arrays (for sequence batches). It applies the augmentation to each 
-        element while respecting the `time_consistent` property, which ensures that all images in a sequence are 
-        augmented in the same way if set to True.
-        
+        **kwargs: Any,
+    ) -> list[ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor] | ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor | None:
+        """Apply the augmentation to the provided elements.
+
+        The input may be a single element, a list of elements, or a list of
+        lists of elements (for sequence batches). The augmentation is applied
+        to each element while respecting the `time_consistent` property,
+        which ensures that all images in a sequence are augmented in the same
+        way if set to True.
+
+        Parameters
+        ----------
+        elements: list[...] | ... | None
+            Elements to be augmented.
+        time_consistent: PropertyLike[bool]
+            If True, the same augmentation parameters are applied to all
+            elements in a sequence.
+        **kwargs: Any
+            Additional keyword arguments passed to the augmentation methods.
+
+        Returns
+        -------
+        Same type as input
+            The augmented elements.
+
         """
+    
         #  None input
         if elements is None:
             return elements
@@ -195,8 +269,26 @@ class Augmentation(Feature):
         element: ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor, 
         **kwargs: Any,
     ) -> ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor:
-        """Augments a single scatterer or array element.
+        """Augment a single element.
 
+        If the element is a `ScatteredVolume` or `ScatteredField`, the 
+        underlying array is augmented and the associated metadata (e.g., 
+        positions) may be updated accordingly.
+        For NumPy arrays or Torch tensors, the augmentation is applied directly
+        to the array.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor
+            The element to be augmented.
+        **kwargs: Any
+            Additional keyword arguments passed to the augmentation methods.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField | np.ndarray | torch.Tensor
+            The augmented element.
+        
         """
 
         if isinstance(element, (ScatteredVolume, ScatteredField)):
@@ -205,13 +297,49 @@ class Augmentation(Feature):
             new_volume.array = self._augment_array(
                 new_volume.array, **kwargs
             )
-            new_volume = self._update_properties(new_volume, old_shape, new_volume.array.shape, **kwargs)
+            new_volume = self._update_properties(
+                new_volume, 
+                old_shape, 
+                new_volume.array.shape, 
+                **kwargs,
+            )
             return new_volume
 
         # Arrays
         return self._augment_array(element, **kwargs)
 
-    def _augment_array(self, array, **kwargs):
+    def _augment_array(
+        self: Augmentation, 
+        array: np.ndarray | torch.Tensor, 
+        **kwargs: Any,
+    ) -> np.ndarray | torch.Tensor:
+        """Augment a single array.
+
+        This method dispatches the augmentation to the appropriate backend
+        implementation depending on the active DeepTrack backend.
+        Subclasses typically implement one of the following methods:
+        - `_get_xp(array, xp, **kwargs)`
+            Backend-agnostic implementation using either `numpy` or `torch`.
+        - `_get_numpy(array, **kwargs)`
+            NumPy-specific implementation.
+        - `_get_torch(array, **kwargs)`
+            PyTorch-specific implementation.
+        If `_get_xp` is defined it takes precedence and will be used for both
+        backends.
+
+        Parameters
+        ----------
+        array: np.ndarray | torch.Tensor
+            The array to augment.
+        **kwargs: Any
+            Additional keyword arguments passed to the augmentation method.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            The augmented array.
+
+        """
 
         backend = self.get_backend()
 
@@ -227,46 +355,89 @@ class Augmentation(Feature):
 
         raise RuntimeError(f"Unknown backend: {backend}")
     
-    def _update_properties(self, element, old_shape, new_shape, **kwargs):
+    def _update_properties(
+        self: Augmentation, 
+        element: ScatteredVolume | ScatteredField, 
+        old_shape: tuple,  
+        new_shape: tuple, 
+        **kwargs: Any
+    ) -> ScatteredVolume | ScatteredField:
+        """Update metadata after an augmentation.
+
+        This method is called after the array contained in a `ScatteredVolume`
+        or `ScatteredField` has been augmented. Subclasses may override this
+        method to update spatial metadata (e.g., particle positions) when the
+        geometry of the array changes.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            The scattered object whose array has been augmented.
+        old_shape: tuple[int, ...]
+            Shape of the array before augmentation.
+        new_shape: tuple[int, ...]
+            Shape of the array after augmentation.
+        **kwargs: Any
+            Additional keyword arguments passed from the augmentation method.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The updated scattered object.
+
+        """
+        
         return element
 
 
 class Reuse(Feature):
-    """Caches and reuses the output of a feature.
+    """Cache and reuse the output of another feature.
 
-    `Reuse` wraps another feature and avoids recomputing it at every call.
+    `Reuse` wraps a feature and avoids recomputing it at every evaluation.
     Instead, it stores up to `storage` previously computed outputs and
-    reuses them for a controlled number of calls.
+    reuses them multiple times.
 
-    A new output from `feature` is computed when:
+    The cache is filled until it contains `storage` outputs. Afterwards,
+    each cached output is reused `uses` times before a new evaluation
+    cycle begins.
 
-    - The cache contains fewer than `storage` elements, or
-    - The internal call counter is a multiple of `uses * storage`.
-
-    Otherwise, one of the cached outputs is returned (uniformly at random).
-
-    This is useful when a computationally expensive feature should only
-    be evaluated intermittently while still producing varying outputs
-    through reuse.
+    This is useful when an expensive feature should only be evaluated
+    occasionally while still producing varying outputs through reuse.
 
     Parameters
     ----------
-    feature : Feature
-        The feature whose output should be cached and reused.
-
-    uses : PropertyLike[int], default=2
-        Number of times each cached output is reused before triggering
-        a new evaluation cycle.
-
-    storage : PropertyLike[int], default=1
-        Maximum number of outputs from `feature` stored in the cache.
-
+    feature: Feature
+        Feature whose output should be cached.
+    uses: PropertyLike[int], default=2
+        Number of times each cached output is reused.
+    storage: PropertyLike[int], default=1
+        Maximum number of cached outputs stored.
 
     Methods
     -------
-    `get(image: np.ndarray | torch.Tensor, uses: PropertyLike[int], storage: PropertyLike[int], **kwargs) -> np.ndarray | torch.Tensor`
-        Abstract method which performs the `Reuse` augmentation.
+    `get(data, uses, storage, **kwargs) -> np.ndarray | torch.Tensor`
+        Implements the caching and reuse logic. Evaluates the wrapped feature
+        only when necessary and otherwise returns cached outputs.
 
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> import numpy as np
+    >>> import matplotlib.pyplot as plt
+
+    >>> particle = dt.PointParticle(
+    ...     position=lambda: np.random.rand(2) * 64
+    ... )
+    >>> optics = dt.Fluorescence()
+    >>> base = optics(particle)
+
+    >>> pipeline = dt.Reuse(base, uses=2, storage=2)
+    >>> fig, ax = plt.subplots(1,8)
+
+    >>> for i in range(8):
+    ...     ax[i].imshow(pipeline.update()(), cmap="gray")
+    ...     ax[i].axis("off")
+    
     """
 
     __distributed__ = False
@@ -290,10 +461,32 @@ class Reuse(Feature):
         storage: int,
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
-        """Abstract method which performs the `Reuse` augmentation.
+        """Return a cached output or recompute the wrapped feature.
+
+        The cache stores up to `storage` outputs from the wrapped feature.
+        Each cached output is reused `uses` times before a new evaluation
+        cycle begins. Cached outputs are returned in cyclic order.
+
+        Parameters
+        ----------
+        data: np.ndarray | torch.Tensor
+            Input passed to the wrapped feature.
+        uses: int
+            Number of times each cached output is reused.
+        storage: int
+            Maximum number of outputs stored in the cache.
+        **kwargs: Any
+            Additional keyword arguments passed to the wrapped feature when
+            recomputation is necessary.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            Cached output if reuse is possible, otherwise a newly computed 
+            output from the wrapped feature.
 
         """
-
+       
         recompute = (
             len(self.cache) < storage
             or self.counter % (uses * storage) == 0
@@ -302,7 +495,8 @@ class Reuse(Feature):
         if recompute:
             output = self.feature(data)
             self.cache.append(output)
-            self.cache = self.cache[-storage:]
+            if len(self.cache) > storage:
+                self.cache.pop(0)
         else:
             index = self.counter % storage
             output = self.cache[index]
@@ -313,35 +507,70 @@ class Reuse(Feature):
 
 
 class FlipLR(Augmentation):
-    """Flips images left-right.
+    """Flip images left-right.
 
-    If scattered volume or field, updates all properties called "position"
-    to flip the second index (width axis) of the image.
+    If the input is a `ScatteredVolume` or `ScatteredField`, the underlying
+    array is flipped along the width axis and any `"position"` metadata is
+    updated accordingly.
 
     Parameters
     ----------
-    p: float
-       Probability of flipping, default is 0.5.
-
-    augment: bool
-       Whether to perform the augmentation.
+    p: PropertyLike[float], default=0.5
+        Probability of performing the flip.
+    augment: PropertyLike[bool] | None
+        Boolean controlling whether the augmentation is applied. If `None`,
+        the augmentation is performed with probability `p`.
 
     Methods
     -------
     `_get_xp(image: np.ndarray | torch.Tensor, xp: Any, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
         Abstract method which performs the `FlipLR` augmentation.
-
     `_update_properties(element: ScatteredVolume | ScatteredField, old_shape: tuple, new_shape: tuple, augment: PropertyLike[bool], **kwargs) -> ScatteredVolume | ScatteredField`
-        Abstract method to update the properties of the scattered volume or field.
-       
+        Abstract method to update the properties of the scattered volume or 
+        field.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle()
+    >>> optics = dt.Fluorescence()
+    >>> image = optics(particle) >> dt.FlipLR(p=1.0)
+    >>> image.plot()
+
     """
 
     def __init__(
         self: FlipLR,
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
-        **kwargs
-    ) -> None:
+        **kwargs: Any,
+    ):
+        """Initialize the FlipLR augmentation.
+        
+        This constructor initializes the `FlipLR` augmentation with the 
+        specified parameters. The `p` parameter controls the probability of 
+        performing the flip, while the `augment` parameter can be used to 
+        directly control whether the augmentation is applied. If `augment` is 
+        set to `None`, the augmentation will be performed with probability `p`. 
+        This allows for flexible control over when the flip is applied, making
+        it suitable for use in data augmentation pipelines where random 
+        transformations are desired.
+
+        Parameters
+        ----------
+        p: PropertyLike[float], default=0.5
+            Probability of performing the flip.
+        augment: PropertyLike[bool] | None
+            Boolean controlling whether the augmentation is applied. If `None`,
+            the augmentation is performed with probability `p`.
+         **kwargs: Any
+            Additional keyword arguments used to configure the feature. Each keyword
+            argument is wrapped as a `Property` and added to the feature's
+            `properties` attribute. These properties are resolved dynamically
+            at call time and passed to the `.get()` method.
+
+        """
+
         super().__init__(
             p=p,
             augment=(
@@ -355,8 +584,25 @@ class FlipLR(Augmentation):
         array: np.ndarray | torch.Tensor, 
         xp: Any, 
         augment: bool, 
-        **kwargs,
+        **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
+        """Flip an array along the width axis.
+
+        Parameters
+        ----------
+        array: np.ndarray | torch.Tensor
+            Input array to be augmented.
+        xp: module
+            Backend module (`numpy` or `torch`) used for array operations.
+        augment: bool
+            Whether the flip should be applied.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            Flipped array if `augment` is True, otherwise the input array.
+        
+        """
 
         if not augment:
             return array
@@ -373,7 +619,28 @@ class FlipLR(Augmentation):
         new_shape: tuple, 
         **kwargs,
     ) -> ScatteredVolume | ScatteredField:
+        """Update position metadata after a left-right flip.
 
+        If the element contains `"position"` properties, their width
+        coordinate is mirrored to match the flipped array.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            Scattered object whose array has been flipped.
+        old_shape: tuple
+            Shape of the array before augmentation.
+        new_shape: tuple
+            Shape of the array after augmentation.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The updated scattered object.
+
+        """
 
         if hasattr(element, "properties"):
             for prop in element.properties:
@@ -388,18 +655,70 @@ class FlipLR(Augmentation):
 
 
 class FlipUD(Augmentation):
-    """Flips images up-down.
+    """Flip images up-down.
 
-    If scattered volume or field, updates all properties called "position"
-    to flip the first index (height axis) of the image.
-    """
+        If the input is a `ScatteredVolume` or `ScatteredField`, the underlying
+        array is flipped along the height axis and any `"position"` metadata is
+        updated accordingly.
+
+        Parameters
+        ----------
+        p: PropertyLike[float], default=0.5
+            Probability of performing the flip.
+        augment: PropertyLike[bool] | None
+            Boolean controlling whether the augmentation is applied. If `None`,
+            the augmentation is performed with probability `p`.
+
+        Methods
+        -------
+        `_get_xp(image: np.ndarray | torch.Tensor, xp: Any, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
+            Abstract method which performs the `FlipUD` augmentation.
+        `_update_properties(element: ScatteredVolume | ScatteredField, old_shape: tuple, new_shape: tuple, augment: PropertyLike[bool], **kwargs) -> ScatteredVolume | ScatteredField`
+            Abstract method to update the properties of the scattered volume or 
+            field.
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> particle = dt.PointParticle()
+        >>> optics = dt.Fluorescence()
+        >>> image = optics(particle) >> dt.FlipUD(p=1.0)
+        >>> image.plot()
+
+        """
 
     def __init__(
         self: FlipUD,
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
-    ) -> None:
+    ):
+        """Initialize the FlipUD augmentation.
+        
+        This constructor initializes the `FlipUD` augmentation with the 
+        specified parameters. The `p` parameter controls the probability of 
+        performing the flip, while the `augment` parameter can be used to 
+        directly control whether the augmentation is applied. If `augment` is 
+        set to `None`, the augmentation will be performed with probability `p`. 
+        This allows for flexible control over when the flip is applied, making
+        it suitable for use in data augmentation pipelines where random 
+        transformations are desired.
+
+        Parameters
+        ----------
+        p: PropertyLike[float], default=0.5
+            Probability of performing the flip.
+        augment: PropertyLike[bool] | None
+            Boolean controlling whether the augmentation is applied. If `None`,
+            the augmentation is performed with probability `p`.
+        **kwargs: Any
+            Additional keyword arguments used to configure the feature. Each 
+            keyword argument is wrapped as a `Property` and added to the 
+            feature's `properties` attribute. These properties are resolved 
+            dynamically at call time and passed to the `.get()` method.
+
+        """
+
         super().__init__(
             p=p,
             augment=(
@@ -415,7 +734,24 @@ class FlipUD(Augmentation):
         augment: bool,
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
+        """Flip an array along the height axis.
 
+        Parameters
+        ----------
+        array: np.ndarray | torch.Tensor
+            Input array to be augmented.
+        xp: module
+            Backend module (`numpy` or `torch`) used for array operations.
+        augment: bool
+            Whether the flip should be applied.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            Flipped array if `augment` is True, otherwise the input array.
+        
+        """
+        
         if not augment:
             return array
 
@@ -431,6 +767,28 @@ class FlipUD(Augmentation):
         new_shape: tuple,
         **kwargs,
     ) -> ScatteredVolume | ScatteredField:
+        """Update position metadata after an up-down flip.
+
+        If the element contains `"position"` properties, their height
+        coordinate is mirrored to match the flipped array.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            Scattered object whose array has been flipped.
+        old_shape: tuple
+            Shape of the array before augmentation.
+        new_shape: tuple
+            Shape of the array after augmentation.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The updated scattered object.
+            
+        """
 
         if hasattr(element, "properties"):
             for prop in element.properties:
@@ -449,10 +807,36 @@ class FlipUD(Augmentation):
 
 
 class FlipDiagonal(Augmentation):
-    """Flips images along the main diagonal (transpose).
+    """Flip images along the diagonal.
 
-    If scattered volume or field, swaps position coordinates
-    (y, x) -> (x, y).
+    If the input is a `ScatteredVolume` or `ScatteredField`, the underlying
+    array is transposed and any `"position"` metadata is updated
+    accordingly.
+
+    Parameters
+    ----------
+    p: PropertyLike[float], default=0.5
+        Probability of performing the flip.
+    augment: PropertyLike[bool] | None
+        Boolean controlling whether the augmentation is applied. If `None`,
+        the augmentation is performed with probability `p`.
+
+    Methods
+    -------
+    `_get_xp(image: np.ndarray | torch.Tensor, xp: Any, augment: PropertyLike[bool], **kwargs) -> np.ndarray | torch.Tensor`
+        Abstract method which performs the `FlipDiagonal` augmentation.
+    `_update_properties(element: ScatteredVolume | ScatteredField, old_shape: tuple, new_shape: tuple, augment: PropertyLike[bool], **kwargs) -> ScatteredVolume | ScatteredField`
+        Abstract method to update the properties of the scattered volume or 
+        field.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle()
+    >>> optics = dt.Fluorescence()
+    >>> image = optics(particle) >> dt.FlipDiagonal(p=1.0)
+    >>> image.plot()
+
     """
 
     def __init__(
@@ -460,7 +844,32 @@ class FlipDiagonal(Augmentation):
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs
-    ) -> None:
+    ):
+        """Initialize the FlipDiagonal augmentation.
+        
+        This constructor initializes the `FlipDiagonal` augmentation with the
+        specified parameters. The `p` parameter controls the probability of
+        performing the flip, while the `augment` parameter can be used to
+        directly control whether the augmentation is applied. If `augment` is
+        set to `None`, the augmentation will be performed with probability `p`.
+        This allows for flexible control over when the flip is applied, making
+        it suitable for use in data augmentation pipelines where random
+        transformations are desired.
+
+        Parameters
+        ----------
+        p: PropertyLike[float], default=0.5
+            Probability of performing the flip.
+        augment: PropertyLike[bool] | None
+            Boolean controlling whether the augmentation is applied. If `None`,
+            the augmentation is performed with probability `p`.
+        **kwargs: Any
+            Additional keyword arguments used to configure the feature. Each
+            keyword argument is wrapped as a `Property` and added to the
+            feature's `properties` attribute. These properties are resolved
+            dynamically at call time and passed to the `.get()` method.
+        
+        """
         super().__init__(
             p=p,
             augment=(
@@ -476,6 +885,23 @@ class FlipDiagonal(Augmentation):
         augment: bool,
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
+        """Flip an array along the diagonal.
+
+        Parameters
+        ----------
+        array: np.ndarray | torch.Tensor
+            Input array to be augmented.
+        xp: module
+            Backend module (`numpy` or `torch`) used for array operations.
+        augment: bool
+            Whether the flip should be applied.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            Flipped array if `augment` is True, otherwise the input array.
+        
+        """
 
         if not augment:
             return array
@@ -492,6 +918,28 @@ class FlipDiagonal(Augmentation):
         new_shape: tuple,
         **kwargs,
     ) -> ScatteredVolume | ScatteredField:
+        """Update position metadata after a diagonal flip.
+
+        If the element contains `"position"` properties, their height and
+        width coordinates are swapped to match the transposed array.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            Scattered object whose array has been flipped.
+        old_shape: tuple
+            Shape of the array before augmentation.
+        new_shape: tuple
+            Shape of the array after augmentation.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The updated scattered object.
+            
+        """
 
         if hasattr(element, "properties"):
             for prop in element.properties:
@@ -513,43 +961,39 @@ class FlipDiagonal(Augmentation):
 
 
 class Affine(Augmentation):
-    """Augmenter to apply affine transformations to images.
+    """Apply affine transformations to images.
 
-    Affine transformations include:
+    This augmentation performs geometric transformations including:
+    - translation
+    - scaling
+    - rotation
+    - shearing
 
-        - `Translation`
-        - `Scaling`
-        - `Rotation`
-        - `Shearing`
-
-    Some transformations involve interpolations between several pixels
-    of the input image to generate output pixel values. The parameter `order`
-    deals with the method of interpolation used for this.
+    Some transformations require interpolating between neighboring pixels
+    to compute new output values. The `order` parameter controls the
+    interpolation method.
 
     Parameters
     ----------
-    scale: float or tuple of floats or list of floats or dict
-        Scaling factor to use, where ``1.0`` denotes "no change" and
-        ``0.5`` is zoomed out to ``50`` percent of the original size.
-        If two values are provided (using tuple, list, or dict),
-        the two first dimensions of the input are scaled individually.
+    scale: PropertyLike[float] | tuple[float, float]
+        Scaling factor. A value of `1.0` corresponds to no scaling.
+        If two values are provided, the height and width are scaled
+        independently.
 
-    translate: float or tuple of floats or list of floats or dict
-        Translation in pixels.
+    translate: PropertyLike[float | tuple[float, float]] | None
+        Translation in pixels along the height and width axes.
 
-    translate_px: float or tuple of floats or list of floats or dict
-        DEPRECATED, use translate.
+    translate_px: PropertyLike[float], default=0
+        Legacy alias for `translate`. Used when `translate` is not provided.
 
-    rotate: float
-        Rotation in radians, i.e. Rotation happens around the *center* of the
-        image.
+    rotate: PropertyLike[float], default=0
+        Rotation angle in radians around the image center.
 
-    shear: float
-        Shear in radians. Values in the range (-pi/4, pi/4) are common.
+    shear: PropertyLike[float], default=0
+        Shear angle in radians.
 
-    order: int
-        Interpolation order to use. Same meaning as in ``skimage``:
-
+    order: PropertyLike[int], default=1
+        Interpolation order used when resampling the image.
             * ``0``: ``Nearest-neighbor``
             * ``1``: ``Bi-linear`` (default)
             * ``2``: ``Bi-quadratic`` (not recommended by skimage)
@@ -557,21 +1001,21 @@ class Affine(Augmentation):
             * ``4``: ``Bi-quartic``
             * ``5``: ``Bi-quintic``
 
-    cval: float
-        The constant intensity value used to fill in new pixels.
-        This value is only used if `mode` is set to ``constant``.
+    cval: PropertyLike[float], default=0
+        Constant value used to fill pixels when `mode="constant"`.
 
-    mode: str
-        Parameter that defines newly created pixels.
-        May take the same values as in :func:`scipy.ndimage.affine_transform`,
-        i.e. ``constant``, ``nearest``, ``reflect`` or ``wrap``.
+    mode: PropertyLike[str], default="reflect"
+        Boundary mode used when sampling outside the image domain.
+        Options match `scipy.ndimage.affine_transform`.
 
     Methods
     -------
-    `_process_properties(properties: dict) -> dict`
-        Processes the properties of the image.
-    `get(image: Image | np.ndarray, scale: PropertyLike[float], translate: PropertyLike[float], rotate: PropertyLike[float], shear: PropertyLike[float], **kwargs) -> Image`
-        Abstract method which performs the `Affine` augmentation.
+    `get_numpy(image, **kwargs) -> np.ndarray`
+        Applies the affine transformation to a NumPy array.
+    `get_torch(image, **kwargs) -> torch.Tensor`
+        Applies the affine transformation to a PyTorch tensor.
+    `update_properties(element, old_shape, new_shape, **kwargs) -> ScatteredVolume | ScatteredField`
+        Updates the properties of a `ScatteredVolume` or `ScatteredField` after
 
     """
 
@@ -586,7 +1030,7 @@ class Affine(Augmentation):
         cval: PropertyLike[float] = 0.0,
         mode: PropertyLike[str] = "reflect",
         **kwargs
-    ) -> None:
+    ):
         
         if translate is None:
             translate = translate_px
@@ -613,7 +1057,68 @@ class Affine(Augmentation):
         cval=0.0,
         mode="reflect",
         **kwargs,
-    ):
+    ) -> np.ndarray:
+        """Apply the affine transformation to a NumPy array.
+        
+        Parameters
+        ----------
+        array: np.ndarray
+            Input array to be augmented.
+        scale: float | tuple[float, float]
+            Scaling factor. A value of `1.0` corresponds to no scaling.
+            If two values are provided, the height and width are scaled
+            independently.
+        translate: float | tuple[float, float] | None
+            Translation in pixels along the height and width axes. If `None`,
+            no translation is applied.
+        rotate: float, default=0
+            Rotation angle in radians around the image center.
+        shear: float, default=0
+            Shear angle in radians.
+        order: int, default=1
+            Interpolation order used when resampling the image.
+                * `0`: `Nearest-neighbor`
+                * `1`: `Bi-linear` (default)
+                * `2`: `Bi-quadratic` (not recommended by skimage)
+                * `3`: `Bi-cubic`
+                * `4`: `Bi-quartic`
+                * `5`: `Bi-quintic`
+        cval: float, default=0
+            Constant value used to fill pixels when `mode="constant"`.
+        mode: str, default="reflect"
+            Boundary mode used when sampling outside the image domain. Options
+            match `scipy.ndimage.affine_transform`. Supported modes include:
+                * `reflect`
+                * `nearest`
+                * `constant`
+                * `wrap`
+            
+        Returns
+        -------
+        np.ndarray
+            The augmented array after applying the affine transformation.    
+
+        Examples
+        --------
+        >>> import deeptrack as dt
+        >>> import numpy as np
+        >>> import matplotlib.pyplot as plt
+        >>> particle = dt.PointParticle()
+        >>> optics = dt.Fluorescence()
+        >>> affine = dt.Affine(
+        ...     scale=1.2,
+        ...     translate=10,
+        ...     rotate=np.pi / 6,
+        ...     shear=np.pi / 12,
+        ...     order=3,
+        ...     cval=0,
+        ...     mode="constant",
+        ... )
+        >>> pipeline = optics(particle) >> affine
+        >>> image = pipeline.update()()
+        >>> plt.imshow(image, cmap="gray")
+
+        """
 
         from scipy.ndimage import affine_transform
 
@@ -640,7 +1145,7 @@ class Affine(Augmentation):
         matrix = scale_map @ rotation_map @ shear_map
 
         shape = array.shape
-        center = (np.array(shape[:2], dtype=float) -1)/ 2
+        center = (np.array(shape[:2], dtype=float) - 1) / 2
         offset = center - matrix @ center - np.array([dy, dx], dtype=float)
 
         forward = np.linalg.inv(matrix)
@@ -692,7 +1197,55 @@ class Affine(Augmentation):
         cval=0.0,
         mode="reflect",
         **kwargs,
-    ):
+    ) -> torch.Tensor:
+        """Apply the affine transformation to a PyTorch tensor.
+        
+        Parameters
+        ----------
+        array: torch.Tensor
+            Input tensor to be augmented.
+        scale: float | tuple[float, float]
+            Scaling factor. A value of `1.0` corresponds to no scaling.
+            If two values are provided, the height and width are scaled
+            independently.
+        translate: float | tuple[float, float] | None
+            Translation in pixels along the height and width axes. If `None`,
+            no translation is applied.
+        rotate: float, default=0
+            Rotation angle in radians around the image center.
+        shear: float, default=0
+            Shear angle in radians.
+        order: int, default=1
+            Interpolation order used when resampling the image.
+                * `0`: `Nearest-neighbor`
+                * `1`: `Bi-linear` (default)
+                * `2`: `Bi-quadratic` (not recommended by skimage)
+                * `3`: `Bi-cubic`
+                * `4`: `Bi-quartic`
+                * `5`: `Bi-quintic`
+        cval: float, default=0
+            Constant value used to fill pixels when `mode="constant"`. Note that
+            PyTorch's `grid_sample` does not support a constant fill mode, so
+            this parameter is ignored in the PyTorch implementation.
+        mode: str, default="reflect"
+            Boundary mode used when sampling outside the image domain. Options
+            match `scipy.ndimage.affine_transform`. Supported modes include:
+                * `reflect`
+                * `nearest`
+                * `constant` (treated as `zeros` in the PyTorch implementation)
+                * `wrap` (only supported in the PyTorch implementation)
+                If `mode="wrap"` is used in the PyTorch implementation, it will
+                be treated as `mode="wrap"` to enable wrapping behavior. In the
+                NumPy implementation, `mode="wrap"` is treated as 
+                `mode="constant"` with `cval=0` to avoid issues with negative 
+                indices in `scipy.ndimage.affine_transform`.
+
+        Returns
+        -------
+        torch.Tensor
+            The augmented tensor after applying the affine transformation.
+        
+        """
 
         if array.ndim not in (2, 3):
             raise ValueError("Affine only supports 2D or 3D tensors.")
@@ -715,7 +1268,11 @@ class Affine(Augmentation):
         sr = torch.sin(torch.tensor(rotate, dtype=dtype, device=device))
         k = torch.tan(torch.tensor(shear, dtype=dtype, device=device))
 
-        scale_map = torch.tensor([[1 / fy, 0], [0, 1 / fx]], dtype=dtype, device=device)
+        scale_map = torch.tensor(
+            [[1 / fy, 0], [0, 1 / fx]], 
+            dtype=dtype, 
+            device=device,
+            )
 
         rotation_map = torch.stack([
             torch.stack([cr, sr]),
@@ -811,11 +1368,32 @@ class Affine(Augmentation):
         old_shape,
         new_shape,
         **kwargs,
-    ):
-        """Update geometric metadata (positions, directions) after affine transform.
+    ) -> ScatteredVolume | ScatteredField:
+        """Update geometric metadata after an affine transform.
 
-            - All metadata (positions, directions) are NumPy arrays.
-            - Backend affects only image resampling, not metadata.
+        Positions and direction vectors stored in the element metadata are
+        transformed using the inverse affine mapping applied to the image.
+        This ensures that geometric annotations remain consistent with the
+        warped image.
+        Metadata is always processed as NumPy arrays, independent of the
+        backend used for image resampling.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            The element whose properties are to be updated.
+        old_shape: tuple
+            The shape of the image before augmentation.
+        new_shape: tuple
+            The shape of the image after augmentation.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+        
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The element with updated properties reflecting the affine transformation.
+
         """
 
         if not isinstance(element.properties, dict):
@@ -867,66 +1445,63 @@ class Affine(Augmentation):
 
 
 class ElasticTransformation(Augmentation):
-    """Transform images using displacement fields.
+    """Apply elastic distortions to images.
 
-    The augmenter creates a random distortion field using `alpha` and `sigma`,
-    which define the strength and smoothness of the field respectively.
-    These are used to transform the input locally.
-
-    Note:
-        This augmentation does not currently update the position property
-        of the image, meaning that it is not recommended to use it if
-        the data label is derived from the position properties of the
-        resulting image.
-
-    For a detailed explanation, see:
-
-        Simard, Steinkraus and Platt
-        Best Practices for Convolutional Neural Networks applied to Visual
-        Document Analysis
-        in Proc. of the International Conference on Document Analysis and
-        Recognition, 2003.
-
+    This augmentation generates a random displacement field that locally
+    warps the input image. The displacement field is created by sampling
+    random noise and smoothing it with a Gaussian kernel.
+    The parameters `alpha` and `sigma` control the strength and smoothness
+    of the distortion field respectively.
 
     Parameters
     ----------
-    alpha: float
-        Strength of the distortion field.
-        Common values are in the range (10, 100)
+    alpha: PropertyLike[float], default=20
+        Strength of the displacement field.
 
-    sigma: float
-        Standard deviation of the gaussian kernel used to smooth the distortion
-        fields. Common values are in the range (1, 10)
+    sigma: PropertyLike[float], default=2
+        Standard deviation of the Gaussian kernel used to smooth the
+        displacement field.
 
-    ignore_last_dim: bool
-        Whether to skip creating a distortion field for the last dimension.
-        This is often desired if the last dimension is a channel dimension
-        (such as a color image.) In that case, the three channels are
-        transformed identically and do not "bleed" into eachother.
+    ignore_last_dim: PropertyLike[bool], default=True
+        If True, the last dimension is assumed to represent channels and
+        the same displacement field is applied to all channels.
 
-    order: int
-        Interpolation order to use. Takes integers from 0 to 5
+    order: PropertyLike[int], default=3
+        Interpolation order used when resampling the image.
+            * 0: Nearest-neighbor
+            * 1: Bi-linear
+            * 2: Bi-quadratic
+            * 3: Bi-cubic
+            * 4: Bi-quartic
+            * 5: Bi-quintic
 
-            * 0: ``Nearest-neighbor``
-            * 1: ``Bi-linear`` (default)
-            * 2: ``Bi-quadratic`` (not recommended by skimage)
-            * 3: ``Bi-cubic``
-            * 4: ``Bi-quartic``
-            * 5: ``Bi-quintic``
+    cval: PropertyLike[float], default=0
+        Constant value used when `mode="constant"`.
 
-    cval: float
-        The constant intensity value used to fill in new pixels.
-        This value is only used if `mode` is set to ``constant``.
-
-    mode: str
-        Parameter that defines newly created pixels.
-        May take the same values as in :func:`scipy.ndimage.map_coordinates`,
-        i.e. ``constant``, ``nearest``, ``reflect`` or ``wrap``.
+    mode: PropertyLike[str], default="constant"
+        Boundary mode used when sampling outside the image domain.
+        Matches `scipy.ndimage.map_coordinates`.
 
     Methods
     -------
-    `get(image: Image | np.ndarray, sigma: PropertyLike[float], alpha: PropertyLike[float], ignore_last_dim: PropertyLike[bool], **kwargs) -> Image`
-        Abstract method which performs the `ElasticTransformation` augmentation.
+    `get_numpy(image, **kwargs) -> np.ndarray`
+        Applies the elastic transformation to a NumPy array.
+    `get_torch(image, **kwargs) -> torch.Tensor`
+        Applies the elastic transformation to a PyTorch tensor.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.Ellipse()
+    >>> optics = dt.Fluorescence()
+    >>> elastic = dt.ElasticTransformation(alpha=30, sigma=3)
+    >>> image = optics(particle) >> elastic
+    >>> image.plot()
+        
+    Notes
+    -----
+    This augmentation does not update `"position"` metadata. It should not
+    be used if labels depend on spatial coordinates derived from the image.
 
     """
 
@@ -939,7 +1514,43 @@ class ElasticTransformation(Augmentation):
         cval: PropertyLike[float] = 0,
         mode: PropertyLike[str] = "constant",
         **kwargs
-    ) -> None:
+    ):
+        """Initialize the elastic transformation.
+
+        The parameters control the strength (`alpha`) and smoothness (`sigma`)
+        of the displacement field, as well as interpolation and boundary
+        behavior during resampling.
+
+        Parameters
+        ----------
+        alpha: PropertyLike[float], default=20
+            Strength of the displacement field.
+        sigma: PropertyLike[float], default=2
+            Standard deviation of the Gaussian kernel used to smooth the
+            displacement field.
+        ignore_last_dim: PropertyLike[bool], default=True
+            If True, the last dimension is assumed to represent channels and
+            the same displacement field is applied to all channels.
+        order: PropertyLike[int], default=3
+            Interpolation order used when resampling the image.
+                * 0: Nearest-neighbor
+                * 1: Bi-linear
+                * 2: Bi-quadratic
+                * 3: Bi-cubic
+                * 4: Bi-quartic
+                * 5: Bi-quintic
+        cval: PropertyLike[float], default=0
+            Constant value used when `mode="constant"`.
+        mode: PropertyLike[str], default="constant"
+            Boundary mode used when sampling outside the image domain. Matches
+            `scipy.ndimage.map_coordinates`. Supported modes include:
+                * `reflect`
+                * `nearest`
+                * `constant`
+                * `wrap`
+        
+        """
+        
         super().__init__(
             alpha=alpha,
             sigma=sigma,
@@ -958,7 +1569,27 @@ class ElasticTransformation(Augmentation):
         ignore_last_dim: bool,
         **kwargs
     ) -> np.ndarray:
-        """Abstract method which performs the `ElasticTransformation` augmentation.
+        """Apply elastic distortion to a NumPy array.
+
+        A random displacement field is generated using Gaussian-smoothed
+        noise and applied to the image using `scipy.ndimage.map_coordinates`.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            Input image to transform.
+        sigma: float
+            Standard deviation of the Gaussian smoothing kernel.
+        alpha: float
+            Strength of the displacement field.
+        ignore_last_dim: bool
+            If True, the last dimension is treated as channels and the same
+            displacement field is applied to all channels.
+
+        Returns
+        -------
+        np.ndarray
+            Distorted image.
 
         """
 
@@ -1026,7 +1657,29 @@ class ElasticTransformation(Augmentation):
         mode: str = "constant",
         **kwargs,
     ) -> torch.Tensor:
+        """Apply elastic distortion to a PyTorch tensor.
 
+        A random displacement field is generated and smoothed using a
+        Gaussian kernel implemented with convolution. The resulting field
+        is applied using `torch.nn.functional.grid_sample`.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor with shape `(H, W)` or `(H, W, C)`.
+        sigma: float
+            Standard deviation of the Gaussian smoothing kernel.
+        alpha: float
+            Strength of the displacement field.
+        ignore_last_dim: bool
+            If True, the same displacement field is applied to all channels.
+
+        Returns
+        -------
+        torch.Tensor
+            Distorted tensor with the same shape as the input.
+
+        """
 
         if image.ndim not in (2, 3):
             raise ValueError("ElasticTransformation only supports 2D or 3D tensors.")
@@ -1140,46 +1793,88 @@ class ElasticTransformation(Augmentation):
         return out.squeeze(0).permute(1, 2, 0)
 
 
-
 class Crop(Augmentation):
-    """Crops a regions of an image.
+    """Crop a region of an image.
+
+    The cropped region can be specified either by defining the number of
+    pixels to remove from the borders or by specifying the size of the
+    output image.
 
     Parameters
     ----------
-    feature: Feature or list of Features
-        Feature(s) to augment.
+    crop: int | tuple[int, ...] | list[int] | Callable
+        Defines the cropping amount. If an integer, the same value is used
+        for all axes. If a tuple or list, values are interpreted per axis.
+        If `crop_mode="retain"`, `crop` specifies the output size.
+        If `crop_mode="remove"`, `crop` specifies the number of pixels
+        removed from the borders.
+        A callable may also be provided, which receives the input array and
+        returns any of the above formats.
 
-    crop: int or tuple of ints or list of ints or Callable[Image]->tuple of ints
-        Number of pixels to remove or retain (depending in `crop_mode`)
-        If a tuple or list, it is assumed to be per axis.
-        Can also be a function that returns any of the other types.
+    crop_mode: PropertyLike[str], default="retain"
+        How the `crop` parameter is interpreted.
+        - `"retain"`: `crop` specifies the output size.
+        - `"remove"`: `crop` specifies the number of pixels removed.
 
-    crop_mode: str {"retain", "remove"}
-        How the `crop` argument is interpreted. If "remove", then
-        `crop` denotes the amount to crop from the edges. If "retain",
-        `crop` denotes the size of the output.
+    corner: PropertyLike[str | tuple[int, int] | Callable], default="random"
+        Top-left corner of the cropped region.
 
-    corner: tuple of ints or Callable[Image]->tuple of ints or "random"
-        Top left corner of the cropped region. Can be a tuple of ints,
-        a function that returns a tuple of ints or the string random.
-        If corner is placed so that the cropping cannot be performed,
-        the modulo of the corner with the allowed region is used.
+        - `"random"` selects a random valid corner.
+        - A tuple specifies the corner explicitly.
+        - A callable receives the input array and returns a corner.
 
     Methods
     -------
-    `get(image: Image | np.ndarray, corner: PropertyLike[str], crop: PropertyLike[int], crop_mode: PropertyLike[str], **kwargs) -> Image`
-        Abstract method which performs the `Crop` augmentation.
+    `_get_xp(array, crop, crop_mode, corner, xp, **kwargs) -> np.ndarray | torch.Tensor`
+        Internal method that performs cropping on either a NumPy array or a 
+        PyTorch tensor based on the specified parameters.
 
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle(position=(32, 32))
+    >>> optics = dt.Fluorescence()
+    >>> crop = dt.Crop(crop=64, crop_mode="retain", corner=(0,0))
+    >>> image = optics(particle) >> crop
+    >>> image.plot()
+    
     """
 
     def __init__(
         self: Crop,
         *args,
-        crop: int | list[int] | tuple[int] | Callable[np.ndarray | torch.Tensor, tuple[int]] = (64, 64),        
+        crop: int | list[int] | tuple[int] | Callable[[np.ndarray | torch.Tensor], tuple[int, ...]] = (64, 64),        
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs
-    ) -> None:
+    ):
+        """Initialize the cropping augmentation.
+
+        The crop size and placement can be fixed, random, or computed
+        dynamically from the input image.
+
+        Parameters
+        ----------
+        crop: int | tuple[int, ...] | list[int] | Callable
+            Defines the cropping amount. If an integer, the same value is used
+            for all axes. If a tuple or list, values are interpreted per axis.
+            If `crop_mode="retain"`, `crop` specifies the output size.
+            If `crop_mode="remove"`, `crop` specifies the number of pixels
+            removed from the borders.
+            A callable may also be provided, which receives the input array and
+            returns any of the above formats.
+        crop_mode: PropertyLike[str], default="retain"
+            How the `crop` parameter is interpreted.
+            - `"retain"`: `crop` specifies the output size.
+            - `"remove"`: `crop` specifies the number of pixels removed.
+        corner: PropertyLike[str | tuple[int, int] | Callable], default="random"
+            Top-left corner of the cropped region.
+            - `"random"` selects a random valid corner.
+            - A tuple specifies the corner explicitly.
+            - A callable receives the input array and returns a corner.
+        
+        """
+
         super().__init__(
             *args,
             crop=crop,
@@ -1188,18 +1883,52 @@ class Crop(Augmentation):
             **kwargs,
         )
 
-
     def _get_xp(
         self: Crop, 
         array: np.ndarray | torch.Tensor,
-        crop: int | list[int] | tuple[int] | Callable[np.ndarray | torch.Tensor, tuple[int]],
+        crop: int | list[int] | tuple[int] | Callable[[np.ndarray | torch.Tensor], tuple[int, ...]],
         crop_mode: str, 
-        corner: str | tuple[int] | Callable[[np.ndarray | torch.Tensor], tuple[int]],
+        corner: str | tuple[int] | Callable[[np.ndarray | torch.Tensor], tuple[int, ...]],
         xp: Any, 
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
+        """Crop an array using the specified crop parameters.
 
-        # Normalize crop
+        The cropping region is determined by `crop`, `crop_mode`, and `corner`.
+        The same logic is used for both NumPy arrays and PyTorch tensors.
+        The appropriate backend is selected automatically.
+
+        Parameters
+        ----------
+        array: np.ndarray | torch.Tensor
+            Input array to be cropped.
+        crop: int | tuple[int, ...] | list[int] | Callable
+            Defines the cropping amount. If an integer, the same value is used
+            for all axes. If a tuple or list, values are interpreted per axis.
+            If `crop_mode="retain"`, `crop` specifies the output size.
+            If `crop_mode="remove"`, `crop` specifies the number of pixels
+            removed from the borders.
+            A callable may also be provided, which receives the input array and
+            returns any of the above formats.
+        crop_mode: str
+            How the `crop` parameter is interpreted.
+            - `"retain"`: `crop` specifies the output size.
+            - `"remove"`: `crop` specifies the number of pixels removed.
+        corner: str | tuple[int] | Callable
+            Top-left corner of the cropped region.
+            - `"random"` selects a random valid corner.
+            - A tuple specifies the corner explicitly.
+            - A callable receives the input array and returns a corner.
+        xp: module
+            The array library (e.g., `numpy` or `torch`) to use for computations
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            Cropped array.
+
+        """
+
         if callable(crop):
             crop = crop(array)
 
@@ -1227,8 +1956,10 @@ class Crop(Augmentation):
         else:
             slice_start = corner
 
-        slice_start = [int(c) % (int(m) + 1)
-                    for c, m in zip(slice_start, crop_amount)]
+        slice_start = [
+            int(c) % (int(m) + 1)
+            for c, m in zip(slice_start, crop_amount)
+        ]
 
         slice_end = [
             a - c + s
@@ -1249,15 +1980,43 @@ class Crop(Augmentation):
 
         return out
     
-    def _update_properties(self, element, old_shape, new_shape, **kwargs):
+    def _update_properties(
+        self: Crop,
+        element: ScatteredVolume | ScatteredField,
+        old_shape: tuple[int, ...],
+        new_shape: tuple[int, ...],
+        **kwargs: Any,
+    ) -> ScatteredVolume | ScatteredField:
+        """Update metadata after cropping.
+
+        Adjusts `"position"` coordinates to match the cropped image and
+        updates `"output_region"` to reflect the new image bounds.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            The element whose properties are to be updated.
+        old_shape: tuple[int, ...]
+            The shape of the image before cropping.
+        new_shape: tuple[int, ...]
+            The shape of the image after cropping.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.   
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The element with updated properties reflecting the cropping.
+        
+        """
+
+        if not hasattr(self, "_last_crop"):
+            return element
 
         if not isinstance(getattr(element, "properties", None), dict):
             return element
 
         props = element.properties
-
-        if not hasattr(self, "_last_crop"):
-            return element
 
         start_y, start_x = self._last_crop["start"][:2]
 
@@ -1291,34 +2050,80 @@ class Crop(Augmentation):
 
 
 class CropToMultiplesOf(Crop):
-    """Crop images down until their height/width is a multiple of a value.
+    """Crop images so their dimensions are multiples of a given value.
+
+    The image is cropped along each axis until its size becomes a multiple
+    of the specified value.
 
     Parameters
     ----------
-    multiple: int or tuple of ints or tuple of none
-        Images will be cropped down until their width is a multiple of
-        this value. If a tuple, it is assumed to be a multiple per axis.
-        A value of None or -1 indicates to skip that axis.
-    
-    corner: str
-        Top left corner of the cropped region. Can be a tuple of ints,
-        a function that returns a tuple of ints or the string random.
-        If corner is placed so that the cropping cannot be performed,
-        the modulo of the corner with the allowed region is used.
+    multiple: PropertyLike[int | tuple[int | None, ...]]
+        Target multiples for each axis. If a single integer is provided,
+        the same multiple is applied to all axes.
+        If a tuple is provided, each value corresponds to an axis.
+        A value of `None` or `-1` indicates that the axis should not be
+        constrained.
 
+    corner: PropertyLike[str], default="random"
+        Top-left corner of the cropped region.
+        - `"random"` selects a random valid corner.
+        - A tuple specifies the corner explicitly.
+        - A callable receives the input array and returns a corner.
+    
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle(position=(32, 32))
+    >>> optics = dt.Fluorescence()
+    >>> crop_mult = dt.CropToMultiplesOf(multiple=5, corner=(0,0))
+    >>> image = optics(particle) >> crop_mult
+    >>> print(image.resolve().shape)
+     
     """
 
     def __init__(
-        self,
-        multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
+        self: CropToMultiplesOf,
+        multiple: PropertyLike[int | tuple[int | None, ...]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs,
-    ) -> None:
+    ):
+        """Initialize the CropToMultiplesOf augmentation.
 
+        The image is cropped so that each dimension becomes a multiple of the
+        specified value. Cropping is performed by reducing the image size
+        along each axis while preserving the selected corner.
+
+        Parameters
+        ----------
+        multiple: PropertyLike[int | tuple[int | None, ...]], default=1
+            Target multiple for each axis.
+            - If a single integer is provided, the same multiple is applied
+              to all axes.
+            - If a tuple is provided, values correspond to individual axes.
+            - A value of `None` or `-1` skips cropping for that axis.
+
+        corner: PropertyLike[str | tuple[int, ...] | Callable], default="random"
+            Top-left corner of the cropped region.
+            - `"random"` selects a random valid corner.
+            - A tuple specifies the corner explicitly.
+            - A callable receives the input array and returns a corner.
+
+        **kwargs: Any
+            Additional keyword arguments passed to the parent `Crop`
+            augmentation.
+        
+        """
+        
         kwargs.pop("crop", None)
         kwargs.pop("crop_mode", None)
 
         def image_to_crop(image):
+            """Determine the crop size.
+            
+            Determine the crop size based on the input image and target 
+            multiples.
+           
+            """
 
             shape = image.shape
             mul = self.multiple()
@@ -1344,38 +2149,77 @@ class CropToMultiplesOf(Crop):
 
 
 class CropTight(Augmentation):
-    """Crops input array to remove empty space.
+    """Crop an array to remove empty space.
 
-    Removes indices from the start and end of the array,
-    where all values are below eps.
-    Currently only works for 3D arrays.
+    Removes leading and trailing indices along each axis where all values
+    are below a threshold `eps`. This effectively crops the array to the
+    smallest bounding box containing values larger than `eps`.
+    Currently only supports 3D arrays of shape (H, W, Z).
 
     Parameters
     ----------
-    eps: float
-        The threshold for considering a pixel to be empty,
-        by default 1e-10.
-
+    eps: PropertyLike[float], default=1e-10
+        Threshold below which values are considered empty.
+    
     Methods
     -------
-    `get(image: np.ndarray | torch.Tensor, eps: PropertyLike[float], **kwargs) -> np.ndarray | torch.Tensor`
-        Abstract method which performs the `CropTight` augmentation.
+    `_get_numpy(image, **kwargs) -> np.ndarray`
+        Applies tight cropping to a NumPy array.
+    `_get_torch(image, **kwargs) -> torch.Tensor`
+        Applies tight cropping to a PyTorch tensor.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle(position=(32, 32))
+    >>> optics = dt.Fluorescence()
+    >>> crop_tight = dt.CropTight(eps=1e-5)
+    >>> image = optics(particle) >> crop_tight
+    >>> image.plot()    
 
     """
 
     def __init__(
         self: CropTight,
         eps: PropertyLike[float] = 1e-10,
-        **kwargs
-    ) -> None:
+        **kwargs: Any,
+    ):
+        """Initialize the tight cropping augmentation.
+        
+        Parameters
+        ----------
+        eps: PropertyLike[float], default=1e-10
+            Threshold below which values are considered empty.
+
+        """
+
         super().__init__(eps=eps, **kwargs)
 
     def _get_numpy(
         self: CropTight, 
         image: np.ndarray, 
         eps: float, 
-        **kwargs
+        **kwargs: Any,
     ) -> np.ndarray:
+        """Crop a NumPy array to its non-empty bounding box.
+
+        Pixels with values below `eps` are treated as empty.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            Input array to be cropped. Should be 3D.
+        eps: float
+            Threshold below which values are considered empty.
+        kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        np.ndarray
+            Cropped array containing all values above the threshold.
+
+        """
 
         mask = image > eps
 
@@ -1389,9 +2233,14 @@ class CropTight(Augmentation):
 
         if len(ys) == 0 or len(xs) == 0 or len(zs) == 0:
             # nothing survives — return minimal array
-            self._last_crop = dict(
-                ymin=0, xmin=0, ymax=0, xmax=0, zmin=0, zmax=0
-            )
+            self._last_crop = {
+                "ymin": 0,
+                "xmin": 0,
+                "ymax": 0,
+                "xmax": 0,
+                "zmin": 0,
+                "zmax": 0,
+            }
             return image[0:1, 0:1, 0:1]
 
         ymin = ys[0]
@@ -1403,19 +2252,43 @@ class CropTight(Augmentation):
         zmin = zs[0]
         zmax = zs[-1] + 1
 
-        self._last_crop = dict(
-            ymin=ymin,
-            xmin=xmin,
-            ymax=ymax,
-            xmax=xmax,
-            zmin=zmin,
-            zmax=zmax,
-        )
+        self._last_crop = {
+            "ymin": ymin,
+            "xmin": xmin,
+            "ymax": ymax,
+            "xmax": xmax,
+            "zmin": zmin,
+            "zmax": zmax,
+        }
 
         return image[ymin:ymax, xmin:xmax, zmin:zmax]
 
 
-    def _get_torch(self, image: torch.Tensor, eps: float, **kwargs):
+    def _get_torch(
+        self: CropTight, 
+        image: torch.Tensor, 
+        eps: float,
+        **kwargs: Any,
+    ) -> torch.Tensor:
+        """Crop a PyTorch tensor to its non-empty bounding box.
+        
+        Pixels with values below `eps` are treated as empty.
+        
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor to be cropped. Should be 3D.
+        eps: float
+            Threshold below which values are considered empty.
+        kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+        
+        Returns
+        -------
+        torch.Tensor
+            Cropped tensor containing all values above the threshold.
+        
+        """
 
         mask = image > eps
 
@@ -1428,9 +2301,14 @@ class CropTight(Augmentation):
         zs = torch.nonzero(keep_z, as_tuple=True)[0]
 
         if len(ys) == 0 or len(xs) == 0 or len(zs) == 0:
-            self._last_crop = dict(
-                ymin=0, xmin=0, ymax=0, xmax=0, zmin=0, zmax=0
-            )
+            self._last_crop = {
+                "ymin": 0,
+                "xmin": 0,
+                "ymax": 0,
+                "xmax": 0,
+                "zmin": 0,
+                "zmax": 0
+            }
             return image[0:1, 0:1, 0:1]
 
         ymin = int(ys[0])
@@ -1442,26 +2320,57 @@ class CropTight(Augmentation):
         zmin = int(zs[0])
         zmax = int(zs[-1]) + 1
 
-        self._last_crop = dict(
-            ymin=ymin,
-            xmin=xmin,
-            ymax=ymax,
-            xmax=xmax,
-            zmin=zmin,
-            zmax=zmax,
-        )
+        self._last_crop = {
+            "ymin": ymin,
+            "xmin": xmin,
+            "ymax": ymax,
+            "xmax": xmax,
+            "zmin": zmin,
+            "zmax": zmax,
+        }
 
         return image[ymin:ymax, xmin:xmax, zmin:zmax]
 
-    def _update_properties(self, element, old_shape, new_shape, **kwargs):
+    def _update_properties(
+        self: CropTight, 
+        element: ScatteredVolume | ScatteredField, 
+        old_shape: tuple[int, ...],
+        new_shape: tuple[int, ...],
+        **kwargs: Any,
+    ) -> ScatteredVolume | ScatteredField:
+        """Update metadata after tight cropping.
+        
+        Adjusts `"position"` coordinates to remain consistent with the cropped 
+        image and updates `"output_region"` to reflect the new image bounds.
+        
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            The element whose properties are to be updated.
+        old_shape: tuple[int, ...]
+            The shape of the image before cropping.
+        new_shape: tuple[int, ...]
+            The shape of the image after cropping.
+        kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
 
-        if not isinstance(element.properties, dict):
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+             The element with updated properties reflecting the tight cropping.
+
+        """
+
+        if not hasattr(self, "_last_crop"):
+            return element
+
+        if not isinstance(getattr(element, "properties", None), dict):
             return element
 
         if "position" in element.properties:
             pos = np.asarray(element.properties["position"], dtype=float).copy()
-            pos[0] -= self._last_crop["ymin"]
-            pos[1] -= self._last_crop["xmin"]
+            pos[..., 0] -= self._last_crop["ymin"]
+            pos[..., 1] -= self._last_crop["xmin"]
             element.properties["position"] = pos
 
         if "output_region" in element.properties:
@@ -1478,55 +2387,105 @@ class CropTight(Augmentation):
 
 
 class Pad(Augmentation):
-    """Pads an image by adding extra pixels along specified axes.
+    """Pad an image by adding extra pixels along specified axes.
 
-    This augmentation uses `numpy.pad` internally but redefines `pad_width` 
-    as `px`, allowing padding along multiple axes (left, right, top, bottom, 
-    before_axis_3, after_axis_3, ...).
+    This augmentation adds padding to an image using functionality similar to
+    `numpy.pad`. The padding is specified using a flat sequence `px` describing
+    the number of pixels added before and after each axis.
 
     Parameters
     ----------
-    px : list of ints or tuple of ints
-        Amount of padding for each axis, specified as a tuple (left, right, 
-        top, bottom, etc.).
-
-    mode : str
-        Padding mode, same as in `numpy.pad`.
-
-    cval : float
-        Value to fill in new pixels, same as in `numpy.pad`.
+    px: PropertyLike[int | tuple[int, ...] | list[int]]
+        Amount of padding for each axis, specified as a flat sequence
+            (before_axis0, after_axis0, before_axis1, after_axis1, ...)
+        If a single integer is provided, the same padding is applied before and
+        after every axis.
+    mode: PropertyLike[str], default="constant"
+        Padding mode used when extending the array. Supported modes follow
+        `numpy.pad` and `torch.nn.functional.pad`.
+    cval: PropertyLike[float], default=0
+        Constant value used when `mode="constant"`.
 
     Methods
     -------
-    `get(image: np.ndarray | torch.Tensor, px: PropertyLike[int], **kwargs) -> np.ndarray | torch.Tensor`
-        Abstract method which performs the `Pad` augmentation.
-    `_image_wrap_process_and_get(images: list[Image] | list[np.ndarray], **kwargs) -> list[Image]`
-        Simple method which wraps an `Image` in a `list`.
+    `_get_numpy(image, **kwargs) -> np.ndarray`
+        Apply padding to a NumPy array.
+
+    `_get_torch(image, **kwargs) -> torch.Tensor`
+        Apply padding to a PyTorch tensor.
 
     Returns
     -------
-    Image
-    The padded image.
+    np.ndarray or torch.Tensor
+        The padded image.
+
+    Examples
+    --------
+    >>> import deeptrack as dt
+    >>> particle = dt.PointParticle(position=(32, 32))
+    >>> optics = dt.Fluorescence()
+    >>> pad = dt.Pad(px=(10, 10, 5, 5), mode="constant", cval=0)
+    >>> image = optics(particle) >> pad
+    >>> print(image.resolve().shape) 
 
     """
 
     def __init__(
         self: Pad,
-        px: list[int] | tuple[int] = (0, 0, 0, 0),
+        px: PropertyLike[int | tuple[int, ...] | list[int]] = (0, 0, 0, 0),
         mode: PropertyLike[str] = "constant",
         cval: PropertyLike[float] = 0,
-        **kwargs
-    ) -> None:
+        **kwargs: Any,
+    ):
+        """Initialize the padding augmentation.
+
+        Parameters
+        ----------
+        px: PropertyLike[int | tuple[int, ...] | list[int]], default=(0, 0, 0, 0)
+            Amount of padding for each axis specified as
+                (before_axis0, after_axis0, before_axis1, after_axis1, ...)
+        mode: PropertyLike[str], default="constant"
+            Padding mode used when extending the array.
+        cval: PropertyLike[float], default=0
+            Constant value used when `mode="constant"`.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent augmentation.
+
+        """
+
         super().__init__(px=px, mode=mode, cval=cval, **kwargs)
 
     def _get_numpy(
         self: Pad, 
         image: np.ndarray, 
-        px: list[int] | tuple[int], 
+        px: PropertyLike[int | tuple[int, ...] | list[int]],
         mode: str = "constant", 
         cval: float = 0, 
-        **kwargs,
+        **kwargs: Any,
     ) -> np.ndarray:
+        """Apply padding to a NumPy array.
+
+        Parameters
+        ----------
+        image: np.ndarray
+            Input array to be padded.
+        px: list[int] | tuple[int]
+            Amount of padding specified as
+                (before_axis0, after_axis0, before_axis1, after_axis1, ...)
+        mode: str, default="constant"
+            Padding mode passed to `numpy.pad`.
+        cval: float, default=0
+            Constant value used when `mode="constant"`.
+        kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        np.ndarray
+            The padded array.
+
+        """
+
         if not isinstance(image, np.ndarray):
             raise TypeError(f"Pad (numpy) expects ndarray, got {type(image)}")
 
@@ -1559,11 +2518,32 @@ class Pad(Augmentation):
     def _get_torch(
         self: Pad, 
         image: torch.Tensor, 
-        px: list[int] | tuple[int], 
+        px: PropertyLike[int | tuple[int, ...] | list[int]],
         mode: str = "constant", 
         cval: float = 0, 
-        **kwargs
+        **kwargs: Any,
     ) -> torch.Tensor:
+        """Apply padding to a PyTorch tensor.
+
+        Parameters
+        ----------
+        image: torch.Tensor
+            Input tensor to be padded.
+        px: list[int] | tuple[int]
+            Amount of padding specified as
+                (before_axis0, after_axis0, before_axis1, after_axis1, ...)
+        mode: str, default="constant"
+            Padding mode passed to `torch.nn.functional.pad`.
+        cval: float, default=0
+            Constant value used when `mode="constant"`.
+        kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        torch.Tensor
+            The padded tensor.
+        """
 
         if not isinstance(image, torch.Tensor):
             raise TypeError(f"Pad (torch) expects Tensor, got {type(image)}")
@@ -1594,21 +2574,50 @@ class Pad(Augmentation):
         return F.pad(
             image,
             pad_list,
-            mode="constant",
-            value=cval,
+            mode=mode,
+            value=cval if mode == "constant" else None,
         )
 
-    def _update_properties(
-        self,
-        element,
-        old_shape,
-        new_shape,
-        **kwargs,
-    ):
 
-        if not isinstance(element.properties, dict):
+    def _update_properties(
+        self: Pad,
+        element: ScatteredVolume | ScatteredField,
+        old_shape: tuple[int, ...],
+        new_shape: tuple[int, ...],
+        **kwargs: Any,
+    ) -> ScatteredVolume | ScatteredField:
+        """Update metadata after padding.
+
+        Padding shifts spatial coordinates and expands the global output 
+        region. The `"position"` property is translated by the amount of 
+        padding added before each spatial axis. The `"output_region"` property
+        is updated so that the padded image remains correctly aligned in the 
+        global coordinate system.
+
+        Parameters
+        ----------
+        element: ScatteredVolume | ScatteredField
+            The element whose properties are to be updated.
+        old_shape: tuple[int, ...]
+            Shape of the image before padding.
+        new_shape: tuple[int, ...]
+            Shape of the image after padding.
+        **kwargs: Any
+            Additional keyword arguments passed by the augmentation pipeline.
+
+        Returns
+        -------
+        ScatteredVolume | ScatteredField
+            The element with updated properties reflecting the applied padding.
+        
+        """
+
+        if not hasattr(self, "_last_padding"):
             return element
 
+        if not isinstance(getattr(element, "properties", None), dict):
+            return element
+        
         padding = self._last_padding
 
         props = element.properties
@@ -1618,8 +2627,8 @@ class Pad(Augmentation):
             pos = np.asarray(props["position"], dtype=float).copy()
 
             # Only shift first two dims (y, x)
-            pos[0] += padding[0][0]
-            pos[1] += padding[1][0]
+            pos[..., 0] += padding[0][0]
+            pos[..., 1] += padding[1][0]
 
             props["position"] = pos
 
@@ -1640,25 +2649,54 @@ class Pad(Augmentation):
 
 
 class PadToMultiplesOf(Pad):
-    """Pad images until their height/width is a multiple of a value.
+    """Pad images so their dimensions become multiples of a given value.
+
+    Padding is applied symmetrically along each axis so that the final image 
+    size is divisible by the specified multiple.
 
     Parameters
     ----------
-
-    multiple: int or tuple of int or tuple of none
-        Images will be padded until their width is a multiple of
-        this value. If a tuple, it is assumed to be a multiple per axis.
-        A value of None or -1 indicates to skip that axis.
-
+    multiple: PropertyLike[int | tuple[int | None, ...]], default=1
+        Target multiple for each axis.
+        - If a single integer is provided, the same multiple is applied to all 
+        axes.
+        - If a tuple is provided, values correspond to individual axes.
+        - A value of `None` or `-1` skips padding for that axis.
+    
     """
 
     def __init__(
-        self,
-        multiple: PropertyLike[int | tuple[int] | tuple[None]] = 1,
-        **kwargs,
-    ) -> None:
+        self: PadToMultiplesOf,
+        multiple: PropertyLike[int | tuple[int | None, ...]] = 1,
+        **kwargs: Any,
+    ):
+        """Initialize the PadToMultiplesOf augmentation.
+
+        The image is padded symmetrically along each axis so that its final
+        dimensions become multiples of the specified value.
+
+        Parameters
+        ----------
+        multiple: PropertyLike[int | tuple[int | None, ...]], default=1
+            Target multiple for each axis.
+            - If a single integer is provided, the same multiple is applied
+            to all axes.
+            - If a tuple is provided, values correspond to individual axes.
+            - A value of `None` or `-1` skips padding for that axis.
+
+        **kwargs: Any
+            Additional keyword arguments passed to the parent `Pad`
+            augmentation (e.g. `mode`, `cval`).
+
+        """
 
         def amount_to_pad(image: np.ndarray | torch.Tensor) -> list[int]:
+            """Calculate the amount of padding.
+            
+            Calculate the amount of padding needed to make each dimension a 
+            multiple of the specified value.
+            
+            """
 
             shape = image.shape
             multiple_value = multiple#self.multiple()
@@ -1687,6 +2725,3 @@ class PadToMultiplesOf(Pad):
             return px
         
         super().__init__(px=lambda: amount_to_pad, multiple=multiple, **kwargs)
-
-
-# TODO: add resizing by rescaling
