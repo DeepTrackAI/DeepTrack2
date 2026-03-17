@@ -52,6 +52,38 @@ class TestMath_Numpy(BackendTestBase):
             xp.all(normalized_image == xp.asarray([[5, 2], [2, -5]]))
         )
 
+    def test_NormalizeMinMax_featurewise(self):
+        x = xp.asarray(
+            [
+                [[0.0, 10.0], [5.0, 20.0]],
+                [[10.0, 30.0], [20.0, 40.0]],
+            ]
+        )
+
+        out_featurewise = math.NormalizeMinMax(
+            min=0,
+            max=1,
+            featurewise=True,
+        ).resolve(x)
+
+        out_global = math.NormalizeMinMax(
+            min=0,
+            max=1,
+            featurewise=False,
+        ).resolve(x)
+
+        zero = xp.asarray(0.0)
+        one = xp.asarray(1.0)
+
+        # featurewise
+        self.assertTrue(xp.allclose(xp.min(out_featurewise[..., 0]), zero))
+        self.assertTrue(xp.allclose(xp.max(out_featurewise[..., 0]), one))
+        self.assertTrue(xp.allclose(xp.min(out_featurewise[..., 1]), zero))
+        self.assertTrue(xp.allclose(xp.max(out_featurewise[..., 1]), one))
+
+        # global
+        self.assertTrue(xp.allclose(xp.min(out_global), zero))
+        self.assertTrue(xp.allclose(xp.max(out_global), one))
 
     def test_NormalizeStandard(self):
         input_image = xp.asarray([[1, 2], [3, 4]], dtype=float)
@@ -72,15 +104,23 @@ class TestMath_Numpy(BackendTestBase):
         self.assertAlmostEqual(xp.quantile(output, 0.5), 0, places=5)
 
 
-    def test_Blur(self):
-        # TODO: check this test with torch
-        pass
-        #input_image = xp.asarray(np.array([[1, 2], [3, 4]], dtype=float))
-        #expected_output = xp.asarray(np.array([[1, 1.5], [2, 2.5]]))
+    def test_Blur_is_abstract(self):
+        blur = math.Blur()
+        with self.assertRaises(NotImplementedError):
+            blur.resolve(xp.zeros((2,2)))
 
-        #feature = math.Blur(filter_function=uniform_filter, size=2)
-        #blurred_image = feature.resolve(input_image)
-        #self.assertTrue(xp.all(blurred_image == expected_output))
+
+    def test_Blur_dispatch(self):
+        class DummyBlur(math.Blur):
+            def _get_numpy(self, image, **kwargs):
+                return image + 1
+            def _get_torch(self, image, **kwargs):
+                return image + 1
+
+        image = xp.zeros((2,2))
+        out = DummyBlur().resolve(image)
+
+        self.assertTrue(xp.all(out == 1))
 
 
     def test_MaxPooling(self):
@@ -102,6 +142,15 @@ class TestMath_Numpy(BackendTestBase):
 
         self.assertEqual(pooled_image.shape, (1, 2))
         self.assertTrue(xp.all(pooled_image == expected))
+
+    def test_SumPooling(self):
+        x = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
+
+        out = math.SumPooling(ksize=2).resolve(x)
+        expected = xp.asarray([[14.0, 22.0]], dtype=float)
+
+        self.assertEqual(out.shape, (1, 2))
+        self.assertTrue(xp.allclose(out, expected))
 
 
 # Extending the test and setting the backend to torch
