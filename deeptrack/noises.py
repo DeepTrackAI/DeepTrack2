@@ -21,24 +21,23 @@ Classes:
 
 Examples
 --------
+>>> import deeptrack as dt
+
 Add Gaussian noise to an image.
 
->>> import deeptrack as dt
->>> particle = dt.PointParticle()
+>>> particle = dt.PointParticle(intensity=1)
 >>> optics = dt.Fluorescence()
 >>> gaussian_noise = dt.Gaussian(mu=0, sigma=0.1)
 >>> noisy_image = optics(particle) >> gaussian_noise
->>> noisy_image.plot()
+>>> noisy_image.plot();
 
 Add Poisson noise with a specified signal-to-noise ratio.
 
 >>> poisson_noise = noises.Poisson(snr=0.1)
 >>> noisy_image = optics(particle) >> poisson_noise
->>> noisy_image.plot()
+>>> noisy_image.plot();
 
 """
-
-#TODO ***??*** revise DTAT327
 
 from __future__ import annotations
 
@@ -116,7 +115,7 @@ class Noise(Feature):
     >>> image = pipeline()
 
     """
-    
+
     def _process_and_get(
         self: Noise,
         inputs: list,
@@ -140,7 +139,7 @@ class Noise(Feature):
         -------
         list
             List of noisy outputs with the same container types as the inputs.
-        
+
         """
 
         results = []
@@ -148,6 +147,7 @@ class Noise(Feature):
         # Lazy import avoids circular dependency
         try:
             from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
             scattered_types = (ScatteredVolume, ScatteredField)
         except Exception:
             scattered_types = ()
@@ -209,7 +209,7 @@ class Background(Noise):
     >>> print(noisy)
     [[0.5 0.5]
      [0.5 0.5]]
-    
+
     """
 
     def __init__(
@@ -317,7 +317,7 @@ class Gaussian(Noise):
             Additional arguments passed to the parent `Noise` class.
 
         """
-       
+
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -339,7 +339,7 @@ class Gaussian(Noise):
             The standard deviation of the Gaussian distribution.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         Returns
         -------
         np.ndarray | torch.Tensor
@@ -398,7 +398,7 @@ class ComplexGaussian(Noise):
     >>> print(noisy)
     [[3.79975648-0.06967551j 4.09943404+0.06499738j]
      [3.99886747-0.23549974j 4.15725117-0.07847024j]]
-    
+
     """
 
     def __init__(
@@ -417,9 +417,9 @@ class ComplexGaussian(Noise):
             Standard deviation of the Gaussian distribution.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Noise` class.
-        
+
         """
-        
+
         super().__init__(mu=mu, sigma=sigma, **kwargs)
 
     def get(
@@ -458,7 +458,7 @@ class ComplexGaussian(Noise):
         elif self.get_backend() == "torch":
             real_noise = torch.randn(*image.shape, device=image.device)
             imag_noise = torch.randn(*image.shape, device=image.device)
-     
+
         noise = real_noise + 1j * imag_noise
         return mu + image + noise * sigma
 
@@ -482,7 +482,7 @@ class Poisson(Noise):
 
     Methods
     -------
-    `get(image, snr, background, max_val, **kwargs) -> np.ndarray | torch.Tensor`
+    `get(image, snr, background, max_val, **kwargs) -> array | tensor`
         Returns the input image with Poisson noise added.
 
     Examples
@@ -525,13 +525,13 @@ class Poisson(Noise):
         background: PropertyLike[float]
             Background level used when computing the signal amplitude.
         max_val: PropertyLike[float]
-            Maximum allowable value used to prevent overflow during noise 
+            Maximum allowable value used to prevent overflow during noise
             computation.
         **kwargs: Any
             Additional keyword arguments passed to the parent `Noise` class.
-        
+
         """
-        
+
         super().__init__(
             *args,
             snr=snr,
@@ -549,7 +549,7 @@ class Poisson(Noise):
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Add Poisson noise to the input image.
-        
+
         Parameters
         ----------
         image: np.ndarray | torch.Tensor
@@ -559,7 +559,7 @@ class Poisson(Noise):
         background: float
             Background level used when computing the signal amplitude.
         max_val: float
-            Maximum allowable value used to prevent overflow during noise 
+            Maximum allowable value used to prevent overflow during noise
             computation.
         **kwargs: Any
             Additional keyword arguments passed through the feature pipeline.
@@ -580,8 +580,8 @@ class Poisson(Noise):
 
             rescale = (snr / peak) ** 2
             rescale = np.clip(
-                rescale, 
-                1e-10, 
+                rescale,
+                1e-10,
                 max_val / max(np.abs(image_max), 1e-12),
             )
 

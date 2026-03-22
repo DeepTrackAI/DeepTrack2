@@ -1,6 +1,10 @@
-import sys
+# pylint: disable=C0115:missing-class-docstring
+# pylint: disable=C0116:missing-function-docstring
+# pylint: disable=C0103:invalid-name
 
-# sys.path.append(".")  # Adds the module to path
+# Use this only when running the test locally.
+# import sys
+# sys.path.append(".")  # Adds the module to path.
 
 import unittest
 
@@ -14,13 +18,28 @@ from deeptrack import (
     sources,
     TORCH_AVAILABLE,
 )
-# from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
     import torch
 
 
 class TestAugmentations(unittest.TestCase):
+
+    def test___all__(self):
+        from deeptrack import (
+            Augmentation,
+            Reuse,
+            FlipLR,
+            FlipUD,
+            FlipDiagonal,
+            Affine,
+            ElasticTransformation,
+            Crop,
+            CropToMultiplesOf,
+            CropTight,
+            Pad,
+            PadToMultiplesOf,
+        )
 
     class _ProjectSum(features.Feature):
         """Minimal 'optics-like' projection: sums a list of inputs."""
@@ -45,14 +64,10 @@ class TestAugmentations(unittest.TestCase):
             for a in arrays[1:]:
                 out = out + a
             return out
-    
+
     @staticmethod
     def make_ellipse(H, W, cy, cx, ry, rx):
-        yy, xx = np.meshgrid(
-            np.arange(H),
-            np.arange(W),
-            indexing="ij"
-        )
+        yy, xx = np.meshgrid(np.arange(H), np.arange(W), indexing="ij")
         mask = ((yy - cy) / ry) ** 2 + ((xx - cx) / rx) ** 2 <= 1
         return mask.astype(np.float32)[..., None]
 
@@ -99,7 +114,6 @@ class TestAugmentations(unittest.TestCase):
             cx = (img * X).sum() / mass
 
             return float(cy), float(cx)
-
 
     def test_Reuse(self):
 
@@ -154,7 +168,6 @@ class TestAugmentations(unittest.TestCase):
             self.assertEqual(counter["i"], 3)
             self.assertEqual(out6, 3)
 
-
     def test_FlipLR(self):
 
         backends = ["numpy"]
@@ -174,8 +187,8 @@ class TestAugmentations(unittest.TestCase):
 
             flip = augmentations.FlipLR(augment=True)
 
-           # check array flipping correctness
-            out = flip(base) 
+            # check array flipping correctness
+            out = flip(base)
             if backend == "numpy":
                 expected = base[:, ::-1, :]
                 np.testing.assert_array_equal(out, expected)
@@ -203,10 +216,14 @@ class TestAugmentations(unittest.TestCase):
 
             if backend == "numpy":
                 expected_array = base[:, ::-1, :]
-                np.testing.assert_array_equal(flipped_volume.array, expected_array)
+                np.testing.assert_array_equal(
+                    flipped_volume.array, expected_array
+                )
             else:
                 expected_array = torch.flip(base, dims=[1])
-                self.assertTrue(torch.equal(flipped_volume.array, expected_array))
+                self.assertTrue(
+                    torch.equal(flipped_volume.array, expected_array)
+                )
 
             # Position update (x mirrored around width)
             expected_x = (W - 1) - position[1]
@@ -261,7 +278,6 @@ class TestAugmentations(unittest.TestCase):
             else:
                 self.assertTrue(torch.equal(img_after_1, img_after_2))
 
-
     def test_FlipUD(self):
 
         backends = ["numpy"]
@@ -308,10 +324,14 @@ class TestAugmentations(unittest.TestCase):
 
             if backend == "numpy":
                 expected_array = base[::-1, :, :]
-                np.testing.assert_array_equal(flipped_volume.array, expected_array)
+                np.testing.assert_array_equal(
+                    flipped_volume.array, expected_array
+                )
             else:
                 expected_array = torch.flip(base, dims=[0])
-                self.assertTrue(torch.equal(flipped_volume.array, expected_array))
+                self.assertTrue(
+                    torch.equal(flipped_volume.array, expected_array)
+                )
 
             expected_y = (H - 1) - position[0]
             got_pos = flipped_volume.properties[0]["position"]
@@ -346,7 +366,6 @@ class TestAugmentations(unittest.TestCase):
             else:
                 self.assertTrue(torch.equal(img_after_1, img_after_2))
 
-
     def test_FlipDiagonal(self):
 
         backends = ["numpy"]
@@ -357,7 +376,7 @@ class TestAugmentations(unittest.TestCase):
 
             config.set_backend(backend)
 
-            H, W, C = 4, 4, 1   # must be square
+            H, W, C = 4, 4, 1  # must be square
             base_np = np.arange(H * W, dtype=np.float32).reshape(H, W, C)
 
             base = base_np if backend == "numpy" else torch.tensor(base_np)
@@ -393,10 +412,14 @@ class TestAugmentations(unittest.TestCase):
 
             if backend == "numpy":
                 expected_array = np.swapaxes(base, 0, 1)
-                np.testing.assert_array_equal(flipped_volume.array, expected_array)
+                np.testing.assert_array_equal(
+                    flipped_volume.array, expected_array
+                )
             else:
                 expected_array = base.transpose(0, 1)
-                self.assertTrue(torch.equal(flipped_volume.array, expected_array))
+                self.assertTrue(
+                    torch.equal(flipped_volume.array, expected_array)
+                )
 
             got_pos = flipped_volume.properties[0]["position"]
 
@@ -429,7 +452,6 @@ class TestAugmentations(unittest.TestCase):
                 np.testing.assert_array_equal(img_after_1, img_after_2)
             else:
                 self.assertTrue(torch.equal(img_after_1, img_after_2))
-
 
     def test_Affine(self):
 
@@ -479,24 +501,30 @@ class TestAugmentations(unittest.TestCase):
                     out,
                 )
             else:
-                self.assertTrue(torch.equal(
-                    transformed_volume.array,
-                    out,
-                ))
+                self.assertTrue(
+                    torch.equal(
+                        transformed_volume.array,
+                        out,
+                    )
+                )
 
             # Position update check
             forward = affine._last_affine["forward"]
             forward_offset = affine._last_affine["forward_offset"]
 
             if backend == "numpy":
-                expected_pos = (forward @ position + forward_offset)
+                expected_pos = forward @ position + forward_offset
             else:
                 pos_t = torch.tensor(position)
                 expected_pos = (forward @ pos_t + forward_offset).detach()
             got_pos = transformed_volume.properties["position"]
 
-            self.assertAlmostEqual(float(got_pos[0]), float(expected_pos[0]), places=4)
-            self.assertAlmostEqual(float(got_pos[1]), float(expected_pos[1]), places=4)
+            self.assertAlmostEqual(
+                float(got_pos[0]), float(expected_pos[0]), places=4
+            )
+            self.assertAlmostEqual(
+                float(got_pos[1]), float(expected_pos[1]), places=4
+            )
 
             # List behavior
             arrays_list = [base, base]
@@ -537,7 +565,9 @@ class TestAugmentations(unittest.TestCase):
             if backend == "numpy":
                 np.testing.assert_allclose(img_after_1, img_after_2, atol=1e-5)
             else:
-                self.assertTrue(torch.allclose(img_after_1, img_after_2, atol=1e-5))
+                self.assertTrue(
+                    torch.allclose(img_after_1, img_after_2, atol=1e-5)
+                )
 
             # Deterministic: Identity
             identity = augmentations.Affine(
@@ -558,7 +588,8 @@ class TestAugmentations(unittest.TestCase):
             H = W = 64
 
             base_np = self.make_ellipse(
-                H, W,
+                H,
+                W,
                 cy=34,
                 cx=28,
                 ry=6,
@@ -595,13 +626,20 @@ class TestAugmentations(unittest.TestCase):
             translated_volume = translation(volume)
             got_pos = translated_volume.properties["position"]
 
-            expected_pos = np.array([
-                position[0] + shift_y,
-                position[1] + shift_x,
-            ], dtype=np.float32)
+            expected_pos = np.array(
+                [
+                    position[0] + shift_y,
+                    position[1] + shift_x,
+                ],
+                dtype=np.float32,
+            )
 
-            self.assertAlmostEqual(float(got_pos[0]), float(expected_pos[0]), places=5)
-            self.assertAlmostEqual(float(got_pos[1]), float(expected_pos[1]), places=5)
+            self.assertAlmostEqual(
+                float(got_pos[0]), float(expected_pos[0]), places=5
+            )
+            self.assertAlmostEqual(
+                float(got_pos[1]), float(expected_pos[1]), places=5
+            )
 
             # Deterministic: 90-degree rotation
             rot = augmentations.Affine(
@@ -644,7 +682,6 @@ class TestAugmentations(unittest.TestCase):
             self.assertAlmostEqual(cy1, expected_cy, places=1)
             self.assertAlmostEqual(cx1, expected_cx, places=1)
 
-
     def test_ElasticTransformation(self):
 
         backends = ["numpy"]
@@ -664,7 +701,8 @@ class TestAugmentations(unittest.TestCase):
 
             # Simple structured image (ellipse)
             base_np = self.make_ellipse(
-                H, W,
+                H,
+                W,
                 cy=32,
                 cx=28,
                 ry=12,
@@ -772,8 +810,12 @@ class TestAugmentations(unittest.TestCase):
 
             # Test that ignore_last_dim=False produces different warps per channel
             base2_np = np.zeros((H, W, 2), dtype=np.float32)
-            base2_np[..., 0] = self.make_ellipse(H, W, cy=32, cx=28, ry=12, rx=20)[..., 0]
-            base2_np[..., 1] = self.make_ellipse(H, W, cy=20, cx=40, ry=8,  rx=10)[..., 0]
+            base2_np[..., 0] = self.make_ellipse(
+                H, W, cy=32, cx=28, ry=12, rx=20
+            )[..., 0]
+            base2_np[..., 1] = self.make_ellipse(
+                H, W, cy=20, cx=40, ry=8, rx=10
+            )[..., 0]
             base2 = base2_np if backend == "numpy" else torch.tensor(base2_np)
 
             # Same seed for both runs so randomness is comparable
@@ -803,8 +845,9 @@ class TestAugmentations(unittest.TestCase):
             else:
                 d_shared = out_shared[..., 0] - out_shared[..., 1]
                 d_indep = out_indep[..., 0] - out_indep[..., 1]
-                self.assertGreater(torch.mean(torch.abs(d_indep - d_shared)).item(), 1e-3)
-
+                self.assertGreater(
+                    torch.mean(torch.abs(d_indep - d_shared)).item(), 1e-3
+                )
 
     def test_Crop(self):
 
@@ -864,7 +907,7 @@ class TestAugmentations(unittest.TestCase):
 
             # Deterministic crop
             crop = augmentations.Crop(
-                crop=(10, 12, None),   # retain shape in last dim
+                crop=(10, 12, None),  # retain shape in last dim
                 crop_mode="retain",
                 corner=(3, 5, 0),
             )
@@ -877,13 +920,12 @@ class TestAugmentations(unittest.TestCase):
             if backend == "numpy":
                 np.testing.assert_array_equal(cropped.array, expected)
             else:
-                self.assertTrue(torch.equal(cropped.array, torch.tensor(expected)))
+                self.assertTrue(
+                    torch.equal(cropped.array, torch.tensor(expected))
+                )
 
             # Position update (y, x)
-            expected_pos = np.array([
-                position[0] - 3,
-                position[1] - 5
-            ])
+            expected_pos = np.array([position[0] - 3, position[1] - 5])
 
             got_pos = cropped.properties["position"]
 
@@ -941,9 +983,7 @@ class TestAugmentations(unittest.TestCase):
                 self.assertTrue(np.array_equal(out1, out2))
 
             # with source time_consistent is automatic because source is shared
-            source = sources.Source(
-                a=img
-            )
+            source = sources.Source(a=img)
 
             source = source.product(crop=[True])
 
@@ -965,7 +1005,6 @@ class TestAugmentations(unittest.TestCase):
                 self.assertTrue(torch.equal(out1, out2))
             else:
                 self.assertTrue(np.array_equal(out1, out2))
-
 
     def test_CropToMultiplesOf(self):
 
@@ -994,14 +1033,20 @@ class TestAugmentations(unittest.TestCase):
             )
 
             # multiple = 2
-            cropper = augmentations.CropToMultiplesOf(multiple=2, corner=(0, 0, 0))
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=2, corner=(0, 0, 0)
+            )
             cropped = cropper(volume)
 
             self.assertSequenceEqual(cropped.array.shape, (10, 10, 10))
 
             # position unchanged if corner=(0,0,0)
-            self.assertAlmostEqual(cropped.properties["position"][0], position[0])
-            self.assertAlmostEqual(cropped.properties["position"][1], position[1])
+            self.assertAlmostEqual(
+                cropped.properties["position"][0], position[0]
+            )
+            self.assertAlmostEqual(
+                cropped.properties["position"][1], position[1]
+            )
 
             self.assertEqual(
                 cropped.properties["output_region"],
@@ -1009,7 +1054,9 @@ class TestAugmentations(unittest.TestCase):
             )
 
             # multiple = -1 (no crop)
-            cropper = augmentations.CropToMultiplesOf(multiple=-1, corner=(0, 0, 0))
+            cropper = augmentations.CropToMultiplesOf(
+                multiple=-1, corner=(0, 0, 0)
+            )
             cropped = cropper(volume)
 
             self.assertSequenceEqual(cropped.array.shape, (11, 11, 11))
@@ -1069,10 +1116,12 @@ class TestAugmentations(unittest.TestCase):
             # Position must shift by corner
             effective_corner = (1 % 2, 2 % 2, 0 % 2)
 
-            expected_pos = np.array([
-                position[0] - effective_corner[0],
-                position[1] - effective_corner[1],
-            ])
+            expected_pos = np.array(
+                [
+                    position[0] - effective_corner[0],
+                    position[1] - effective_corner[1],
+                ]
+            )
 
             got_pos = cropped.properties["position"]
 
@@ -1143,10 +1192,12 @@ class TestAugmentations(unittest.TestCase):
                 )
 
             # Position update
-            expected_pos = np.array([
-                position[0] - y0,
-                position[1] - x0,
-            ])
+            expected_pos = np.array(
+                [
+                    position[0] - y0,
+                    position[1] - x0,
+                ]
+            )
 
             got_pos = cropped.properties["position"]
 
@@ -1185,7 +1236,6 @@ class TestAugmentations(unittest.TestCase):
 
                 self.assertIsNotNone(x.grad)
                 self.assertFalse(torch.isnan(x.grad).any())
-
 
     def test_Pad(self):
         backends = ["numpy"]
@@ -1239,7 +1289,9 @@ class TestAugmentations(unittest.TestCase):
                 self.assertEqual(border_sum.item(), 0.0)
 
             # Non-symmetric padding
-            padder = augmentations.Pad(px=(1, 3, 2, 4, 0, 0), mode="constant", cval=5)
+            padder = augmentations.Pad(
+                px=(1, 3, 2, 4, 0, 0), mode="constant", cval=5
+            )
             out = padder.update().resolve(base)
 
             self.assertSequenceEqual(out.shape, (H + 1 + 3, W + 2 + 4, D))
@@ -1267,13 +1319,17 @@ class TestAugmentations(unittest.TestCase):
             padded = padder(volume)
 
             # Shape
-            self.assertSequenceEqual(padded.array.shape, (H + 2 + 0, W + 3 + 0, D))
+            self.assertSequenceEqual(
+                padded.array.shape, (H + 2 + 0, W + 3 + 0, D)
+            )
 
             # Position shifts with top/left padding
-            expected_pos = np.array([
-                position[0] + 2,
-                position[1] + 3,
-            ])
+            expected_pos = np.array(
+                [
+                    position[0] + 2,
+                    position[1] + 3,
+                ]
+            )
 
             got_pos = padded.properties["position"]
 
@@ -1295,7 +1351,6 @@ class TestAugmentations(unittest.TestCase):
                 expected_region,
             )
 
-        
     def test_PadToMultiplesOf(self):
         backends = ["numpy"]
         if TORCH_AVAILABLE:
@@ -1309,7 +1364,9 @@ class TestAugmentations(unittest.TestCase):
             image_np = np.ones((11, 13, 17), dtype=np.float32)
             image = image_np if backend == "numpy" else torch.tensor(image_np)
 
-            padder = augmentations.PadToMultiplesOf(multiple=4, mode="constant")
+            padder = augmentations.PadToMultiplesOf(
+                multiple=4, mode="constant"
+            )
             out = padder.update().resolve(image)
 
             # 11 → 12
@@ -1361,10 +1418,12 @@ class TestAugmentations(unittest.TestCase):
             pad_left = pad_x // 2
 
             # Position shift
-            expected_pos = np.array([
-                position[0] + pad_top,
-                position[1] + pad_left,
-            ])
+            expected_pos = np.array(
+                [
+                    position[0] + pad_top,
+                    position[1] + pad_left,
+                ]
+            )
 
             got_pos = padded.properties["position"]
             self.assertAlmostEqual(got_pos[0], expected_pos[0])
@@ -1384,6 +1443,7 @@ class TestAugmentations(unittest.TestCase):
                 padded.properties["output_region"],
                 expected_region,
             )
+
 
 if __name__ == "__main__":
     unittest.main()
