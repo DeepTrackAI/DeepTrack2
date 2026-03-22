@@ -1016,35 +1016,130 @@ class NormalizeQuantile(Feature):
         return out
 
 
-#TODO ***CM*** revise typing, docstring, unit test
-class Blur(Feature):
-    """Abstract blur feature with backend-dispatched implementations.
+def move_channel_last(
+    x: np.ndarray | torch.Tensor, 
+    channel_axis: int | None,
+) -> Tuple[np.ndarray | torch.Tensor, int | None]:
+    """Move the channel axis to the last position.
     
-    This class serves as a base for blur features that support multiple
-    backends (e.g., NumPy, Torch). Subclasses should implement backend-specific
-    blurring logic via `_get_numpy` and/or `_get_torch` methods.
-    
-    Methods
+    Helper function to move the channel axis to the last position for both 
+    NumPy and PyTorch tensors. If `channel_axis` is `None`, the input is 
+    returned unchanged.
+
+    Parameters
+    ----------
+    x: np.ndarray or torch.Tensor
+        Input array or tensor.
+    channel_axis: int or None
+        Axis corresponding to channels/features. If None, no movement is 
+        performed.
+
+    Returns
     -------
-    get(image: np.ndarray | torch.Tensor, **kwargs) -> np.ndarray | torch.Tensor
-        Applies the appropriate backend-specific blurring method.
-        
-    _blur(xp, image: array, **kwargs) -> array
-        Internal method that dispatches to the correct backend-specific blur
-        implementation.
+    Tuple[np.ndarray or torch.Tensor, int or None]
+        A tuple containing the array/tensor with the channel axis moved to the
+        last position and the original channel axis index (or None if no 
+        movement was done).
 
     """
 
+    if channel_axis is None:
+        return x, None
+
+    original_axis = channel_axis
+
+    if isinstance(x, np.ndarray):
+        x = np.moveaxis(x, channel_axis, -1)
+    elif isinstance(x, torch.Tensor):
+        x = x.movedim(channel_axis, -1)
+    else:
+        raise TypeError("Unsupported type")
+
+    return x, original_axis
+
+
+def restore_channel_axis(
+        x: np.ndarray | torch.Tensor, 
+        original_axis: int | None,
+    ) -> np.ndarray | torch.Tensor:
+    """Restore the channel axis to its original position.
+    
+    Helper function to restore the channel axis to its original position after
+    processing. If `original_axis` is `None`, the input is returned unchanged.
+    
+    Parameters
+    ----------
+    x: np.ndarray or torch.Tensor
+        Input array or tensor.
+    original_axis: int or None
+        Original axis index for the channel dimension. If None, no movement is 
+        performed.
+
+    Returns
+    -------
+    np.ndarray or torch.Tensor
+        The array/tensor with the channel axis restored to its original position.
+
+    """
+    
+    if original_axis is None:
+        return x
+
+    if isinstance(x, np.ndarray):
+        return np.moveaxis(x, -1, original_axis)
+    elif isinstance(x, torch.Tensor):
+        return x.movedim(-1, original_axis)
+    else:
+        raise TypeError("Unsupported type")
+    
+
+class Blur(Feature):
+    """Backend-dispatched abstract base class for blurring operations.
+
+    This class defines a unified interface for applying blur filters across
+    multiple computational backends (NumPy and PyTorch). Subclasses are
+    responsible for implementing the backend-specific logic via `_get_numpy`
+    and `_get_torch`.
+
+    Subclasses must implement at least one of:
+        `_get_numpy(image, **kwargs)`
+        `_get_torch(image, **kwargs)`
+
+    Methods
+    -------
+    `get(image, **kwargs) -> np.ndarray | torch.Tensor`
+        Applies the blur using the selected backend.
+        
+    """
 
     def get(
-        self,
-        image: np.ndarray | torch.Tensor,
-        **kwargs,
-    ):
+        self: Blur,
+        image: np.ndarray | torch.Tensor,        
+        **kwargs: Any,
+    ) -> np.ndarray | torch.Tensor:
+        """Apply the blur filter to the input image using the selected backend.
+        
+        This method applies the blur filter to the input image using the
+        selected backend. It dispatches to the appropriate backend-specific
+        implementation based on the type of the input image and the configured
+        backend. It also handles unwrapping of scattered objects if necessary.
+
+        Parameters
+        ----------
+        image: np.ndarray or torch.Tensor
+            The input image to blur. Must be compatible with the selected 
+            backend.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            The blurred image, with the same shape and backend as the input.
+                
+        """
+
         backend = self.get_backend()
         from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
-        # --- unwrap scattered objects ---
         is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
         if is_scattered:
             obj = image.copy()
@@ -1077,36 +1172,39 @@ class Blur(Feature):
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
         
-            # --- rewrap if needed ---
         if is_scattered:
             obj.array = result
             return obj
         
         return result
 
-    def _get_numpy(self, image: np.ndarray, **kwargs):
+    def _get_numpy(self, image: np.ndarray,  **kwargs):
         raise NotImplementedError
 
-    def _get_torch(self, image: torch.Tensor, **kwargs):
+    def _get_torch(self, image: torch.Tensor,  **kwargs):
         raise NotImplementedError
 
 
-
-#TODO ***CM*** revise AverageBlur - torch, typing, docstring, unit test
 class AverageBlur(Blur):
     """Blur an image by computing simple means over neighbourhoods.
 
-    Performs a (N-1)D convolution if the last dimension is smaller than
-    the kernel size.
+    Applies a uniform (mean) filter over spatial dimensions.
+
+    If `channel_axis` is specified, the blur is applied independently
+    per channel. Otherwise, all dimensions are treated as spatial.
 
     Parameters
     ----------
     ksize: int
         Kernel size for the pooling operation.
+    channel_axis: int or None
+        The axis representing the channel dimension. If `None`, channels are
+        not treated separately and the same blurring is applied across all
+        dimensions.
 
     Methods
     -------
-    `get(image: np.ndarray | torch.Tensor, ksize: int, **kwargs: Any) --> np.ndarray | torch.Tensor`
+    `get(image, ksize, channel_axis, **kwargs) --> np.ndarray | torch.Tensor`
         Applies the average blurring filter to the input image.
 
     Examples
@@ -1114,11 +1212,11 @@ class AverageBlur(Blur):
     >>> import deeptrack as dt
     >>> import numpy as np
 
-    Create an input image:
+    Create an input image.
     >>> input_image = np.random.rand(32, 32)
 
-    Define an average blur feature:
-    >>> average_blur = dt.AverageBlur(ksize=3)
+    Define an average blur feature.
+    >>> average_blur = dt.AverageBlur(ksize=3, channel_axis=None)
     >>> output_image = average_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
@@ -1128,6 +1226,7 @@ class AverageBlur(Blur):
     def __init__(
         self: AverageBlur, 
         ksize: int = 3, 
+        channel_axis: int | None = -1,
         **kwargs: Any
     ) -> None:
         """Initialize the parameters for averaging input features.
@@ -1139,22 +1238,17 @@ class AverageBlur(Blur):
         ----------
         ksize: int
             Kernel size for the pooling operation.
+        channel_axis: int | None
+            The axis representing the channel dimension.
         **kwargs: Any
             Additional keyword arguments.
 
         """
 
         self.ksize = int(ksize)
+        self.channel_axis = channel_axis
         super().__init__(**kwargs)
 
-    @staticmethod
-    def _kernel_shape(shape: tuple[int, ...], ksize: int) -> tuple[int, ...]:
-        # If last dim is channel and smaller than kernel, do not blur channels
-        if shape[-1] < ksize:
-            return (ksize,) * (len(shape) - 1) + (1,)
-        return (ksize,) * len(shape)
-
-    # ---------- NumPy backend ----------
     def _get_numpy(
         self: AverageBlur, 
         image: np.ndarray, 
@@ -1179,17 +1273,23 @@ class AverageBlur(Blur):
         
         """
 
-        k = self._kernel_shape(image.shape, self.ksize)
-        return ndimage.uniform_filter(
-            image,
+        x, ch_axis = move_channel_last(image, self.channel_axis)
+
+        if ch_axis is not None:
+            k = (self.ksize,) * (x.ndim - 1) + (1,)
+        else:
+            k = (self.ksize,) * x.ndim
+
+        out = ndimage.uniform_filter(
+            x,
             size=k,
             mode=kwargs.get("mode", "reflect"),
             cval=kwargs.get("cval", 0),
             origin=kwargs.get("origin", 0),
-            axes=tuple(range(len(k))),
         )
 
-    # ---------- Torch backend ----------
+        return restore_channel_axis(out, ch_axis)
+
     def _get_torch(
         self: AverageBlur, 
         image: torch.Tensor, 
@@ -1214,52 +1314,52 @@ class AverageBlur(Blur):
 
         """
 
-        k = self._kernel_shape(tuple(image.shape), self.ksize)
+        x, ch_axis = move_channel_last(image, self.channel_axis)
 
-        last_dim_is_channel = len(k) < image.ndim
-        if last_dim_is_channel:
-            image = image.movedim(-1, 0)   # C, ...
+        # move channels → first (torch conv convention)
+        if ch_axis is not None:
+            x = x.movedim(-1, 0)  # C, ...
         else:
-            image = image.unsqueeze(0)     # 1, ...
+            x = x.unsqueeze(0)    # 1, ...
 
-        # add batch dimension
-        image = image.unsqueeze(0)         # 1, C, ...
+        x = x.unsqueeze(0)        # 1, C, ...
 
-        # symmetric padding
+        spatial_dims = x.ndim - 2
+        k = (self.ksize,) * spatial_dims
+
+        # padding
         pad = []
         for kk in reversed(k):
             p = kk // 2
             pad.extend([p, p])
-        image = F.pad(
-            image,
+
+        x = F.pad(
+            x,
             tuple(pad),
             mode=kwargs.get("mode", "reflect"),
             value=kwargs.get("cval", 0),
         )
 
-        # pooling by dimensionality
-        if image.ndim == 3:
-            out = F.avg_pool1d(image, kernel_size=k, stride=1)
-        elif image.ndim == 4:
-            out = F.avg_pool2d(image, kernel_size=k, stride=1)
-        elif image.ndim == 5:
-            out = F.avg_pool3d(image, kernel_size=k, stride=1)
+        # pooling
+        if spatial_dims == 1:
+            out = F.avg_pool1d(x, k, stride=1)
+        elif spatial_dims == 2:
+            out = F.avg_pool2d(x, k, stride=1)
+        elif spatial_dims == 3:
+            out = F.avg_pool3d(x, k, stride=1)
         else:
-            raise NotImplementedError(
-                f"Input dimensionality {image.ndim - 2} not supported"
-            )
+            raise NotImplementedError(f"{spatial_dims}D not supported")
 
-        # restore layout
         out = out.squeeze(0)
-        if last_dim_is_channel:
+
+        if ch_axis is not None:
             out = out.movedim(0, -1)
         else:
             out = out.squeeze(0)
 
-        return out
+        return restore_channel_axis(out, ch_axis)
 
 
-#TODO ***CM*** revise typing, docstring, unit test
 class GaussianBlur(Blur):
     """Applies a Gaussian blur to images using Gaussian kernels.
 

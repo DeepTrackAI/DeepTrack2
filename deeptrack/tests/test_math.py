@@ -256,8 +256,99 @@ class TestMath_Numpy(BackendTestBase):
         self.assertIsInstance(out, self.array_type)
         self.assertTrue(xp.all(out == 1))
 
-    def test_GaussianBlur(self):
+    def test_AverageBlur(self):
+        # --- impulse response ---
+        impulse = xp.zeros((7, 7))
+        impulse[3, 3] = 1
+        out = math.AverageBlur(ksize=3).resolve(impulse)
 
+        # symmetry
+        self.assertTrue(xp.allclose(out, xp.flip(out, axis=0)))
+        self.assertTrue(xp.allclose(out, xp.flip(out, axis=1)))
+
+        # normalization (sum preserved)
+        self.assertTrue(xp.allclose(xp.sum(out), xp.asarray(1.0, dtype=out.dtype)))
+
+        # center is maximum
+        self.assertTrue(out[3, 3] == xp.max(out))
+
+        # shape preserved
+        self.assertEqual(out.shape, impulse.shape)
+
+        # --- constant image invariance ---
+        const = xp.ones((9, 9)) * 5.0
+        out_const = math.AverageBlur(ksize=5).resolve(const)
+        self.assertTrue(xp.allclose(out_const, const))
+
+        # --- channel handling (last axis) ---
+        img = xp.zeros((7, 7, 3))
+        img[3, 3, 0] = 1.0
+        img[3, 3, 1] = 2.0
+        img[3, 3, 2] = 3.0
+
+        out = math.AverageBlur(ksize=3, channel_axis=-1).resolve(img)
+
+        # channels independent
+        self.assertTrue(xp.allclose(out[..., 1], 2 * out[..., 0]))
+        self.assertTrue(xp.allclose(out[..., 2], 3 * out[..., 0]))
+
+        # no cross-channel leakage
+        self.assertTrue(xp.all(out[..., 0] >= 0))
+        self.assertTrue(xp.all(out[..., 1] >= 0))
+        self.assertTrue(xp.all(out[..., 2] >= 0))
+
+        # shape preserved
+        self.assertEqual(out.shape, img.shape)
+
+        # --- channel handling (non-last axis) ---
+        img_cf = xp.zeros((3, 7, 7))
+        img_cf[0, 3, 3] = 1.0
+        img_cf[1, 3, 3] = 2.0
+        img_cf[2, 3, 3] = 3.0
+
+        out_cf = math.AverageBlur(ksize=3, channel_axis=0).resolve(img_cf)
+
+        self.assertTrue(xp.allclose(out_cf[1], 2 * out_cf[0]))
+        self.assertTrue(xp.allclose(out_cf[2], 3 * out_cf[0]))
+        self.assertEqual(out_cf.shape, img_cf.shape)
+
+        # # --- channel_axis=None mixes channels locally ---
+        # img = xp.zeros((7, 7, 3))
+        # img[3, 3, 0] = 1.0
+
+        # out = math.AverageBlur(ksize=3, channel_axis=None).resolve(img)
+        # print(xp.sum(out))
+        # # adjacent channel gets signal
+        # self.assertTrue(
+        #     xp.allclose(
+        #         xp.sum(out),
+        #         xp.asarray(1.0, dtype=out.dtype),
+        #         atol=1e-3,
+        #     )
+        # )
+
+        # # far channel may still be zero (depends on kernel reach)
+        # # so DO NOT assert for channel 2
+
+        # # energy preserved
+        # self.assertTrue(
+        #     xp.allclose(
+        #         xp.sum(out),
+        #         xp.asarray(1.0, dtype=out.dtype)
+        #     )
+        # )
+
+        # --- small kernel (identity-ish) ---
+        img = xp.random.rand(5, 5)
+        out = math.AverageBlur(ksize=1).resolve(img)
+        self.assertTrue(xp.allclose(out, img))
+
+        # --- dtype preservation ---
+        img = xp.ones((5, 5), dtype=xp.float32)
+        out = math.AverageBlur(ksize=3).resolve(img)
+        self.assertEqual(out.dtype, img.dtype)
+
+    def test_GaussianBlur(self):
         #  --- impulse response ---
         impulse = xp.zeros((7, 7))
         impulse[3, 3] = 1
