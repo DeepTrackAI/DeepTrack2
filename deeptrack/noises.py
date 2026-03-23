@@ -265,10 +265,10 @@ class Gaussian(Noise):
 
     Parameters
     ----------
-    mu: PropertyLike[float], default=0
-        Mean of the Gaussian distribution.
-    sigma: PropertyLike[float], default=1
-        Standard deviation of the Gaussian distribution.
+    mu: PropertyLike[float], optional
+        Mean of the Gaussian distribution. Defaults to `0`.
+    sigma: PropertyLike[float], optional
+        Standard deviation of the Gaussian distribution. Defaults to `1`.
 
     Methods
     -------
@@ -367,10 +367,10 @@ class ComplexGaussian(Noise):
 
     Parameters
     ----------
-    mu: PropertyLike[float], default=0
-        Mean of the Gaussian distribution.
-    sigma: PropertyLike[float], default=1
-        Standard deviation of the Gaussian distribution.
+    mu: PropertyLike[float], optional
+        Mean of the Gaussian distribution. Deafults to `0`.
+    sigma: PropertyLike[float], optional
+        Standard deviation of the Gaussian distribution. Defaults to `1`.
 
     Methods
     -------
@@ -471,14 +471,15 @@ class Poisson(Noise):
 
     Parameters
     ----------
-    snr: PropertyLike[float], default=100
+    snr: PropertyLike[float], optional
         Target signal-to-noise ratio of the output image. The signal is
-        determined by the peak value of the input image.
-    background: PropertyLike[float], default=0
+        determined by the peak value of the input image. Defaults to `100`.
+    background: PropertyLike[float], optional
         Background level used when computing the signal amplitude.
-    max_val: PropertyLike[float], default=1e8
+        Defaults to `0`.
+    max_val: PropertyLike[float], optional
         Maximum allowable value used to prevent overflow during noise
-        computation.
+        computation. Defaults to `1e8`.
 
     Methods
     -------
