@@ -842,7 +842,6 @@ class NormalizeQuantile(Feature):
         backend = self.get_backend()
 
         if backend == "torch":
-            # ---- HARD GUARD: torch only ----
             if not isinstance(image, torch.Tensor):
                 raise TypeError(
                     "Torch backend selected but image is not a torch.Tensor"
@@ -857,7 +856,6 @@ class NormalizeQuantile(Feature):
             )
 
         elif backend == "numpy":
-            # ---- HARD GUARD: numpy only ----
             if not isinstance(image, np.ndarray):
                 raise TypeError(
                     "NumPy backend selected but image is not a np.ndarray"
@@ -1146,7 +1144,6 @@ class Blur(Feature):
             image = obj.array  # operate on underlying array
 
         if backend == "torch":
-            # ---- HARD GUARD: torch only ----
             if not isinstance(image, torch.Tensor):
                 raise TypeError(
                     "Torch backend selected but image is not a torch.Tensor"
@@ -1158,7 +1155,6 @@ class Blur(Feature):
             )
 
         elif backend == "numpy":
-            # ---- HARD GUARD: numpy only ----
             if not isinstance(image, np.ndarray):
                 raise TypeError(
                     "NumPy backend selected but image is not a np.ndarray"
@@ -1411,8 +1407,6 @@ class GaussianBlur(Blur):
 
         """
 
-        # self.sigma = float(sigma)
-        # super().__init__(None, **kwargs)
         super().__init__(sigma=sigma, **kwargs)
 
     # NumPy backend
