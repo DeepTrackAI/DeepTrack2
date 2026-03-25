@@ -1,12 +1,10 @@
 """Mathematical operations and structures.
 
 This module provides classes and utilities to perform common mathematical
-operations and transformations on images, including clipping, normalization,
-blurring, and pooling. These are implemented as subclasses of `Feature` for
-seamless integration with the feature-based design of the library. Each
-`Feature` supports lazy evaluation and can be composed using operators (e.g.,
-`>>` for chaining), enabling efficient and readable construction of image
-processing pipelines.
+operations on images, including clipping, normalization, blurring, pooling,
+resizing, and morphology. All operations are implemented as subclasses of
+`Feature`, enabling seamless integration with the feature-based design of the
+library.
 
 Key Features
 ------------
@@ -30,59 +28,57 @@ Key Features
 
     Change the dimensions of images.
 
+- **Morphology**
+
+    Binary dilation and erosion on masks.
+
 Module Structure
 -----------------
+
+Helper functions:
+
+- `_prepare_mask`: Normalize mask shape and channel handling for morphological 
+    operations.
+- `isotropic_dilation`: Apply isotropic dilation to a binary mask.
+- `isotropic_erosion`:Apply isotropic erosion to a binary mask.
+- `move_channel_last`: Move the channel axis to the last position.
+- `restore_channel_axis`:Restore the channel axis to its original position.
+
 Classes:
 
-- `Clip`: Clip the input values within a specified minimum and maximum range.
-
-- `NormalizeMinMax`: Perform min-max normalization on images.
-
-- `NormalizeStandard`: Normalize images to have mean 0 and standard
-    deviation 1.
-
-- `NormalizeQuantile`: Normalize images based on specified quantiles.
-
-- `Blur`: Apply a blurring filter to the image.
-
-- `AverageBlur`: Apply average blurring to the image.
-
-- `GaussianBlur`: Apply Gaussian blurring to the image.
-
-- `MedianBlur`: Apply median blurring to the image.
-
-- `Pool`: Apply a pooling function to downsample the image.
-
-- `AveragePooling`: Apply average pooling to the image.
-
-- `MaxPooling`: Apply max-pooling to the image.
-
-- `MinPooling`: Apply min-pooling to the image.
-
-- `SumPooling`: Apply sum pooling to the image.
-
-- `MedianPooling`: Apply median pooling to the image.
-
-- `Resize`: Resize the image to a specified size.
-
-- `BlurCV2`: Apply a blurring filter using OpenCV2.
-
-- `BilateralBlur`: Apply bilateral blurring to preserve edges while smoothing.
+- `Average`: Compute the mean across a list of inputs.
+- `Clip`: Clip values to a specified minimum and maximum.
+- `NormalizeMinMax`: Perform min–max normalization.
+- `NormalizeStandard`: Normalize to zero mean and unit variance.
+- `NormalizeQuantile`: Normalize based on specified quantiles.
+- `Blur`: Base class for blurring operations.
+- `AverageBlur`: Apply mean filtering.
+- `GaussianBlur`: Apply Gaussian filtering.
+- `MedianBlur`: Apply median filtering.
+- `Pool`: Base class for pooling operations.
+- `AveragePooling`: Apply average pooling.
+- `MaxPooling`: Apply max pooling.
+- `MinPooling`: Apply min pooling.
+- `SumPooling`: Apply sum pooling.
+- `MedianPooling`: Apply median pooling.
+- `Resize`: Resize images to a specified spatial size.
+- `BlurCV2`: Apply OpenCV-based blurring (NumPy backend only).
+- `BilateralBlur`: Apply bilateral filtering for edge-preserving smoothing.
 
 Examples
 --------
-Define a simple pipeline with mathematical operations:
+Define a simple pipeline with mathematical operations.
 >>> import deeptrack as dt
 >>> import numpy as np
 
-Create features for clipping and normalization:
+Create features for clipping and normalization.
 >>> clip = dt.Clip(min=0, max=200)
 >>> normalize = dt.NormalizeMinMax()
 
-Chain features together:
+Chain features together.
 >>> pipeline = clip >> normalize
 
-Process an input image:
+Process an input image.
 >>> input_image = np.array([0, 100, 200, 400])
 >>> output_image = pipeline(input_image)
 >>> print(output_image)
@@ -90,12 +86,11 @@ Process an input image:
 
 """
 
-#TODO ***??*** revise class docstring
 #TODO ***??*** revise DTAT381
 
 from __future__ import annotations
 
-from typing import Any, Callable, Dict, Literal, Tuple, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 import warnings
 
 import array_api_compat as apc
@@ -135,6 +130,8 @@ __all__ = [
     "Resize",
     "BlurCV2",
     "BilateralBlur",
+    "isotropic_dilation",
+    "isotropic_erosion",
 ]
 
 if TYPE_CHECKING:
@@ -571,7 +568,11 @@ class NormalizeStandard(Feature):
 
         """
 
-        super().__init__(featurewise=featurewise, **kwargs)
+        super().__init__(
+            featurewise=featurewise,
+            channel_axis=channel_axis,
+            **kwargs
+        )
 
     def get(
         self: NormalizeStandard,
@@ -1017,7 +1018,7 @@ class NormalizeQuantile(Feature):
 def move_channel_last(
     x: np.ndarray | torch.Tensor, 
     channel_axis: int | None,
-) -> Tuple[np.ndarray | torch.Tensor, int | None]:
+) -> tuple[np.ndarray | torch.Tensor, int | None]:
     """Move the channel axis to the last position.
     
     Helper function to move the channel axis to the last position for both 
@@ -1034,7 +1035,7 @@ def move_channel_last(
 
     Returns
     -------
-    Tuple[np.ndarray or torch.Tensor, int or None]
+    tuple[np.ndarray or torch.Tensor, int or None]
         A tuple containing the array/tensor with the channel axis moved to the
         last position and the original channel axis index (or None if no 
         movement was done).
@@ -1955,8 +1956,6 @@ class Pool(Feature):
     ) -> tuple[int, int] | tuple[int, int, int]:
         """Return pooling window size matching input dimensionality.
 
-        Returns (px, py) for 2D inputs and (px, py, pz) for 3D inputs.
-
         Parameters
         ----------
         x: np.ndarray or torch.Tensor
@@ -1964,6 +1963,7 @@ class Pool(Feature):
             size.
         has_channels: bool
             Whether the input has a channel dimension.
+
         Returns
         -------
         tuple[int, int] or tuple[int, int, int]
@@ -3196,9 +3196,6 @@ class BlurCV2(Feature):
         except AttributeError as e:
             raise RuntimeError(f"OpenCV missing border constant '{border_attr}'") from e
 
-        # preserve legacy behavior
-        kwargs.pop("name", None)
-
         return filter_fn(
             src=image,
             borderType=border,
@@ -3332,7 +3329,6 @@ def _prepare_mask(
 
     # --- explicit channel handling ---
     if channel_axis is not None:
-        print('explicit channel handling')
         return mask, True, False
 
     # --- implicit singleton channel ---
@@ -3365,7 +3361,9 @@ def isotropic_dilation(
 
     **NumPy backend**
     Uses `skimage.morphology.isotropic_dilation`, based on Euclidean distance.
-
+    An additional safeguard ensures that empty masks remain empty. This avoids 
+    boundary artifacts present in `skimage.morphology.isotropic_dilation`.
+    
     **Torch backend**
     Uses convolution with a full kernel (square/cubic neighborhood),
     corresponding to Chebyshev distance. This is not strictly isotropic.
@@ -3398,11 +3396,6 @@ def isotropic_dilation(
 
     mask, channelwise, restore_channel = _prepare_mask(mask, channel_axis)
     
-    print('channelwise:', channelwise)
-    print('channel_axis:', channel_axis)
-
-    print("ENTRY:", backend, channel_axis, mask.shape)
-
     if channelwise:
         xp = np if backend == "numpy" else __import__("torch")
 
@@ -3433,6 +3426,10 @@ def isotropic_dilation(
 
     if backend == "numpy":
         from skimage.morphology import isotropic_dilation as sk_iso_dil
+        mask = mask > 0
+        if not np.any(mask): # fixes a corner case 
+            return np.zeros_like(mask, dtype=bool)
+
         out = sk_iso_dil(mask, radius)
         if restore_channel:
             return out[..., None]
@@ -3553,6 +3550,7 @@ def isotropic_erosion(
 
     if backend == "numpy":
         from skimage.morphology import isotropic_erosion as sk_iso_ero
+        mask = mask > 0
         out =  sk_iso_ero(mask, radius)
         if restore_channel:
             return out[..., None]

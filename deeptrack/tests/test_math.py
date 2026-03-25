@@ -1110,66 +1110,64 @@ class TestMath_Numpy(BackendTestBase):
         self.assertEqual(out.dtype, image.dtype)
 
     def test_isotropic_dilation(self):
-        # mask = xp.asarray([[0, 1], [0, 0]], dtype=bool)
-        # out = math.isotropic_dilation(mask, radius=0, backend=self.BACKEND)
-        # self.assertTrue(xp.all(out == mask))
+        mask = xp.asarray([[0, 1], [0, 0]], dtype=bool)
+        out = math.isotropic_dilation(mask, radius=0, backend=self.BACKEND)
+        self.assertTrue(xp.all(out == mask))
 
-        # mask = xp.zeros((5, 5), dtype=bool)
-        # mask[2, 2] = True
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertTrue(xp.sum(out) >= xp.sum(mask))
+        mask = xp.zeros((5, 5), dtype=bool)
+        mask[2, 2] = True
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertTrue(xp.sum(out) >= xp.sum(mask))
 
-        # mask = xp.random.rand(5, 5) > 0.5
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertTrue(xp.all((out == 0) | (out == 1)))
+        mask = xp.random.rand(5, 5) > 0.5
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertTrue(xp.all((out == 0) | (out == 1)))
 
-        # mask = xp.zeros((7, 7), dtype=bool)
-        # mask[3, 3] = True
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertTrue(out[3, 3])
-        # self.assertTrue(xp.sum(out) > 1)
+        mask = xp.zeros((7, 7), dtype=bool)
+        mask[3, 3] = True
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertTrue(out[3, 3])
+        self.assertTrue(xp.sum(out) > 1)
 
-        # mask = xp.ones((5, 5), dtype=bool)
-        # out = math.isotropic_dilation(mask, radius=2, backend=self.BACKEND)
-        # self.assertTrue(xp.all(out))
+        mask = xp.ones((5, 5), dtype=bool)
+        out = math.isotropic_dilation(mask, radius=2, backend=self.BACKEND)
+        self.assertTrue(xp.all(out))
         
-        # mask = xp.zeros((5, 5, 5), dtype=bool)
-        # mask[2, 2, 2] = True
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertTrue(out[2, 2, 2])
-        # self.assertTrue(xp.sum(out) > 1)
+        mask = xp.zeros((5, 5, 5), dtype=bool)
+        mask[2, 2, 2] = True
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertTrue(out[2, 2, 2])
+        self.assertTrue(xp.sum(out) > 1)
 
-        # # activate one plane only
-        # mask = xp.zeros((5, 5, 5), dtype=bool)
-        # mask[2, :, :] = True
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # # must expand along Z
-        # self.assertTrue(xp.sum(out[1]) > 0)
-        # self.assertTrue(xp.sum(out[3]) > 0)
+        # activate one plane only
+        mask = xp.zeros((5, 5, 5), dtype=bool)
+        mask[2, :, :] = True
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        # must expand along Z
+        self.assertTrue(xp.sum(out[1]) > 0)
+        self.assertTrue(xp.sum(out[3]) > 0)
         
-        # mask = xp.zeros((7, 7, 7))
-        # mask[3, 3, 3] = 1
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertEqual(out.ndim, mask.ndim)
-        # self.assertGreater(xp.sum(out), 1)
+        mask = xp.zeros((7, 7, 7))
+        mask[3, 3, 3] = 1
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertEqual(out.ndim, mask.ndim)
+        self.assertGreater(xp.sum(out), 1)
 
-        # mask = xp.zeros((7, 7, 1))
-        # mask[3, 3, 0] = 1
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertEqual(out.ndim, mask.ndim)
+        mask = xp.zeros((7, 7, 1))
+        mask[3, 3, 0] = 1
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertEqual(out.ndim, mask.ndim)
 
-        # mask = xp.zeros((5,5), dtype=bool)
-        # mask[2,2] = True
-        # out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
-        # self.assertTrue(out[2,2])
-        # self.assertEqual(out.shape, mask.shape)
+        mask = xp.zeros((5,5), dtype=bool)
+        mask[2,2] = True
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        self.assertTrue(out[2,2])
+        self.assertEqual(out.shape, mask.shape)
 
         mask = xp.zeros((5,5,2), dtype=bool)
         mask[2,2,0] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND, channel_axis=-1)
-        print(xp.sum(out[...,0]), xp.sum(mask[...,0]))
-        print(xp.sum(out[...,1]), xp.sum(mask[...,1]))
-        self.assertEqual(xp.sum(out[...,1]), xp.sum(mask[...,1]))
+        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND, channel_axis=-1)        
+        self.assertEqual(xp.sum(out[...,1]).item(), 0)
 
     def test_isotropic_erosion(self):
         mask = xp.asarray([[0, 1], [1, 1]], dtype=bool)
@@ -1210,6 +1208,27 @@ class TestMath_Numpy(BackendTestBase):
         mask = xp.ones((7, 7, 7))
         out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertLess(xp.sum(out), xp.sum(mask))
+
+        mask = xp.zeros((5,5), dtype=bool)
+        mask[2,2] = True
+        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        # single pixel should disappear
+        self.assertFalse(out[2,2])
+        self.assertEqual(xp.sum(out), 0)
+        self.assertEqual(out.shape, mask.shape)
+
+        mask = xp.zeros((5,5,2), dtype=bool)
+        mask[2,2,0] = True
+        out = math.isotropic_erosion(
+            mask,
+            radius=1,
+            backend=self.BACKEND,
+            channel_axis=-1,
+        )
+        # channel 0 → removed
+        self.assertEqual(xp.sum(out[...,0]).item(), 0)
+        # channel 1 → remains empty (no contamination)
+        self.assertEqual(xp.sum(out[...,1]).item(), 0)
 
 # Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
