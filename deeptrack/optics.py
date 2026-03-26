@@ -1900,12 +1900,10 @@ class Brightfield(Optics):
         output_image = xp.fft.ifft2(light_in_focus)[
             : padded_volume.shape[0], : padded_volume.shape[1]
         ]
-        # output_image = np.expand_dims(output_image, axis=-1)
         output_image = xp.expand_dims(output_image, axis=-1)
         output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
         if not kwargs.get("return_field", False):
-            # output_image = np.square(np.abs(output_image))
             output_image = xp.square(xp.abs(output_image))
 
         return output_image
