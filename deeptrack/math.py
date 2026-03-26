@@ -37,7 +37,7 @@ Module Structure
 
 Helper functions:
 
-- `_prepare_mask`: Normalize mask shape and channel handling for morphological 
+- `_prepare_mask`: Normalize mask shape and channel handling for morphological
     operations.
 - `isotropic_dilation`: Apply isotropic dilation to a binary mask.
 - `isotropic_erosion`:Apply isotropic erosion to a binary mask.
@@ -67,18 +67,23 @@ Classes:
 
 Examples
 --------
-Define a simple pipeline with mathematical operations.
 >>> import deeptrack as dt
->>> import numpy as np
+
+Define a simple pipeline with mathematical operations.
 
 Create features for clipping and normalization.
+
 >>> clip = dt.Clip(min=0, max=200)
 >>> normalize = dt.NormalizeMinMax()
 
 Chain features together.
+
 >>> pipeline = clip >> normalize
 
 Process an input image.
+
+>>> import numpy as np
+>>>
 >>> input_image = np.array([0, 100, 200, 400])
 >>> output_image = pipeline(input_image)
 >>> print(output_image)
@@ -86,12 +91,9 @@ Process an input image.
 
 """
 
-#TODO ***??*** revise DTAT381
-
 from __future__ import annotations
 
 from typing import Any, Callable, TYPE_CHECKING
-import warnings
 
 import array_api_compat as apc
 import numpy as np
@@ -99,10 +101,10 @@ from scipy import ndimage
 import skimage
 import skimage.measure
 
-from deeptrack import image, utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
+from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
-from deeptrack.backend import xp, config
+from deeptrack.backend import xp
 
 if TORCH_AVAILABLE:
     import torch
@@ -154,9 +156,9 @@ class Average(Feature):
     Parameters
     ----------
     axis: int or tuple[int], optional
-        Axis or axes along which to compute the average. It defaults to 0.
+        Axis or axes along which to compute the average. Defaults to `0`.
     features: list[Feature] or None, optional
-        List of features to resolve and average. It defaults to None.
+        List of features to resolve and average. Defaults to `None`.
 
     Attributes
     ----------
@@ -174,23 +176,28 @@ class Average(Feature):
     >>> import deeptrack as dt
 
     Create two input images.
+
     >>> import numpy as np
+    >>>
     >>> input_image0 = np.ones((10, 30, 20)) * 2
     >>> input_image1 = np.ones((10, 30, 20)) * 4
 
     Define a pipeline with the average feature along the dimension 0.
+
     >>> average = dt.Average(axis=0)
     >>> output_image = average([input_image0, input_image1])
     >>> output_image
     (10, 30, 20)
 
     Define a pipeline with the average feature along the dimension 1.
+
     >>> average = dt.Average(axis=1)
     >>> output_image = average([input_image0, input_image1])
     >>> output_image.shape
     (2, 30, 20)
 
     Define a pipeline averaging each image.
+
     >>> average = dt.Average(axis=(1, 2, 3))
     >>> output_image = average([input_image0, input_image1])
     >>> output_image.shape
@@ -211,10 +218,10 @@ class Average(Feature):
 
         Parameters
         ----------
-        axis: int or tuple[int]
-            Axis or axes along which to compute the average. It defaults to 0.
+        axis: int or tuple[int], optional
+            Axis or axes along which to compute the average. Defaults to `0`.
         features: list[Feature] or None, optional
-            List of features to be resolved and averaged. It defaults to None.
+            List of features to be resolved and averaged. Defaults to `None`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -265,17 +272,17 @@ class Clip(Feature):
     This feature applies elementwise clipping such that all values in the input
     are constrained to the interval [`min`, `max`].
 
-    This operation is purely pointwise and does **not interpret dimensions**
-    (e.g., spatial or channel axes). The same transformation is applied
-    independently to every element.
+    This operation is purely pointwise and does not interpret dimensions (e.g.,
+    spatial or channel axes). The same transformation is applied independently
+    to every element.
 
     Parameters
     ----------
     min: float, optional
-        Lower bound. Values below this will be set to `min`. It defaults to
+        Lower bound. Values below this will be set to `min`. Defaults to
         `-inf`.
     max: float, optional
-        Upper bound. Values above this will be set to `max`. It defaults to
+        Upper bound. Values above this will be set to `max`. Defaults to
         `+inf`.
 
     Returns
@@ -293,11 +300,13 @@ class Clip(Feature):
     >>> import deeptrack as dt
 
     Create an input image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.asarray([[10, 4], [4, -10]])
 
     Define a clipper feature:
+
     >>> clipper = dt.Clip(min=0, max=5)
     >>> output_image = clipper(input_image)
     >>> output_image
@@ -317,9 +326,9 @@ class Clip(Feature):
         Parameters
         ----------
         min: float, optional
-            Minimum allowed value. It defaults to `-xp.inf`.
+            Minimum allowed value. Defaults to `-xp.inf`.
         max: float, optional
-            Maximum allowed value. It defaults to `+xp.inf`.
+            Maximum allowed value. Defaults to `+xp.inf`.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -397,11 +406,13 @@ class NormalizeMinMax(Feature):
     >>> import deeptrack as dt
 
     Create an input image:
+
     >>> import numpy as np
     >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a min-max normalizer:
+
     >>> normalizer = dt.NormalizeMinMax(min=-5, max=5)
     >>> output_image = normalizer(input_image)
     >>> output_image
@@ -436,11 +447,11 @@ class NormalizeMinMax(Feature):
         """
 
         super().__init__(
-            min=min, 
-            max=max, 
-            featurewise=featurewise, 
-            channel_axis=channel_axis, 
-            **kwargs
+            min=min,
+            max=max,
+            featurewise=featurewise,
+            channel_axis=channel_axis,
+            **kwargs,
         )
 
     def get(
@@ -477,7 +488,9 @@ class NormalizeMinMax(Feature):
 
         if featurewise and channel_axis is not None:
             ch_axis = channel_axis % image.ndim
-            reduce_axes = tuple(ax for ax in range(image.ndim) if ax != ch_axis)
+            reduce_axes = tuple(
+                ax for ax in range(image.ndim) if ax != ch_axis
+            )
 
             img_min = xp.min(image, axis=reduce_axes, keepdims=True)
             img_max = xp.max(image, axis=reduce_axes, keepdims=True)
@@ -524,7 +537,7 @@ class NormalizeStandard(Feature):
     Returns
     -------
     np.ndarray or torch.Tensor
-        Standardized array with the same shape as input.    
+        Standardized array with the same shape as input.
 
     Methods
     -------
@@ -536,7 +549,9 @@ class NormalizeStandard(Feature):
     >>> import deeptrack as dt
 
     Create an input image.
+
     >>> import numpy as np
+    >>>
     >>> input_image = np.array([[1, 2], [3, 4]], dtype=float)
 
     >>> standardizer = dt.NormalizeStandard()
@@ -569,9 +584,7 @@ class NormalizeStandard(Feature):
         """
 
         super().__init__(
-            featurewise=featurewise,
-            channel_axis=channel_axis,
-            **kwargs
+            featurewise=featurewise, channel_axis=channel_axis, **kwargs
         )
 
     def get(
@@ -591,11 +604,11 @@ class NormalizeStandard(Feature):
         denominator N).
 
         Axis semantics:
-        - If `featurewise=False`, normalization is applied globally over all 
+        - If `featurewise=False`, normalization is applied globally over all
         elements.
-        - If `featurewise=True` and `channel_axis` is specified, normalization 
+        - If `featurewise=True` and `channel_axis` is specified, normalization
         is applied independently along each channel.
-        - If `featurewise=True` and `channel_axis=None`, normalization falls 
+        - If `featurewise=True` and `channel_axis=None`, normalization falls
         back to global behavior.
 
         The output preserves the input shape.
@@ -659,11 +672,11 @@ class NormalizeStandard(Feature):
     ) -> np.ndarray:
         """NumPy implementation of standardization.
 
-        Performs z-score normalization using NumPy operations. Uses population 
-        standard deviation (`ddof=0`). Channels are temporarily moved to the 
-        last axis for computation. Numerical stability is ensured by clamping 
+        Performs z-score normalization using NumPy operations. Uses population
+        standard deviation (`ddof=0`). Channels are temporarily moved to the
+        last axis for computation. Numerical stability is ensured by clamping
         the standard deviation.
-       
+
         Parameters
         ----------
         image: np.ndarray
@@ -712,9 +725,9 @@ class NormalizeStandard(Feature):
     ) -> torch.Tensor:
         """PyTorch implementation of standardization.
 
-        Performs z-score normalization using PyTorch tensor operations. Uses 
-        population standard deviation (`unbiased=False`). Channels are 
-        temporarily moved to the last axis for computation. Numerical stability 
+        Performs z-score normalization using PyTorch tensor operations. Uses
+        population standard deviation (`unbiased=False`). Channels are
+        temporarily moved to the last axis for computation. Numerical stability
         is ensured via `torch.clamp`.
 
         Parameters
@@ -785,16 +798,19 @@ class NormalizeQuantile(Feature):
     Notes
     -----
     - Not differentiable.
-    
+
     Examples
     --------
     >>> import deeptrack as dt
 
     Create an input image.
+
     >>> import numpy as np
+    >>>
     >>> input_image = np.array([[10, 4], [4, -10]])
 
     Define a quantile normalizer.
+
     >>> normalizer = dt.NormalizeQuantile(quantiles=(0.25, 0.75))
     >>> output_image = normalizer(input_image)
     >>> output_image
@@ -901,7 +917,7 @@ class NormalizeQuantile(Feature):
         -------
         np.ndarray or torch.Tensor
             The quantile-normalized image.
-        
+
         """
 
         q_low_val, q_high_val = quantiles
@@ -937,7 +953,7 @@ class NormalizeQuantile(Feature):
 
         out = np.where(np.isnan(out), 0.0, out)
         return out
-    
+
     def _get_torch(
         self,
         image: torch.Tensor,
@@ -947,7 +963,7 @@ class NormalizeQuantile(Feature):
         **kwargs: Any,
     ) -> torch.Tensor:
         """Normalize the input image based on the specified quantiles.
-        
+
         Parameters
         ----------
         image: torch.Tensor
@@ -961,14 +977,14 @@ class NormalizeQuantile(Feature):
             normalization is performed.
         kwargs: Any
             Additional keyword arguments (unused).
-            
+
         Returns
         -------
         torch.Tensor
             The quantile-normalized image.
-        
+
         """
-        
+
         q_low_val, q_high_val = quantiles
 
         q = torch.tensor(
@@ -1016,13 +1032,13 @@ class NormalizeQuantile(Feature):
 
 
 def move_channel_last(
-    x: np.ndarray | torch.Tensor, 
+    x: np.ndarray | torch.Tensor,
     channel_axis: int | None,
 ) -> tuple[np.ndarray | torch.Tensor, int | None]:
     """Move the channel axis to the last position.
-    
-    Helper function to move the channel axis to the last position for both 
-    NumPy and PyTorch tensors. If `channel_axis` is `None`, the input is 
+
+    Helper function to move the channel axis to the last position for both
+    NumPy and PyTorch tensors. If `channel_axis` is `None`, the input is
     returned unchanged.
 
     Parameters
@@ -1030,14 +1046,14 @@ def move_channel_last(
     x: np.ndarray or torch.Tensor
         Input array or tensor.
     channel_axis: int or None
-        Axis corresponding to channels/features. If None, no movement is 
+        Axis corresponding to channels/features. If None, no movement is
         performed.
 
     Returns
     -------
     tuple[np.ndarray or torch.Tensor, int or None]
         A tuple containing the array/tensor with the channel axis moved to the
-        last position and the original channel axis index (or None if no 
+        last position and the original channel axis index (or None if no
         movement was done).
 
     """
@@ -1058,30 +1074,30 @@ def move_channel_last(
 
 
 def restore_channel_axis(
-        x: np.ndarray | torch.Tensor, 
-        original_axis: int | None,
-    ) -> np.ndarray | torch.Tensor:
+    x: np.ndarray | torch.Tensor,
+    original_axis: int | None,
+) -> np.ndarray | torch.Tensor:
     """Restore the channel axis to its original position.
-    
+
     Helper function to restore the channel axis to its original position after
     processing. If `original_axis` is `None`, the input is returned unchanged.
-    
+
     Parameters
     ----------
     x: np.ndarray or torch.Tensor
         Input array or tensor.
     original_axis: int or None
-        Original axis index for the channel dimension. If None, no movement is 
+        Original axis index for the channel dimension. If None, no movement is
         performed.
 
     Returns
     -------
     np.ndarray or torch.Tensor
-        The array/tensor with the channel axis restored to its original 
+        The array/tensor with the channel axis restored to its original
         position.
 
     """
-    
+
     if original_axis is None:
         return x
 
@@ -1091,7 +1107,7 @@ def restore_channel_axis(
         return x.movedim(-1, original_axis)
     else:
         raise TypeError("Unsupported type")
-    
+
 
 class Blur(Feature):
     """Backend-dispatched abstract base class for blurring operations.
@@ -1109,7 +1125,7 @@ class Blur(Feature):
     -------
     `get(image, **kwargs) -> np.ndarray | torch.Tensor`
         Applies the blur using the selected backend.
-        
+
     """
 
     def get(
@@ -1118,7 +1134,7 @@ class Blur(Feature):
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Apply the blur filter to the input image using the selected backend.
-        
+
         This method applies the blur filter to the input image using the
         selected backend. It dispatches to the appropriate backend-specific
         implementation based on the type of the input image and the configured
@@ -1127,8 +1143,8 @@ class Blur(Feature):
         Parameters
         ----------
         image: np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
-            The input image to blur. Must be compatible with the selected 
-            backend. If a scattered object is provided, the blur will be 
+            The input image to blur. Must be compatible with the selected
+            backend. If a scattered object is provided, the blur will be
             applied to its underlying array.
         **kwargs: Any
             Additional keyword arguments.
@@ -1137,7 +1153,7 @@ class Blur(Feature):
         -------
         np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
             The blurred image, with the same shape and backend as the input.
-                
+
         """
 
         backend = self.get_backend()
@@ -1172,17 +1188,17 @@ class Blur(Feature):
 
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
-        
+
         if is_scattered:
             obj.array = result
             return obj
-        
+
         return result
 
-    def _get_numpy(self, image: np.ndarray,  **kwargs):
+    def _get_numpy(self, image: np.ndarray, **kwargs):
         raise NotImplementedError
 
-    def _get_torch(self, image: torch.Tensor,  **kwargs):
+    def _get_torch(self, image: torch.Tensor, **kwargs):
         raise NotImplementedError
 
 
@@ -1193,7 +1209,7 @@ class AverageBlur(Blur):
 
     If `channel_axis` is specified, the blur is applied independently
     per channel. Otherwise, all dimensions (including channels, if present)
-    are treated as spatial, and the filter is applied across them. 
+    are treated as spatial, and the filter is applied across them.
 
     Parameters
     ----------
@@ -1212,12 +1228,15 @@ class AverageBlur(Blur):
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
 
     Create an input image.
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
     Define an average blur feature.
+
     >>> average_blur = dt.AverageBlur(ksize=3, channel_axis=None)
     >>> output_image = average_blur(input_image)
     >>> print(output_image.shape)
@@ -1226,10 +1245,10 @@ class AverageBlur(Blur):
     """
 
     def __init__(
-        self: AverageBlur, 
-        ksize: int = 3, 
+        self: AverageBlur,
+        ksize: int = 3,
         channel_axis: int | None = -1,
-        **kwargs: Any
+        **kwargs: Any,
     ) -> None:
         """Initialize the parameters for averaging input features.
 
@@ -1252,27 +1271,25 @@ class AverageBlur(Blur):
         super().__init__(**kwargs)
 
     def _get_numpy(
-        self: AverageBlur, 
-        image: np.ndarray, 
-        **kwargs: Any
+        self: AverageBlur, image: np.ndarray, **kwargs: Any
     ) -> np.ndarray:
         """Apply average blurring using SciPy's uniform_filter.
 
         This method applies average blurring to the input image using
         SciPy's `uniform_filter`.
-        
+
         Parameters
         ----------
         image: np.ndarray
             The input image to blur.
         **kwargs: Any
             Additional keyword arguments for `uniform_filter`.
-        
+
         Returns
         -------
         np.ndarray
             The blurred image.
-        
+
         """
 
         x, ch_axis = move_channel_last(image, self.channel_axis)
@@ -1293,9 +1310,7 @@ class AverageBlur(Blur):
         return restore_channel_axis(out, ch_axis)
 
     def _get_torch(
-        self: AverageBlur, 
-        image: torch.Tensor, 
-        **kwargs: Any
+        self: AverageBlur, image: torch.Tensor, **kwargs: Any
     ) -> torch.Tensor:
         """Apply average blurring using PyTorch's avg_pool.
 
@@ -1322,9 +1337,9 @@ class AverageBlur(Blur):
         if ch_axis is not None:
             x = x.movedim(-1, 0)  # C, ...
         else:
-            x = x.unsqueeze(0)    # 1, ...
+            x = x.unsqueeze(0)  # 1, ...
 
-        x = x.unsqueeze(0)        # 1, C, ...
+        x = x.unsqueeze(0)  # 1, C, ...
 
         spatial_dims = x.ndim - 2
         k = (self.ksize,) * spatial_dims
@@ -1368,7 +1383,7 @@ class GaussianBlur(Blur):
     The image is convolved with a Gaussian kernel with standard deviation
     `sigma`. If `channel_axis` is specified, the blur is applied independently
     per channel. Otherwise, all dimensions (including channels, if present)
-    are treated as spatial, and the filter is applied across them. 
+    are treated as spatial, and the filter is applied across them.
     The implementation uses separable convolution for efficiency.
     For large `sigma` relative to the image size, the output approaches
       the global mean of the image.
@@ -1384,25 +1399,30 @@ class GaussianBlur(Blur):
     Methods
     -------
     `get(image, sigma, channel_axis, **kwargs) --> array | tensor`
-            Apply Gaussian blurring to the input image using the selected 
-            backend.        
+            Apply Gaussian blurring to the input image using the selected
+            backend.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
 
     Create an input image:
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
     Define a Gaussian blur feature.
+
     >>> gaussian_blur = dt.GaussianBlur(sigma=2, channel_axis=None)
     >>> output_image = gaussian_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
 
     Visualize the input and output images.
+
+    >>> import matplotlib.pyplot as plt
+    >>>
     >>> plt.figure(figsize=(8, 4))
     >>> plt.subplot(1, 2, 1)
     >>> plt.imshow(input_image, cmap='gray')
@@ -1413,10 +1433,10 @@ class GaussianBlur(Blur):
     """
 
     def __init__(
-        self: GaussianBlur, 
+        self: GaussianBlur,
         sigma: PropertyLike[float] = 2,
         channel_axis: int | None = -1,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         """Initialize the parameters for Gaussian blurring.
 
@@ -1436,18 +1456,15 @@ class GaussianBlur(Blur):
         super().__init__(sigma=sigma, **kwargs)
 
     def _get_numpy(
-        self: GaussianBlur, 
-        image: np.ndarray, 
-        sigma: float, 
-        **kwargs
+        self: GaussianBlur, image: np.ndarray, sigma: float, **kwargs
     ) -> np.ndarray:
         """Apply Gaussian blurring using SciPy's gaussian_filter.
-        
-        Apply Gaussian blur using SciPy's `gaussian_filter`. The `sigma` 
-        parameter is expanded to match the number of dimensions, with zero for 
+
+        Apply Gaussian blur using SciPy's `gaussian_filter`. The `sigma`
+        parameter is expanded to match the number of dimensions, with zero for
         the channel dimension if `channel_axis` is specified. The blur is
         applied across all spatial dimensions, and independently per channel if
-        `channel_axis` is set. 
+        `channel_axis` is set.
 
         Parameters
         ----------
@@ -1462,7 +1479,7 @@ class GaussianBlur(Blur):
         -------
         np.ndarray
             The blurred image.
-        
+
         """
 
         x, ch_axis = move_channel_last(image, self.channel_axis)
@@ -1488,12 +1505,12 @@ class GaussianBlur(Blur):
         **kwargs: Any,
     ) -> torch.Tensor:
         """Apply Gaussian blurring using separable convolution.
-        
-        Applies Gaussian blur using separable 1D convolutions. Channels are 
-        processed independently if `channel_axis` is set. Otherwise, the same 
-        blur is applied across all dimensions. The method handles edge cases 
+
+        Applies Gaussian blur using separable 1D convolutions. Channels are
+        processed independently if `channel_axis` is set. Otherwise, the same
+        blur is applied across all dimensions. The method handles edge cases
         such as zero sigma (no blur) and large sigma (approaching global mean).
-        
+
         Parameters
         ----------
         image: torch.Tensor
@@ -1547,11 +1564,12 @@ class GaussianBlur(Blur):
 
         # --- build 1D Gaussian kernel ---
         coords = torch.arange(
-            -radius, radius + 1,
+            -radius,
+            radius + 1,
             device=x.device,
             dtype=x.dtype,
         )
-        kernel = torch.exp(-(coords ** 2) / (2 * sigma ** 2))
+        kernel = torch.exp(-(coords**2) / (2 * sigma**2))
         kernel = kernel / kernel.sum()
 
         C = x.shape[1]
@@ -1601,8 +1619,8 @@ class MedianBlur(Blur):
     per channel. Otherwise, all dimensions (including channels, if present)
     are treated as spatial and the filter is applied across them.
 
-    NumPy backend uses `scipy.ndimage.median_filter`. Torch backend uses 
-    explicit unfolding and is significantly slower. Median filtering is not 
+    NumPy backend uses `scipy.ndimage.median_filter`. Torch backend uses
+    explicit unfolding and is significantly slower. Median filtering is not
     differentiable.
 
     Parameters
@@ -1616,25 +1634,30 @@ class MedianBlur(Blur):
     Methods
     -------
     `get(image, ksize, channel_axis, **kwargs) --> array | tensor`
-            Applies the median filter to the input image using the selected 
-            backend.        
+            Applies the median filter to the input image using the selected
+            backend.
 
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> import matplotlib.pyplot as plt
 
     Create an input image:
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
     Define a median blur feature:
+
     >>> median_blur = dt.MedianBlur(ksize=3, channel_axis=None)
     >>> output_image = median_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
 
     Visualize the input and output images:
+
+    >>> import matplotlib.pyplot as plt
+    >>>
     >>> plt.figure(figsize=(8, 4))
     >>> plt.subplot(1, 2, 1)
     >>> plt.imshow(input_image, cmap='gray')
@@ -1651,7 +1674,7 @@ class MedianBlur(Blur):
         **kwargs: Any,
     ):
         if isinstance(ksize, int) and ksize % 2 == 0:
-            raise ValueError("MedianBlur requires an odd kernel size.")        
+            raise ValueError("MedianBlur requires an odd kernel size.")
         self.channel_axis = channel_axis
         super().__init__(ksize=ksize, **kwargs)
 
@@ -1711,7 +1734,7 @@ class MedianBlur(Blur):
         if `channel_axis` is specified.
 
         This implementation is significantly slower than the NumPy backend.
-        
+
         Parameters
         ----------
         image: torch.Tensor
@@ -1797,11 +1820,11 @@ class Pool(Feature):
     channel. Otherwise, all dimensions (including channels, if present) are
     treated as spatial.
 
-    Input dimensions are cropped (from the origin) to be divisible by the 
-    pooling size before applying pooling. Cropping is not centered: excess 
+    Input dimensions are cropped (from the origin) to be divisible by the
+    pooling size before applying pooling. Cropping is not centered: excess
     elements are removed from the right/bottom (or back).
 
-    Subclasses must  implement `_get_numpy` and/or `_get_torch`, respect 
+    Subclasses must  implement `_get_numpy` and/or `_get_torch`, respect
     `channel_axis` and call `_crop_to_multiple`.
 
     Parameters
@@ -1815,11 +1838,11 @@ class Pool(Feature):
     Methods
     -------
     `get(image, ksize, channel_axis, **kwargs) --> array | tensor`
-        Apply the pooling operation to the input image using the selected 
+        Apply the pooling operation to the input image using the selected
         backend.
-            
+
     """
-    
+
     def __init__(
         self: Pool,
         ksize: PropertyLike[int | tuple[int, int] | tuple[int, int, int]] = 2,
@@ -1831,11 +1854,12 @@ class Pool(Feature):
         Parameters
         ----------
         ksize: int or tuple
-            Size of the pooling window. Can be an int (same size for all spatial
-            dimensions) or a tuple specifying the size for each spatial dimension.
+            Size of the pooling window. Can be an int (same size for all
+            spatial dimensions) or a tuple specifying the size for each spatial
+            dimension.
         channel_axis: int or None
-            Axis corresponding to channels. If None, all dimensions are treated as
-            spatial.
+            Axis corresponding to channels. If None, all dimensions are treated
+            as spatial.
         **kwargs: Any
             Additional keyword arguments.
 
@@ -1850,26 +1874,26 @@ class Pool(Feature):
         ksize: int | tuple[int, int] | tuple[int, int, int],
     ) -> tuple[int, int, int]:
         """Normalize the ksize parameter to a 3D tuple.
-        
+
         This method takes the `ksize` parameter, which can be specified as an
-        int (for uniform pooling) or a tuple (for dimension-specific pooling), 
-        and normalizes it to a 3D tuple of the form (px, py, pz). For 2D 
+        int (for uniform pooling) or a tuple (for dimension-specific pooling),
+        and normalizes it to a 3D tuple of the form (px, py, pz). For 2D
         pooling, the tuple is expanded to (px, py, 1).
 
         Parameters
         ----------
         ksize: int or tuple
-            The kernel size for pooling. Can be an int (same size for all 
-            spatial dimensions) or a tuple specifying the size for each spatial 
+            The kernel size for pooling. Can be an int (same size for all
+            spatial dimensions) or a tuple specifying the size for each spatial
             dimension.
 
         Returns
         -------
         tuple[int, int, int]
             A normalized 3D tuple representing the pooling window size in the
-            format (px, py, pz). For 2D pooling, the tuple is expanded to 
+            format (px, py, pz). For 2D pooling, the tuple is expanded to
             (px, py, 1).
-        
+
         """
         if isinstance(ksize, int):
             return (ksize, ksize, ksize)
@@ -1893,23 +1917,23 @@ class Pool(Feature):
         selected backend. It dispatches to the appropriate backend-specific
         implementation based on the type of the input image and the configured
         backend. It also handles unwrapping of scattered objects if necessary.
-        
+
         Parameters
         ----------
         image: np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
-            The input image to pool. Must be compatible with the selected 
-            backend. If a scattered object is provided, the pooling will be 
+            The input image to pool. Must be compatible with the selected
+            backend. If a scattered object is provided, the pooling will be
             applied to its underlying array.
         **kwargs: Any
             Additional keyword arguments.
 
-        Returns        
+        Returns
         -------
         np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
             The pooled image, with reduced spatial resolution.
-        
+
         """
-        
+
         backend = self.get_backend()
         from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
@@ -1939,18 +1963,18 @@ class Pool(Feature):
                 image,
                 **kwargs,
             )
-        
+
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
 
         if is_scattered:
             obj.array = result
             return obj
-        
+
         return result
 
     def _get_pool_size(
-        self: Pool, 
+        self: Pool,
         x: np.ndarray | torch.Tensor,
         has_channels: bool = False,
     ) -> tuple[int, int] | tuple[int, int, int]:
@@ -1959,7 +1983,7 @@ class Pool(Feature):
         Parameters
         ----------
         x: np.ndarray or torch.Tensor
-            Input array or tensor for which to determine the pooling window 
+            Input array or tensor for which to determine the pooling window
             size.
         has_channels: bool
             Whether the input has a channel dimension.
@@ -1968,7 +1992,7 @@ class Pool(Feature):
         -------
         tuple[int, int] or tuple[int, int, int]
             The pooling window size corresponding to the spatial dimensions of
-            the input. Returns (px, py) for 2D inputs and (px, py, pz) for 3D 
+            the input. Returns (px, py) for 2D inputs and (px, py, pz) for 3D
             inputs.
 
         """
@@ -1986,29 +2010,29 @@ class Pool(Feature):
         raise NotImplementedError("Only 2D or 3D inputs supported")
 
     def _crop_to_multiple(
-        self: Pool, 
+        self: Pool,
         array: np.ndarray | torch.Tensor,
     ) -> np.ndarray | torch.Tensor:
         """Crop the input array.
 
-        Crop the input array from the origin (top-left/front) to ensure that 
-        each spatial dimension is divisible by the pooling size. This is not a 
+        Crop the input array from the origin (top-left/front) to ensure that
+        each spatial dimension is divisible by the pooling size. This is not a
         centered crop. The cropping is performed from the origin.
 
         Parameters
         ----------
         array: np.ndarray or torch.Tensor
-            The input array to crop. Must be compatible with the selected 
+            The input array to crop. Must be compatible with the selected
             backend.
 
         Returns
         -------
         np.ndarray or torch.Tensor
             The cropped array, with spatial dimensions adjusted to be divisible
-            by the pooling size. 
-        
+            by the pooling size.
+
         """
-        
+
         # assumes array is already channel-last if channels exist
         has_channels = self.channel_axis is not None
         pool = self._get_pool_size(array, has_channels)
@@ -2079,6 +2103,9 @@ class AveragePooling(Pool):
     Examples
     --------
     >>> import deeptrack as dt
+
+    >>> import numpy as np
+    >>>
     >>> image = np.ones((4, 4, 3))
     >>> pool = dt.AveragePooling(ksize=2, channel_axis=-1)
     >>> out = pool(image)
@@ -2100,15 +2127,16 @@ class AveragePooling(Pool):
         """Apply average pooling using block reduction.
 
         This implementation uses `skimage.measure.block_reduce` to compute
-        local means over non-overlapping blocks. Channel dimensions, if present,
-        are excluded from pooling by using a block size of 1 along that axis.
+        local means over non-overlapping blocks. Channel dimensions, if
+        present, are excluded from pooling by using a block size of 1 along
+        that axis.
 
         Parameters
         ----------
         image: np.ndarray
             The input image to pool.
         **kwargs: Any
-            Additional keyword arguments for pooling.   
+            Additional keyword arguments for pooling.
 
         Returns
         -------
@@ -2161,7 +2189,7 @@ class AveragePooling(Pool):
             Downsampled tensor with reduced spatial dimensions.
 
         """
-    
+
         x, ch_axis = move_channel_last(image, self.channel_axis)
         has_channels = ch_axis is not None
 
@@ -2170,11 +2198,11 @@ class AveragePooling(Pool):
 
         # ---- reshape to torch format ----
         if has_channels:
-            x = x.movedim(-1, 0)   # C, H, W
+            x = x.movedim(-1, 0)  # C, H, W
         else:
-            x = x.unsqueeze(0)     # 1, H, W
+            x = x.unsqueeze(0)  # 1, H, W
 
-        x = x.unsqueeze(0)         # 1, C, H, W
+        x = x.unsqueeze(0)  # 1, C, H, W
 
         # ---- pooling ----
         if len(pool) == 2:
@@ -2193,6 +2221,7 @@ class AveragePooling(Pool):
             out = out.squeeze(0)
 
         return restore_channel_axis(out, ch_axis)
+
 
 class MaxPooling(Pool):
     """Max pooling over spatial dimensions.
@@ -2226,6 +2255,9 @@ class MaxPooling(Pool):
     Examples
     --------
     >>> import deeptrack as dt
+
+    >>> import numpy as np
+    >>>
     >>> image = np.random.rand(4, 4, 3)
     >>> pool = dt.MaxPooling(ksize=2, channel_axis=-1)
     >>> out = pool(image)
@@ -2233,7 +2265,7 @@ class MaxPooling(Pool):
     (2, 2, 3)
 
     """
-    
+
     def _get_numpy(
         self,
         image: np.ndarray,
@@ -2250,7 +2282,7 @@ class MaxPooling(Pool):
         image: np.ndarray
             The input image to pool.
         **kwargs: Any
-            Additional keyword arguments for pooling.   
+            Additional keyword arguments for pooling.
 
         Returns
         -------
@@ -2311,11 +2343,11 @@ class MaxPooling(Pool):
 
         # ---- reshape to torch format ----
         if has_channels:
-            x = x.movedim(-1, 0)   # C, H, W
+            x = x.movedim(-1, 0)  # C, H, W
         else:
-            x = x.unsqueeze(0)     # 1, H, W
+            x = x.unsqueeze(0)  # 1, H, W
 
-        x = x.unsqueeze(0)         # 1, C, H, W
+        x = x.unsqueeze(0)  # 1, C, H, W
 
         # ---- pooling ----
         if len(pool) == 2:
@@ -2368,6 +2400,9 @@ class MinPooling(Pool):
     Examples
     --------
     >>> import deeptrack as dt
+
+    >>> import numpy as np
+    >>>
     >>> image = np.random.rand(4, 4, 3)
     >>> pool = dt.MinPooling(ksize=2, channel_axis=-1)
     >>> out = pool(image)
@@ -2375,7 +2410,7 @@ class MinPooling(Pool):
     (2, 2, 3)
 
     """
-    
+
     def _get_numpy(
         self,
         image: np.ndarray,
@@ -2392,7 +2427,7 @@ class MinPooling(Pool):
         image: np.ndarray
             The input image to pool.
         **kwargs: Any
-            Additional keyword arguments for pooling.   
+            Additional keyword arguments for pooling.
 
         Returns
         -------
@@ -2428,8 +2463,8 @@ class MinPooling(Pool):
         """Apply min pooling using PyTorch pooling operators.
 
         The input is reshaped to match PyTorch's expected layout:
-        (N, C, spatial...). Pooling is performed using `-max_pool2d(-x, ...)` 
-        or `-max_pool3d(-x, ...)` depending on dimensionality, with kernel size 
+        (N, C, spatial...). Pooling is performed using `-max_pool2d(-x, ...)`
+        or `-max_pool3d(-x, ...)` depending on dimensionality, with kernel size
         equal to stride to ensure non-overlapping pooling.
 
         Parameters
@@ -2453,11 +2488,11 @@ class MinPooling(Pool):
 
         # ---- reshape to torch format ----
         if has_channels:
-            x = x.movedim(-1, 0)   # C, H, W
+            x = x.movedim(-1, 0)  # C, H, W
         else:
-            x = x.unsqueeze(0)     # 1, H, W
+            x = x.unsqueeze(0)  # 1, H, W
 
-        x = x.unsqueeze(0)         # 1, C, H, W
+        x = x.unsqueeze(0)  # 1, C, H, W
 
         # ---- pooling ----
         if len(pool) == 2:
@@ -2476,6 +2511,7 @@ class MinPooling(Pool):
             out = out.squeeze(0)
 
         return restore_channel_axis(out, ch_axis)
+
 
 class SumPooling(Pool):
     """Sum pooling over spatial dimensions.
@@ -2509,6 +2545,9 @@ class SumPooling(Pool):
     Examples
     --------
     >>> import deeptrack as dt
+
+    >>> import numpy as np
+    >>>
     >>> image = np.random.rand(4, 4, 3)
     >>> pool = dt.SumPooling(ksize=2, channel_axis=-1)
     >>> out = pool(image)
@@ -2516,7 +2555,7 @@ class SumPooling(Pool):
     (2, 2, 3)
 
     """
-    
+
     def _get_numpy(
         self,
         image: np.ndarray,
@@ -2533,7 +2572,7 @@ class SumPooling(Pool):
         image: np.ndarray
             The input image to pool.
         **kwargs: Any
-            Additional keyword arguments for pooling.   
+            Additional keyword arguments for pooling.
 
         Returns
         -------
@@ -2570,7 +2609,7 @@ class SumPooling(Pool):
 
         The input is reshaped to match PyTorch's expected layout:
         (N, C, spatial...). Pooling is performed using `avg_pool2d` or
-        `avg_pool3d` depending on dimensionality multiplied by the kernel size, 
+        `avg_pool3d` depending on dimensionality multiplied by the kernel size,
         with kernel size equal to stride to ensure non-overlapping pooling.
 
         Parameters
@@ -2595,11 +2634,11 @@ class SumPooling(Pool):
 
         # ---- reshape to torch format ----
         if has_channels:
-            x = x.movedim(-1, 0)   # C, H, W
+            x = x.movedim(-1, 0)  # C, H, W
         else:
-            x = x.unsqueeze(0)     # 1, H, W
+            x = x.unsqueeze(0)  # 1, H, W
 
-        x = x.unsqueeze(0)         # 1, C, H, W
+        x = x.unsqueeze(0)  # 1, C, H, W
 
         # ---- pooling ----
         if len(pool) == 2:
@@ -2653,10 +2692,13 @@ class MedianPooling(Pool):
     -----
     - Equivalent to standard median pooling with stride equal to kernel size.
     - Preserves central tendency and is non-linear (unlike average pooling).
-    
+
     Examples
     --------
     >>> import deeptrack as dt
+
+    >>> import numpy as np
+    >>>
     >>> image = np.random.rand(4, 4, 3)
     >>> pool = dt.MedianPooling(ksize=2, channel_axis=-1)
     >>> out = pool(image)
@@ -2673,8 +2715,8 @@ class MedianPooling(Pool):
         """Apply median pooling using block reduction.
 
         This implementation uses `skimage.measure.block_reduce` to compute
-        local medians over non-overlapping blocks. Channel dimensions, if 
-        present, are excluded from pooling by using a block size of 1 along 
+        local medians over non-overlapping blocks. Channel dimensions, if
+        present, are excluded from pooling by using a block size of 1 along
         that axis.
 
         Parameters
@@ -2682,7 +2724,7 @@ class MedianPooling(Pool):
         image: np.ndarray
             The input image to pool.
         **kwargs: Any
-            Additional keyword arguments for pooling.   
+            Additional keyword arguments for pooling.
 
         Returns
         -------
@@ -2719,7 +2761,7 @@ class MedianPooling(Pool):
 
         The input is reshaped to match PyTorch's expected layout:
         (N, C, spatial...). Pooling is performed by unfolding the input into
-        non-overlapping blocks and computing the median along the last 
+        non-overlapping blocks and computing the median along the last
         dimension. PyTorch does not have a built-in median pooling operator.
 
         Parameters
@@ -2754,9 +2796,9 @@ class MedianPooling(Pool):
 
         # ---------- reshape to (C, spatial...) ----------
         if has_channels:
-            x = x.movedim(-1, 0)   # (C, ...)
+            x = x.movedim(-1, 0)  # (C, ...)
         else:
-            x = x.unsqueeze(0)     # (1, ...)
+            x = x.unsqueeze(0)  # (1, ...)
 
         spatial_dims = x.ndim - 1  # exclude channel dim
 
@@ -2817,20 +2859,23 @@ class Resize(Feature):
         Target output size given as (width, height). This convention is
         backend-independent and applies equally to NumPy and PyTorch inputs.
     channel_axis: int or None, default=None
-        Axis corresponding to channels in the input image. If None and 
-        dimension > 2, the last channel dimension is used. 
+        Axis corresponding to channels in the input image. If None and
+        dimension > 2, the last channel dimension is used.
     **kwargs: Any
         Additional keyword arguments.
 
     Methods
     -------
     `get(image, dsize, **kwargs) -> array | tensor`
-        Resize the input image to the specified size using the selected 
+        Resize the input image to the specified size using the selected
         backend.
 
     Examples
     --------
     >>> import numpy as np
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(16, 16)
     >>> feature = dt.math.Resize(dsize=(8, 4))
     >>> resized_image = feature.resolve(input_image)
@@ -2857,17 +2902,17 @@ class Resize(Feature):
         Parameters
         ----------
         dsize: PropertyLike[tuple[int, int]]
-            The target size. dsize is always (width, height) for both backends. 
+            The target size. dsize is always (width, height) for both backends.
             Default is (256, 256).
         channel_axis: int | None, default=None
-            The axis corresponding to the channels in the input image. If None 
-            and the input has more than two dimensions, the last channel 
-            dimension is used. 
+            The axis corresponding to the channels in the input image. If None
+            and the input has more than two dimensions, the last channel
+            dimension is used.
         **kwargs: Any
             Additional keywords arguments.
 
         """
-        
+
         self.channel_axis = channel_axis
         super().__init__(dsize=dsize, **kwargs)
 
@@ -2886,7 +2931,7 @@ class Resize(Feature):
         Parameters
         ----------
         image : np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
-            The input image to resize. If a scattered object is provided, the 
+            The input image to resize. If a scattered object is provided, the
             resizing is applied to its internal array/tensor.
         dsize : tuple[int, int]
             Target output size given as (width, height). This convention is
@@ -2902,12 +2947,13 @@ class Resize(Feature):
         -------
         np.ndarray or torch.Tensor or ScatteredVolume or ScatteredField
             The resized image, with the same type and layout as the input.
-        
+
         """
 
         backend = self.get_backend()
 
         from deeptrack.scatterers import ScatteredVolume, ScatteredField
+
         is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
         if is_scattered:
             obj = image.copy()
@@ -2936,14 +2982,14 @@ class Resize(Feature):
                 dsize=dsize,
                 **kwargs,
             )
-        
+
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
-        
+
         if is_scattered:
             obj.array = result
             return obj
-        
+
         return result
 
     def _get_numpy(
@@ -2953,7 +2999,7 @@ class Resize(Feature):
         **kwargs: Any,
     ) -> np.ndarray:
         """Resize the input image using OpenCV.
-        
+
         Parameters
         ----------
         image: np.ndarray
@@ -2981,7 +3027,6 @@ class Resize(Feature):
             **kwargs,
         )
         return restore_channel_axis(out, ch_axis)
-    
 
     def _get_torch(
         self,
@@ -3004,9 +3049,9 @@ class Resize(Feature):
         -------
         torch.Tensor
             The resized image.
-        
+
         """
-        
+
         import torch.nn.functional as F
 
         target_w, target_h = map(int, dsize)
@@ -3085,16 +3130,24 @@ class BlurCV2(Feature):
     `get(image: np.ndarray, **kwargs: Any) --> array`
         Applies the blurring filter to the input image.
 
+    Notes
+    -----
+    BlurCV2 is NumPy-only and does not support PyTorch tensors.
+
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> import cv2
 
     Create an input image:
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
     Define a blur feature using the Gaussian blur function:
+
+    >>> import cv2
+    >>>
     >>> blur = dt.BlurCV2(
     ...     filter_function=cv2.GaussianBlur,
     ...     ksize=(5, 5),
@@ -3104,10 +3157,6 @@ class BlurCV2(Feature):
     >>> output_image = blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
-
-    Notes
-    -----
-    BlurCV2 is NumPy-only and does not support PyTorch tensors.
 
     """
 
@@ -3135,7 +3184,7 @@ class BlurCV2(Feature):
             Border handling mode.
         **kwargs : Any
             Additional keyword arguments passed to the filtering function.
-        
+
         """
 
         if not OPENCV_AVAILABLE:
@@ -3144,7 +3193,7 @@ class BlurCV2(Feature):
                 f"dependency of DeepTrack2. To use {self.__class__.__name__}, "
                 "you need to install it manually."
             )
-        
+
         self.filter = filter_function
         self.mode = mode
         super().__init__(mode=mode, **kwargs)
@@ -3184,7 +3233,11 @@ class BlurCV2(Feature):
 
         import cv2
 
-        filter_fn = getattr(cv2, self.filter) if isinstance(self.filter, str) else self.filter
+        filter_fn = (
+            getattr(cv2, self.filter)
+            if isinstance(self.filter, str)
+            else self.filter
+        )
 
         try:
             border_attr = self._MODE_TO_BORDER[mode]
@@ -3194,7 +3247,9 @@ class BlurCV2(Feature):
         try:
             border = getattr(cv2, border_attr)
         except AttributeError as e:
-            raise RuntimeError(f"OpenCV missing border constant '{border_attr}'") from e
+            raise RuntimeError(
+                f"OpenCV missing border constant '{border_attr}'"
+            ) from e
 
         return filter_fn(
             src=image,
@@ -3223,16 +3278,27 @@ class BilateralBlur(BlurCV2):
     **kwargs: Any
         Additional keyword arguments passed to `cv2.bilateralFilter`.
 
+    Notes
+    -----
+    - This feature supports only NumPy arrays.
+    - PyTorch tensors are not supported.
+    - Parameter names are mapped to OpenCV conventions:
+      `sigma_color → sigmaColor`, `sigma_space → sigmaSpace`.
+
     Examples
     --------
     >>> import deeptrack as dt
-    >>> import numpy as np
-    >>> import cv2
 
     Create an input image:
+
+    >>> import numpy as np
+    >>>
     >>> input_image = np.random.rand(32, 32)
 
     Define a bilateral blur feature:
+
+    >>> import cv2
+    >>>
     >>> bilateral_blur = dt.BilateralBlur(
     ...     d=5,
     ...     sigma_color=50,
@@ -3242,13 +3308,6 @@ class BilateralBlur(BlurCV2):
     >>> output_image = bilateral_blur(input_image)
     >>> print(output_image.shape)
     (32, 32)
-
-    Notes
-    -----
-    - This feature supports only NumPy arrays.
-    - PyTorch tensors are not supported.
-    - Parameter names are mapped to OpenCV conventions:
-      `sigma_color → sigmaColor`, `sigma_space → sigmaSpace`.
 
     """
 
@@ -3281,6 +3340,7 @@ class BilateralBlur(BlurCV2):
             sigmaSpace=sigma_space,
             **kwargs,
         )
+
 
 def _prepare_mask(
     mask: np.ndarray | torch.Tensor,
@@ -3337,6 +3397,7 @@ def _prepare_mask(
 
     return mask, False, False
 
+
 def isotropic_dilation(
     mask: np.ndarray | torch.Tensor,
     radius: float,
@@ -3361,9 +3422,9 @@ def isotropic_dilation(
 
     **NumPy backend**
     Uses `skimage.morphology.isotropic_dilation`, based on Euclidean distance.
-    An additional safeguard ensures that empty masks remain empty. This avoids 
+    An additional safeguard ensures that empty masks remain empty. This avoids
     boundary artifacts present in `skimage.morphology.isotropic_dilation`.
-    
+
     **Torch backend**
     Uses convolution with a full kernel (square/cubic neighborhood),
     corresponding to Chebyshev distance. This is not strictly isotropic.
@@ -3388,19 +3449,23 @@ def isotropic_dilation(
     -------
     np.ndarray or torch.Tensor
         Dilated mask (boolean) with the same shape as the input.
-    
+
     """
 
     if radius <= 0:
         return mask
 
     mask, channelwise, restore_channel = _prepare_mask(mask, channel_axis)
-    
+
     if channelwise:
         xp = np if backend == "numpy" else __import__("torch")
 
         # move channel axis to last
-        mask_moved = np.moveaxis(mask, channel_axis, -1) if backend == "numpy" else mask.movedim(channel_axis, -1)
+        mask_moved = (
+            np.moveaxis(mask, channel_axis, -1)
+            if backend == "numpy"
+            else mask.movedim(channel_axis, -1)
+        )
 
         outputs = [
             isotropic_dilation(
@@ -3426,8 +3491,9 @@ def isotropic_dilation(
 
     if backend == "numpy":
         from skimage.morphology import isotropic_dilation as sk_iso_dil
+
         mask = mask > 0
-        if not np.any(mask): # fixes a corner case 
+        if not np.any(mask):  # fixes a corner case
             return np.zeros_like(mask, dtype=bool)
 
         out = sk_iso_dil(mask, radius)
@@ -3439,7 +3505,7 @@ def isotropic_dilation(
 
     if mask.ndim == 2:
         kernel = torch.ones(
-            (1, 1, 2*r+1, 2*r+1),
+            (1, 1, 2 * r + 1, 2 * r + 1),
             device=device or mask.device,
             dtype=dtype or torch.float32,
         )
@@ -3448,7 +3514,7 @@ def isotropic_dilation(
 
     elif mask.ndim == 3:
         kernel = torch.ones(
-            (1, 1, 2*r+1, 2*r+1, 2*r+1),
+            (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
             device=device or mask.device,
             dtype=dtype or torch.float32,
         )
@@ -3458,10 +3524,11 @@ def isotropic_dilation(
     else:
         raise ValueError("Mask must be 2D or 3D")
 
-    out = (y[0, 0] > 0)
+    out = y[0, 0] > 0
     if restore_channel:
         return out[..., None]
     return out
+
 
 def isotropic_erosion(
     mask: np.ndarray | torch.Tensor,
@@ -3514,17 +3581,21 @@ def isotropic_erosion(
         Eroded mask (boolean) with the same shape as the input.
 
     """
-    
+
     if radius <= 0:
         return mask
 
     mask, channelwise, restore_channel = _prepare_mask(mask, channel_axis)
-    
+
     if channelwise:
         xp = np if backend == "numpy" else __import__("torch")
 
         # move channel axis to last
-        mask_moved = np.moveaxis(mask, channel_axis, -1) if backend == "numpy" else mask.movedim(channel_axis, -1)
+        mask_moved = (
+            np.moveaxis(mask, channel_axis, -1)
+            if backend == "numpy"
+            else mask.movedim(channel_axis, -1)
+        )
 
         outputs = [
             isotropic_erosion(
@@ -3550,17 +3621,18 @@ def isotropic_erosion(
 
     if backend == "numpy":
         from skimage.morphology import isotropic_erosion as sk_iso_ero
+
         mask = mask > 0
-        out =  sk_iso_ero(mask, radius)
+        out = sk_iso_ero(mask, radius)
         if restore_channel:
             return out[..., None]
         return out
-    
+
     r = int(np.ceil(radius))
 
     if mask.ndim == 2:
         kernel = torch.ones(
-            (1, 1, 2*r+1, 2*r+1),
+            (1, 1, 2 * r + 1, 2 * r + 1),
             device=device or mask.device,
             dtype=dtype or torch.float32,
         )
@@ -3569,7 +3641,7 @@ def isotropic_erosion(
 
     elif mask.ndim == 3:
         kernel = torch.ones(
-            (1, 1, 2*r+1, 2*r+1, 2*r+1),
+            (1, 1, 2 * r + 1, 2 * r + 1, 2 * r + 1),
             device=device or mask.device,
             dtype=dtype or torch.float32,
         )
@@ -3580,7 +3652,7 @@ def isotropic_erosion(
         raise ValueError("Mask must be 2D or 3D")
 
     required = kernel.numel()
-    out = (y[0, 0] >= required)
+    out = y[0, 0] >= required
     if restore_channel:
         return out[..., None]
 
