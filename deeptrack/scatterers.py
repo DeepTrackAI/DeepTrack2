@@ -177,7 +177,7 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie
 from deeptrack.math import AveragePooling
-from deeptrack.features import Feature, MERGE_STRATEGY_APPEND
+from deeptrack.features import Feature, StructuralFeature, MERGE_STRATEGY_APPEND
 from deeptrack.wrappers import Wrapper
 from deeptrack.image import pad_image_to_fft #TODO ***??***  pad_image_to_fft should be moved
 from deeptrack import units_registry as u
@@ -194,6 +194,7 @@ __all__ = [
     "MieSphere",
     "MieStratifiedSphere",
     "Unpolarized",
+    "Incoherent",
 ]
 
 
@@ -856,9 +857,8 @@ class MieScatterer(FieldScatterer):
 
     output_polarization : float | Quantity
         Angle of a polarization analyzer placed after the sample, in radians.
-        If None, the output light is not polarized. If a float (or `Quantity`), 
-        the detected field is projected onto the corresponding linear 
-        polarization direction.
+        If a float (or `Quantity`), the detected field is projected onto the 
+        corresponding linear polarization direction.
 
     L : int | str
         Number of terms used to evaluate the Mie series. If `"auto"`,
@@ -928,7 +928,7 @@ class MieScatterer(FieldScatterer):
         self,
         coefficients,
         input_polarization: float=0,
-        output_polarization: float | None=0,
+        output_polarization: float=0,
         offset_z: str="auto",
         collection_angle: str = "auto",
         L: str = "auto",
@@ -938,7 +938,7 @@ class MieScatterer(FieldScatterer):
         padding=(0,) * 4,
         output_region=None,
         polarization_angle: float | None=None,
-        working_distance: float=1000000,  # Value to avoid numerical issues.
+        working_distance: float=1000000,
         position_objective: tuple[float, float]=(0, 0),
         return_fft: bool=False,
         coherence_length: float=None,
@@ -992,6 +992,22 @@ class MieScatterer(FieldScatterer):
     ) -> dict:
 
         properties = super()._process_properties(properties)
+
+        # --- polarization validation ---
+        inp = properties.get("input_polarization", None)
+        out = properties.get("output_polarization", None)
+
+        if inp is None:
+            raise ValueError(
+                "input_polarization must be specified for coherent scattering. "
+                "Use the Incoherent feature to model unpolarized illumination."
+            )
+
+        if out is None:
+            raise ValueError(
+                "output_polarization=None (no analyzer) is not supported in coherent mode. "
+                "Use the Incoherent feature to model detection without analyzer."
+            )
 
         if properties["L"] == "auto":
             try:
@@ -1692,25 +1708,44 @@ class ScatteredField(Wrapper):
     """Complex field produced by a FieldScatterer."""
     pass
 
+    
+class Incoherent(StructuralFeature):
+    """Average intensities over orthogonal polarization states.
 
-from deeptrack.features import StructuralFeature
+    This meta-feature evaluates a child feature for a set of polarization
+    configurations and returns the incoherent (intensity) average.
 
-class Unpolarized(StructuralFeature):
-    """Average intensities over orthogonal input/output polarization states.
+    By default, unpolarized states are approximated by averaging over two
+    orthogonal linear polarizations (0 and π/2).
 
-    This is a meta-feature: it re-evaluates a child feature for several
-    polarization configurations and averages the resulting intensities.
     """
 
     __distributed__ = False
 
     def __init__(
-        self,
-        feature,
-        input_unpolarized=True,
-        output_unpolarized=False,
-        **kwargs,
+        self: Incoherent,
+        feature: Feature,
+        input_unpolarized: bool = True,
+        output_unpolarized: bool = True,
+        **kwargs: Any,
     ):
+        """Initializes the Incoherent feature.
+        
+        Parameters
+        ----------
+        feature: Feature
+            The child feature to evaluate for different polarization states.
+        input_unpolarized: bool, optional
+            If True, the input light is treated as unpolarized, and the feature
+            will be evaluated for two orthogonal input polarization states (0 and π/2).
+        output_unpolarized: bool, optional
+            If True, the output light is treated as unpolarized, and the feature
+            will be evaluated for two orthogonal output polarization states (0 and π/2).
+        **kwargs: dict
+            Additional keyword arguments passed to the parent StructuralFeature.
+                
+        """
+
         super().__init__(
             input_unpolarized=input_unpolarized,
             output_unpolarized=output_unpolarized,
@@ -1719,49 +1754,74 @@ class Unpolarized(StructuralFeature):
         self.feature = self.add_feature(feature)
 
     @staticmethod
-    def _input_states(base_input_pol, input_unpolarized):
-        if input_unpolarized:
-            return [0.0, np.pi / 2]
-        return [0.0 if base_input_pol is None else base_input_pol]
+    def _states(base, unpolarized):
+        """Return polarization states to sample."""
 
-    @staticmethod
-    def _output_states(base_output_pol, output_unpolarized):
-        if output_unpolarized:
-            return [0.0, np.pi / 2]
-        return [base_output_pol]
+        if unpolarized:
+            return (0.0, np.pi / 2)
+        return (0.0 if base is None else base,)
 
-    def get(self, inputs, input_unpolarized, output_unpolarized, _ID=(), **kwargs):
+    def get(
+        self: Incoherent,
+        inputs: Any,
+        input_unpolarized: bool,
+        output_unpolarized: bool,
+        _ID: tuple = (),
+        **kwargs: Any,
+    ) -> Any:
+        """Evaluates the feature for different polarization states and returns 
+            the incoherent average.
+        
+        Parameters
+        ----------
+        inputs: Any
+            The input to the feature, passed through to the child feature.
+        input_unpolarized: bool
+            Whether the input light is unpolarized.
+        output_unpolarized: bool
+            Whether the output light is unpolarized.
+        _ID: tuple, optional
+            The identifier for the current feature evaluation, passed through to the child feature.
+        **kwargs: dict
+            Additional keyword arguments passed to the child feature.   
 
-        # identity case
+        Returns
+        -------
+        Any
+            The incoherent average of the feature evaluated over the specified polarization states.
+        """
+        # Fast path: no averaging needed
         if not input_unpolarized and not output_unpolarized:
             return self.feature(_ID=_ID, **kwargs)
 
         base_input = kwargs.get("input_polarization", 0.0)
-        base_output = kwargs.get("output_polarization", None)
+        base_output = kwargs.get("output_polarization", 0.0)
 
-        input_states = [0.0, np.pi/2] if input_unpolarized else [base_input]
-        output_states = [0.0, np.pi/2] if output_unpolarized else [base_output]
-        print(base_input, input_states)
-        print(base_output, output_states)
-        intensity = None
+        input_states = self._states(base_input, input_unpolarized)
+        output_states = self._states(base_output, output_unpolarized)
+
+        # print('IN', input_states, input_unpolarized)
+        # print('OUT', output_states, output_unpolarized)
+
+        intensity_sum = None
         count = 0
 
         for pin in input_states:
             for pout in output_states:
-
                 result = self.feature(
                     _ID=_ID,
+                    **kwargs,
                     input_polarization=pin,
                     output_polarization=pout,
                 )
 
-                I = np.abs(result)**2
+                I = np.abs(result) ** 2
 
-                if intensity is None:
-                    intensity = np.array(I, copy=True)
+                if intensity_sum is None:
+                    intensity_sum = np.array(I, copy=True)
                 else:
-                    intensity += I
+                    intensity_sum += I
 
                 count += 1
 
-        return intensity / count
+        return intensity_sum / count
