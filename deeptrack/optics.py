@@ -142,8 +142,6 @@ import warnings
 import itertools
 
 import numpy as np
-import torch
-import torch.nn.functional as F
 
 from deeptrack.backend.units import (
     ConversionTable,
@@ -151,10 +149,9 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling, SumPooling
+from deeptrack.math import AveragePooling, SumPooling, pad_image_to_fft
 from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
-from deeptrack.image import pad_image_to_fft #TODO ***??***  pad_image_to_fft should be moved
 from deeptrack.types import PropertyLike
 
 from deeptrack import image
@@ -166,6 +163,7 @@ from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
 if TORCH_AVAILABLE:
     import torch
+    import torch.nn.functional as F
 
 if TYPE_CHECKING:
     import torch
