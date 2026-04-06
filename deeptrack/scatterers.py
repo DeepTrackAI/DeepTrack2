@@ -12,9 +12,19 @@ etc.).
 Scatterers produce either voxelized volumes (for geometrical optics models)
 or complex fields (for wave-optical models such as Mie scattering).
 
+Volume-based scatterers are evaluated on a discrete grid defined by the active
+optics configuration, and can be supersampled (`upsample`) for improved 
+accuracy. Upsampling does not change the physical size of the scatterer, but 
+rather the resolution at which it is evaluated. Field-based scatterers are 
+evaluated directly as complex fields without supersampling. 
+
+`Upsample` should not be confused with `Optics.upscale`, which applies to the 
+entire imaging pipeline and can be used to improve the accuracy of the optics 
+model itself.
+
 Key Features
 ------------
-- **Customizable geometries**
+- **Customizable Geometries**
 
     Initialization parameters allow full control over shape, size, and spatial
     positioning. Multiple scatterers can be combined and overlaid using feature
@@ -26,14 +36,14 @@ Key Features
     The `z` parameter defines the axial position relative to the focal plane,
     enabling simulation of defocused imaging by assigning nonzero values.
     
-- **Mie scatterers**
+- **Mie Scatterers**
 
     Includes Mie-theory-based scatterers that compute scattering harmonics up
     to a specified order using utilities from `deeptrack.backend.mie`. 
     Supported implementations include homogeneous spheres and stratified 
     spheres with multiple concentric layers of distinct refractive indices.
 
-- **Backend compatibility**
+- **Backend Compatibility**
 
     Geometry-based scatterers support both NumPy and PyTorch arrays.
     Mie-based scatterers currently rely on NumPy implementations and
@@ -44,38 +54,25 @@ Module Structure
 Classes:
 
 - `Scatterer`: Abstract base class for all scatterers.
-
     Stores positional information and implements utilities for coordinate
     conversion, upsampling, and cropping.
-
 - `VolumeScatterer`: Base class for scatterers that generate voxelized volumes.
-
     Produces `ScatteredVolume` outputs representing spatial occupancy.
-
 - `FieldScatterer`: Base class for scatterers that generate complex fields.
-
     Produces `ScatteredField` outputs representing optical fields.
-
 - `PointParticle`: Generates diffraction-limited point particles.
-
 - `Ellipse`: Generates 2-D elliptical particles.
-
 - `Sphere`: Generates 3-D spheres.
-
 - `Ellipsoid`: Generates 3-D ellipsoids.
-
 - `MieScatterer`: Mie scatterer base class.
-
 - `MieSphere`: Extends `MieScatterer` to the spherical case.
-
 - `MieStratifiedSphere`:  Extends `MieScatterer` to the stratified sphere case.
-
     A stratified sphere consists of concentric shells with distinct refractive 
     indices.
+- `Incoherent`: A wrapper to treat coherent scatterers as incoherent sources.
 
 Examples
 --------
-
 Create a ellipse scatterer and resolve it through a microscope:
 
 >>> import numpy as np
@@ -171,8 +168,8 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
-from typing import Any, TYPE_CHECKING
 import warnings
+from typing import Any, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
@@ -186,13 +183,15 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.backend import mie
+from deeptrack.backend import mie, TORCH_AVAILABLE, xp
 from deeptrack.math import AveragePooling, pad_image_to_fft
 from deeptrack.features import Feature, StructuralFeature, MERGE_STRATEGY_APPEND
 from deeptrack.wrappers import Wrapper
 from deeptrack import units_registry as u
 
-from deeptrack.backend import xp
+if TORCH_AVAILABLE:
+    import torch
+
 
 __all__ = [
     "Scatterer",
@@ -211,52 +210,73 @@ if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Scatterer - torch, typing, docstring, unit test
 class Scatterer(Feature):
     """Base abstract class for scatterers.
 
-    A scatterer is defined by a 3-dimensional volume of voxels.
-    To each voxel corresponds an occupancy factor, i.e., how much
-    of that voxel does the scatterer occupy. However, this number is not
-    necessarily limited to the [0, 1] range. It can be any number, and its
-    interpretation is left to the optical device that images the scatterer.
+    A `Scatterer` defines an object or optical source term to be evaluated on a
+    discrete spatial grid. Depending on the subclass, the result may represent
+    either a voxelized volume (`VolumeScatterer`) or a complex field
+    (`FieldScatterer`).
 
-    This abstract class implements the `_process_properties` method to convert
-    the position to voxel units, as well as the `_process_and_get` method to
-    upsample the calculation and crop empty slices. 
-    
-    Subclasses must implement the `get` method, which defines how the scatterer 
-    is generated on a voxel grid.
+    Parameters
+    ----------
+    position: tuple[float, float] | tuple[float, float, float], optional
+        The position of the particle, length 2 or 3. Third index is optional,
+        and represents the position in the direction normal to the camera 
+        plane. Default is (32.0, 32.0).
+    z: float, optional
+        The position in the direction normal to the camera plane. Used if 
+        `position` is of length 2. Default is 0.0.
+    value: float, optional
+        A default value of the characteristic of the particle. Used by optics
+        unless a more direct property is set (eg. `refractive_index` for 
+        `Brightfield` and `intensity` for `Fluorescence`). Default is 1.0.
+    position_unit: str, optional
+        The unit of the provided position property. Can be "meter" or "pixel".
+        Default is "pixel".
+    upsample : int, optional
+        Geometry supersampling factor for volume-based scatterers. The 
+        scatterer is evaluated on a finer grid and downsampled by average 
+        pooling. Ignored by field-based scatterers.
+    upsample_axes : tuple of int, optional
+        Deprecated. Previously selected the axes along which supersampling was
+        applied. This parameter is now ignored.
+    voxel_size: array-like, optional
+        The size of the voxels in meters. If not provided, it is obtained from
+        the active optics configuration.
+    pixel_size: array-like, optional
+        The size of the pixels in meters. If not provided, it is obtained from
+        the active optics configuration.
+    **kwargs: Any
+        Additional feature properties forwarded to the parent `Feature` class.
 
     Attributes
     ----------
-    position:   tuple[float, float] | tuple[float, float, float]
-        The position of the particle, length 2 or 3. Third index is optional,
-        and represents the position in the direction normal to the
-        camera plane.
+    __list_merge_strategy__: str
+        The strategy for merging lists of properties when multiple scatterers 
+        are combined. Default is "append", which concatenates the lists.
+    __distributed__: bool
+        Determines whether `.get(image, **kwargs)` is applied to each element
+        of the input list independently (`__distributed__ = True`) or to the
+        list as a whole (`__distributed__ = False`).
+    __conversion_table__: ConversionTable
+        A table defining the physical units of the scatterer's properties and
+        how to convert them to the internal units used for calculations.
         
-    z: float
-        The position in the direction normal to the
-        camera plane. Used if `position` is of length 2.
-        
-    value: float
-        A default value of the characteristic of the particle. Used by
-        optics unless a more direct property is set (eg. `refractive_index`
-        for `Brightfield` and `intensity` for `Fluorescence`).
-        
-    position_unit: "meter" or "pixel"
-        The unit of the provided position property.
+    Methods
+    -------
+    `_antialias_volume(volume, factor) -> array`
+        Geometry-only supersampling anti-aliasing.
+    `_process_properties(properties) -> dict`
+        Preprocess the input to the method .get()
+    `_process_and_get(*args, voxel_size, upsample, upsample_axes, crop_empty, **kwargs) -> list[array]`
+        Post-processes the created object.
+    `_wrap_output(array, props) -> ScatteredVolume or ScatteredField`
+        Wraps the output of the scatterer in the appropriate class.
 
-    upsample_axes: tuple of ints
-        Sets the axes along which the calculation is upsampled (default is
-        None, which implies all axes are upsampled).
-        
-    crop_zeros: bool
-        Whether to remove slices in which all elements are zero.
-        
     """
 
-    __list_merge_strategy__ = MERGE_STRATEGY_APPEND ### Not clear why needed
+    __list_merge_strategy__ = MERGE_STRATEGY_APPEND
     __distributed__ = False
     __conversion_table__ = ConversionTable(
         position=(u.pixel, u.pixel),
@@ -271,42 +291,22 @@ class Scatterer(Feature):
         value: float = 1.0,
         position_unit: str = "pixel",
         upsample: int = 1,
-        voxel_size: np.ndarray | None = None,
-        pixel_size: np.ndarray | None = None,
+        voxel_size: tuple | None = None,
+        pixel_size: tuple | None = None,
         **kwargs,
-    ) -> None:
-        """Initialize the scatterer.
+    ):
+        """Initialize the scatterer with the given properties."""
+
+        upsample_axes = kwargs.pop("upsample_axes", None)
         
-        Parameters
-        ----------
-        position: tuple[float, float] | tuple[float, float, float], optional
-            The position of the particle, length 2 or 3. Third index is optional,
-            and represents the position in the direction normal to the
-            camera plane. Default is (32.0, 32.0).
-
-        z: float, optional
-            The position in the direction normal to the
-            camera plane. Used if `position` is of length 2. Default is 0.0.
-        
-        value: float, optional
-            A default value of the characteristic of the particle. Used by
-            optics unless a more direct property is set (eg. `refractive_index`
-            for `Brightfield` and `intensity` for `Fluorescence`). Default is 1.0.
-
-        position_unit: str, optional
-            The unit of the provided position property. Can be "meter" or "pixel".
-            Default is "pixel".
-
-        upsample: int, optional
-            Upsamples the calculations of the pixel occupancy fraction. Default is 1 (no upsampling).
-
-        voxel_size: array-like, optional
-            The size of the voxels in meters. If not provided, it is obtained from the active optics configuration.
-
-        pixel_size: array-like, optional
-            The size of the pixels in meters. If not provided, it is obtained from the active optics configuration.
-
-        """
+        if upsample_axes is not None:
+            warnings.warn(
+                "`upsample_axes` is deprecated and will be removed in a future "
+                "release. Supersampling is now applied uniformly to all "
+                "applicable axes.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
 
         self._processed_properties = False
 
@@ -332,6 +332,18 @@ class Scatterer(Feature):
         Assumes `volume` was generated on a grid oversampled by `factor`
         and downsamples it back by average pooling.
 
+        Parameters
+        ----------
+        volume: np.ndarray or torch.Tensor
+            The oversampled volume to be downsampled.
+        factor: int
+            The factor by which the volume is oversampled.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            The downsampled volume after anti-aliasing.
+
         """
         
         if factor == 1:
@@ -347,13 +359,27 @@ class Scatterer(Feature):
         # average pooling conserves fractional occupancy
         return AveragePooling(pool)(volume)
 
-
     def _process_properties(
         self: Scatterer,
         properties: dict,
     ) -> dict:
-        """Preprocess the input to the method .get()
+        """Preprocess the input to the method `.get()`
         
+        This method is called before the scatterer is evaluated, and can be 
+        used to preprocess the input properties.
+
+        Parameters
+        ----------
+        properties: dict
+            The properties of the scatterer, which are passed to the method 
+            `.get()`. This method can modify the properties before they are 
+            used for evaluation.
+
+        Returns
+        -------
+        dict
+            The processed properties to be used for evaluation.
+
         """
 
         # Rescales the position property.
@@ -383,15 +409,13 @@ class Scatterer(Feature):
             upsampling factor if `upsample` is greater than 1.
 
         upsample: int
-            Upsamples the calculations of the pixel occupancy fraction. This is
-            used to create smoother scatterers when the scatterer is small
-            compared to the voxel size. The upsampling is done by creating the
-            scatterer on a grid that is `upsample` times finer than the voxel
-            grid, and then downsampling it back by average pooling.
+            Geometry supersampling factor for volume-based scatterers. Ignored 
+            by field-based scatterers.
 
         upsample_axes: tuple of ints, optional
-            The axes along which to apply supersampling. If not provided, 
-            supersampling is applied along all axes.
+            Deprecated. Previously selected the axes along which supersampling 
+            was applied. This parameter is now ignored, and supersampling is 
+            applied uniformly to all applicable axes when `upsample` > 1.
 
         crop_empty: bool, optional
             Whether to remove slices in which all elements are zero. This can 
@@ -413,7 +437,6 @@ class Scatterer(Feature):
                 + "This is likely to result in errors if used with "
                 + "Optics.upscale != 1."
             )
-
 
         voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
 
@@ -438,7 +461,6 @@ class Scatterer(Feature):
 
         if apply_supersampling:
             new_image = self._antialias_volume(new_image, factor=upsample)
-
 
         if new_image.numel() == 0 if apc.is_torch_array(new_image) else new_image.size == 0:
             warnings.warn(
@@ -491,6 +513,7 @@ class Scatterer(Feature):
 
 class VolumeScatterer(Scatterer):
     """Abstract scatterer producing ScatteredVolume outputs."""
+
     def _wrap_output(
         self: VolumeScatterer, 
         array: np.ndarray | torch.Tensor, 
@@ -525,6 +548,8 @@ class VolumeScatterer(Scatterer):
 
 
 class FieldScatterer(Scatterer):
+    """Abstract scatterer producing ScatteredField outputs."""
+    
     def _wrap_output(
         self: FieldScatterer, 
         array: np.ndarray | torch.Tensor, 
@@ -603,8 +628,9 @@ class PointParticle(VolumeScatterer):
         For a point particle, this is simply a single voxel with a value
         corresponding to the product of the scale factors of the active 
         optics configuration. 
-        The returned value is scaled by the voxel volume to preserve
-        intensity under discretization.
+        The returned value is scaled by the pixel area to preserve intensity 
+        under discretization. Axial normalization is handled by the 
+        fluorescence projection step.
 
         Parameters
         ----------
@@ -623,8 +649,8 @@ class PointParticle(VolumeScatterer):
         """
 
         scale = xp.asarray(get_active_scale(), dtype=xp.float32)
-
-        return xp.ones((1, 1, 1), dtype=scale.dtype) * xp.prod(scale)
+        mask = xp.ones((1, 1, 1), dtype=scale.dtype) * xp.prod(scale)
+        return mask
 
 
 class Ellipse(VolumeScatterer):
@@ -703,9 +729,8 @@ class Ellipse(VolumeScatterer):
 
         properties = super()._process_properties(properties)
 
-        # Ensure radius is of length 2
         radius = properties["radius"]
-        r = xp.asarray(radius) #if hasattr(xp, "asarray") else xp.array(radius)
+        r = xp.asarray(radius)
 
         if r.ndim == 0:
             r = xp.stack([r, r])
@@ -779,19 +804,22 @@ class Ellipse(VolumeScatterer):
             dtype=xp.float32,
         )
         mask = xp.expand_dims(mask, axis=-1)
+        
+        scale = xp.asarray(get_active_scale(), dtype=xp.float32)
+        # The returned value is scaled to preserve intensity under discretization.
+        mask = mask * scale[2]
         return mask
 
 
-#TODO ***??*** revise Sphere - torch, typing, docstring, unit test
 class Sphere(VolumeScatterer):
-    """Generates a spherical scatterer
+    """Generate a spherical scatterer.
 
     Parameters
     ----------
     radius: float
         Radius of the sphere in meters.
         
-        position: tuple[float, float] | tuple[float, float, float]
+    position: tuple[float, float] | tuple[float, float, float]
         The position of the particle, length 2 or 3. Third index is optional,
         and represents the position in the direction normal to the
         camera plane.
@@ -818,26 +846,49 @@ class Sphere(VolumeScatterer):
         self,
         radius: float = 1e-6,
         **kwargs
-    ) -> None:
+    ):
+        """Initialize the sphere scatterer."""
+        
         super().__init__(radius=radius, **kwargs)
 
     def get(
         self,
-        image: np.ndarray | torch.Tensor,
+        *args: Any,
         radius: float,
         voxel_size: np.ndarray | torch.Tensor,
-        **kwargs
+        **kwargs,
     ) -> np.ndarray | torch.Tensor:
-        """Abstract method to initialize the sphere scatterer"""
+        """Evaluate the sphere on a voxel grid.
+
+        The sphere is defined by its radius, and evaluated on a grid with
+        spacing given by `voxel_size`. The returned value is a 3D array where 
+        each voxel is assigned 1 if inside the sphere and 0 otherwise.. 
+        
+        Parameters
+        ----------
+        args: Any
+            Positional arguments passed to the method. Not used in this 
+            implementation.
+        radius : float
+            Radius of the sphere in meters.
+        voxel_size : array-like
+            Size of voxels along each axis.
+        kwargs: Any
+            Keyword arguments passed to the method. 
+                
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            A (X, Y, Z) array representing the spherical mask.
+
+        """
 
         # Create a grid to calculate on.
-        rad = xp.asarray(radius) * xp.ones(3) / xp.asarray(voxel_size)
+        voxel_size = xp.asarray(voxel_size)
+        rad = xp.asarray(radius) / voxel_size
+        rad = xp.broadcast_to(rad, (3,))
         rad_ceil = xp.ceil(rad)
-        if hasattr(rad_ceil, "astype"):
-            rad_ceil = rad_ceil.astype(int)
-        else:
-            rad_ceil = rad_ceil.to(dtype=xp.int64)
-            
+        
         x = xp.arange(-rad_ceil[0], rad_ceil[0])
         y = xp.arange(-rad_ceil[1], rad_ceil[1])
         z = xp.arange(-rad_ceil[2], rad_ceil[2])
@@ -846,7 +897,7 @@ class Sphere(VolumeScatterer):
             (y / rad[1]) ** 2,
             (x / rad[0]) ** 2,
             (z / rad[2]) ** 2,
-            indexing="xy",   # important for torch consistency
+            indexing="xy",
         )
 
         mask = xp.asarray(
@@ -856,18 +907,21 @@ class Sphere(VolumeScatterer):
         return mask
 
 
-#TODO ***??*** revise Ellipsoid - torch, typing, docstring, unit test
 class Ellipsoid(VolumeScatterer):
-    """Generates an ellipsoidal scatterer
+    """Generates an ellipsoidal scatterer.
 
     Parameters
     ----------
-        radius: float | tuple[float, float, float]
+    args: Any
+        Positional arguments passed to the method. Not used in this
+        implementation.
+    
+    radius: float | tuple[float, float, float]
         Radius of the ellipsoid in meters. If only one value,
         assume spherical.
         
-    rotation: float
-        Rotation of the ellipsoid in about the x, y and z axis.
+    rotation: float | tuple[float, float, float]
+        Rotation angles (rx, ry, rz) applied in XYZ order.
         
     position: tuple[float, float] | tuple[float, float, float]
         The position of the particle. Third index is optional,
@@ -891,6 +945,9 @@ class Ellipsoid(VolumeScatterer):
         of the radius with the first axis of the created volume.
         This is applied before rotation.
         
+    kwargs: Any
+        Keyword arguments passed to the method.
+
     """
 
     __conversion_table__ = ConversionTable(
@@ -900,11 +957,13 @@ class Ellipsoid(VolumeScatterer):
 
     def __init__(
         self,
-        radius: float = 1e-6,
-        rotation: float = 0,
+        radius: float | tuple[float, float] | tuple[float, float, float] = 1e-6,
+        rotation: float | tuple[float, float] | tuple[float, float, float] = 0,
         transpose: float = False,
         **kwargs,
-    ) -> None:
+    ):
+        """Initialize the ellipsoid scatterer."""
+
         super().__init__(
             radius=radius, rotation=rotation, transpose=transpose, **kwargs
         )
@@ -913,7 +972,7 @@ class Ellipsoid(VolumeScatterer):
         self,
         propertydict: dict
     ) -> dict:
-        """Preprocess the input to the method .get()
+        """Preprocess the input to the method `.get()`
 
         Ensures that the radius and the rotation properties both are arrays of
         length 3.
@@ -922,7 +981,19 @@ class Ellipsoid(VolumeScatterer):
         If the radius are two values, the smallest value is appended as the
         third value
 
-        The rotation vector is padded with zeros until it is of length 3
+        The rotation vector is padded with zeros until it is of length 3.
+
+        Parameters
+        ----------
+        propertydict: dict
+            The properties of the scatterer, which are preprocessed and passed 
+            to the `get` method.
+
+        Returns
+        -------
+        dict
+            The preprocessed properties of the scatterer.
+
         """
 
         propertydict = super()._process_properties(propertydict)
@@ -943,7 +1014,6 @@ class Ellipsoid(VolumeScatterer):
             r = xp.stack([r[0], r[1], xp.minimum(r[0], r[1])])
         elif n == 3:
             # If three values, convert to tuple for consistency.
-            # radius = (*radius,)
             r = r[:3]
         propertydict["radius"] = r
 
@@ -964,22 +1034,51 @@ class Ellipsoid(VolumeScatterer):
             rot = xp.stack([rot[0], rot[1], xp.asarray(0.0)])
         elif n == 3:        
             # If three values, convert to tuple for consistency.
-            # rotation = (*rotation,)
             rot = rot[:3]
         propertydict["rotation"] = rot
 
         return propertydict
 
     def get(
-        self,
-        image: np.ndarray | torch.Tensor,
-        radius: np.ndarray | torch.Tensor | float,
-        rotation: np.ndarray | torch.Tensor | float,
-        voxel_size: np.ndarray | torch.Tensor | float,
+        self: Ellipsoid,
+        *args: Any,
+        radius: np.ndarray | float,
+        rotation: np.ndarray | float,
+        voxel_size: np.ndarray | float,
         transpose: bool,
-        **kwargs
+        **kwargs,
     ) -> np.ndarray | torch.Tensor:
-        """Abstract method to initialize the ellipsoid scatterer"""
+        """Evaluate the ellipsoid on a voxel grid.
+        
+        The ellipsoid is defined by its radii and rotation, and evaluated on a
+        grid with spacing given by `voxel_size`. The returned value is a 3D 
+        array where each voxel is assigned 1 if inside the ellipsoid and 0 
+        otherwise.
+
+        Parameters
+        ----------
+        args: Any
+            Positional arguments passed to the method. Not used in this
+            implementation.
+        radius : array-like
+            Radii of the ellipsoid along the principal axes.
+        rotation : array-like of length 3
+            Rotation angles (rx, ry, rz) applied in XYZ order.
+        voxel_size : array-like
+            Size of voxels along each axis.
+        transpose : bool
+            Whether to align the first axis of the radius with the first axis 
+            of the created volume before rotation.
+        kwargs: Any
+            Keyword arguments passed to the method.
+
+        Returns
+        -------
+        np.ndarray or torch.Tensor
+            A (X, Y, Z) array representing the ellipsoidal mask.
+            
+
+        """
 
         radius = xp.asarray(radius)
         rotation = xp.asarray(rotation)
@@ -1018,7 +1117,7 @@ class Ellipsoid(VolumeScatterer):
         mask = xp.asarray(
             (XR / radius[0]) ** 2 +
             (YR / radius[1]) ** 2 +
-            (ZR / radius[2]) ** 2 < 1,
+            (ZR / radius[2]) ** 2 <= 1,
             dtype=xp.float32,
         )
         return mask
@@ -2004,9 +2103,6 @@ class Incoherent(StructuralFeature):
 
         input_states = self._states(base_input, input_unpolarized)
         output_states = self._states(base_output, output_unpolarized)
-
-        # print('IN', input_states, input_unpolarized)
-        # print('OUT', output_states, output_unpolarized)
 
         intensity_sum = None
         count = 0

@@ -282,10 +282,10 @@ class Microscope(StructuralFeature):
         ux, uy, uz = int(ux), int(uy), int(uz)
 
         image = xp.roll(image, shift=(ux//2, uy//2), axis=(0, 1)) 
-        norm = ux*uy
+        # norm = ux*uy
 
         # Detector integration
-        return SumPooling((ux, uy))(image)/norm
+        return AveragePooling((ux, uy))(image)# SumPooling((ux, uy))(image)/norm
 
     def get(
         self: Microscope,
@@ -1245,11 +1245,14 @@ class Fluorescence(Optics):
         return value * scattered.array
 
     def downscale_image(
-            self, 
-            image: np.ndarray | torch.Tensor, 
-            upscale
+        self: Fluorescence,
+        image: np.ndarray | torch.Tensor, 
+        upscale: int,
     ) -> np.ndarray | torch.Tensor:
-        """Detector downscaling (energy conserving)"""
+        """Detector downscaling (energy conserving).
+        
+
+        """
         if not np.any(np.array(upscale) != 1):
             return image
 
@@ -1291,7 +1294,6 @@ class Fluorescence(Optics):
         backend = self.get_backend()
 
         if backend == "torch":
-            # ---- HARD GUARD: torch only ----
             if not isinstance(illuminated_volume, torch.Tensor):
                 raise TypeError(
                     "Torch backend selected but image is not a torch.Tensor"
@@ -1304,7 +1306,6 @@ class Fluorescence(Optics):
             )
 
         elif backend == "numpy":
-            # ---- HARD GUARD: numpy only ----
             if not isinstance(illuminated_volume, np.ndarray):
                 raise TypeError(
                     "NumPy backend selected but image is not a np.ndarray"
@@ -1892,7 +1893,7 @@ class Brightfield(Optics):
         shifted_pupil = xp.fft.fftshift(pupils[-1])
         light_in_focus = light_in_focus * shifted_pupil
         # Mask to remove light outside the pupil.
-        mask = np.abs(shifted_pupil) > 0
+        mask = xp.abs(shifted_pupil) > 0
         light_in_focus = light_in_focus * mask
 
         output_image = xp.fft.ifft2(light_in_focus)[
@@ -2155,7 +2156,7 @@ class Darkfield(Brightfield):
             ux = int(ux)
 
         # Energy-conserving detector integration
-        return SumPooling(ux)(image)
+        return SumPooling((ux,ux))(image)
 
     #Retrieve get as super
     def get(
@@ -2273,19 +2274,19 @@ class IlluminationGradient(Feature):
 
     def get(
         self: IlluminationGradient,
-        image: np.ndarray,
+        image: np.ndarray | torch.Tensor,
         gradient: tuple[float, float],
         constant: float,
         vmin: float,
         vmax: float,
         **kwargs: Any,
-    ) -> np.ndarray:
+    ) -> np.ndarray | torch.Tensor:
         """Applies the gradient and constant offset to the amplitude of the 
         field.
 
         Parameters
         ----------
-        image: np.ndarray
+        image: np.ndarray | torch.Tensor
             The input field to which the gradient and constant are applied.
         gradient: tuple[float, float]
             Gradient of the plane to add to the field amplitude.
@@ -2300,7 +2301,7 @@ class IlluminationGradient(Feature):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray | torch.Tensor
             The modified field with the gradient and constant applied.
 
         Examples
@@ -2316,19 +2317,19 @@ class IlluminationGradient(Feature):
         
         """
         
-        x = np.arange(image.shape[0])
-        y = np.arange(image.shape[1])
+        x = xp.arange(image.shape[0])
+        y = xp.arange(image.shape[1])
 
-        X, Y = np.meshgrid(y, x)
+        X, Y = xp.meshgrid(y, x)
 
         amplitude = X * gradient[0] + Y * gradient[1]
 
         if image.ndim == 3:
-            amplitude = np.expand_dims(amplitude, axis=-1)
-        amplitude = np.clip(np.abs(image) + amplitude + constant, vmin, vmax)
+            amplitude = xp.expand_dims(amplitude, axis=-1)
+        amplitude = xp.clip(xp.abs(image) + amplitude + constant, vmin, vmax)
 
-        image = amplitude * image / np.abs(image)
-        image[np.isnan(image)] = 0
+        image = amplitude * image / xp.abs(image)
+        image[xp.isnan(image)] = 0
 
         return image
 

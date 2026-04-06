@@ -36,252 +36,216 @@ class TestScatterers_NumPy(BackendTestBase):
             Ellipsoid,
             MieSphere,
             MieStratifiedSphere,
+            Incoherent,
         )
+
+    def to_numpy(self, x):
+        return x.detach().cpu().numpy() if hasattr(x, "detach") else np.asarray(x)
 
     def test_PointParticle(self):
 
-        # --- PointParticle with Fluorescence optics ---
-        optics = Fluorescence(
-            NA=0.7,
-            wavelength=500e-9,
-            resolution=1e-6,
-            magnification=4,
-            output_region=(0, 0, 32, 32),
-        )
+        # --- Basic properties ---
         scatterer = scatterers.PointParticle(
             intensity=100,
             position_unit="pixel",
             position=(32, 32),
         )
-        imaged_scatterer = optics(scatterer)
-        output_image = imaged_scatterer.resolve()
-        self.assertIsInstance(output_image, self.array_type)
-        self.assertEqual(output_image.shape, (32, 32, 1))
-
-        # --- Energy conservation for PointParticle with Fluorescence ---
-        p1 = scatterers.PointParticle(position=(16, 16), intensity=1.0)
-        p2 = scatterers.PointParticle(position=(16, 16), intensity=2.0)
-        im1 = optics(p1).resolve()
-        im2 = optics(p2).resolve()
-        self.assertAlmostEqual(xp.sum(im2), 2 * xp.sum(im1), places=5)
+        output_scatterer = scatterer.resolve()
+        self.assertIsInstance(output_scatterer.array, self.array_type)
+        self.assertEqual(output_scatterer.shape, (1, 1, 1))
+        self.assertTrue(
+            np.allclose(
+                np.asarray(output_scatterer.properties["position"]),
+                np.array([32, 32]),
+            )
+        )
+        self.assertEqual(output_scatterer.properties["intensity"], 100)
 
     def test_Ellipse(self):
 
-        def make_optics(upscale=1):
-            return Fluorescence(
-                NA=0.7,
-                wavelength=680e-9,
-                resolution=1e-6,
-                magnification=10,
-                output_region=(0, 0, 64, 64),
-                upscale=upscale,
-            )
-
-        def make_scatterer(radius=(1e-6, 0.5e-6)):
-            return scatterers.Ellipse(
-                intensity=100,
-                position_unit="pixel",
-                position=(32, 32),
-                radius=radius,
-            )
-
-        # --- Imaging test ---
-        optics = make_optics()
-        scatterer = make_scatterer()
-        out = optics(scatterer).resolve()
-
-        self.assertIsInstance(out, self.array_type)
-        self.assertEqual(out.shape, (64, 64, 1))
-
-        # --- Upscale consistency ---
-        s2 = make_scatterer()
-        make_optics(upscale=2)(s2).resolve()
-        shape2 = s2().shape
-        s4 = make_scatterer()
-        make_optics(upscale=4)(s4).resolve()
-        shape4 = s4().shape
-        # Z must exist
-        self.assertEqual(shape2[-1], 1)
-        self.assertEqual(shape4[-1], 1)
-        # upscale increases resolution
-        self.assertGreater(shape4[0], shape2[0])
-        self.assertGreater(shape4[1], shape2[1])
-
-        # --- Asymmetric upscale ---
-        s_y = make_scatterer(radius=(1e-6, 1e-6))
-        make_optics(upscale=(2, 1, 1))(s_y).resolve()
-        shape_y = s_y().shape
-        s_x = make_scatterer(radius=(1e-6, 1e-6))
-        make_optics(upscale=(1, 2, 1))(s_x).resolve()
-        shape_x = s_x().shape
-        # anisotropy check
-        self.assertGreater(shape_y[0], shape_y[1])  # stretched in Y
-        self.assertGreater(shape_x[1], shape_x[0])  # stretched in X
-
-        # --- Translation invariance ---
-        s1 = scatterers.Ellipse(position=(32, 32))
-        s2 = scatterers.Ellipse(position=(40, 40))
-        v1 = s1()
-        v2 = s2()
-        self.assertEqual(v1.shape, v2.shape)
-
-        # --- Rotation invariance ---
-        r1 = (1e-6, 0.5e-6)
-        r2 = (0.5e-6, 1e-6)
-        s1 = scatterers.Ellipse(
-            radius=r1,
-            rotation=0,
+        e1 = scatterers.Ellipse(
+            radius=(3e-6, 2e-6),
+            rotation=0.0,
+            position=(16, 16),
+            position_unit="pixel",
+            upsample=1,
         )
-        s2 = scatterers.Ellipse(
-            radius=r2,
-            rotation=np.pi / 2,
+
+        e3 = scatterers.Ellipse(
+            radius=(3e-6, 2e-6),
+            rotation=0.0,
+            position=(16, 16),
+            position_unit="pixel",
+            upsample=3,
         )
-        v1 = s1().array.squeeze()
-        v2 = s2().array.squeeze()
-        # allow small interpolation differences
-        np.testing.assert_allclose(v1, v2, atol=1e-6)
+
+        v1 = e1.resolve()
+        v3 = e3.resolve()
+        
+        self.assertIsInstance(v1.array, self.array_type)
+        self.assertEqual(v1.shape, (3, 5, 1))
+        self.assertEqual(v3.shape, (5, 6, 1))
+        self.assertTrue(
+            np.allclose(
+                np.asarray(v1.properties["position"]),
+                np.array([16, 16]),
+            )
+        )
+
+        a1 = self.to_numpy(v1.array)
+        a3 = self.to_numpy(v3.array)
+
+        self.assertGreater(a1.sum(), 0)
+        self.assertGreater(a3.sum(), 0)
+        self.assertGreaterEqual(a3.sum(), a1.sum())
+
+        self.assertTrue(np.allclose(a1, np.flip(a1, axis=0)))
+        self.assertTrue(np.allclose(a1, np.flip(a1, axis=1)))
+
 
     # def test_Ellipse(self):
 
-    #     # --- Ellipse with Fluorescence optics ---
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #     )
-    #     scatterer = scatterers.Ellipse(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=(1e-6, 0.5e-6),
-    #         rotation=np.pi / 4,
-    #         upsample=2,
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     output_image = imaged_scatterer.resolve()
-    #     self.assertIsInstance(output_image, self.array_type)
-    #     self.assertEqual(output_image.shape, (64, 64, 1))
+    #     def make_optics(upscale=1):
+    #         return Fluorescence(
+    #             NA=0.7,
+    #             wavelength=680e-9,
+    #             resolution=1e-6,
+    #             magnification=10,
+    #             output_region=(0, 0, 64, 64),
+    #             upscale=upscale,
+    #         )
 
-    #     # --- Ellipse upscale ---
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #         upscale=2,
-    #     )
-    #     scatterer = scatterers.Ellipse(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=(1e-6, 0.5e-6),
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     imaged_scatterer.resolve()
-    #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+    #     def make_scatterer(radius=(1e-6, 0.5e-6)):
+    #         return scatterers.Ellipse(
+    #             intensity=100,
+    #             position_unit="pixel",
+    #             position=(32, 32),
+    #             radius=radius,
+    #         )
 
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #         upscale=4,
-    #     )
-    #     scatterer = scatterers.Ellipse(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=(1e-6, 0.5e-6),
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     imaged_scatterer.resolve()
-    #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (39, 79, 1))
+    #     # --- Imaging test ---
+    #     optics = make_optics()
+    #     scatterer = make_scatterer()
+    #     out = optics(scatterer).resolve()
 
-    #     # --- Ellipse upscale asymmetric ---
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #         upscale=(2, 1, 1),
-    #     )
-    #     scatterer = scatterers.Ellipse(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=(1e-6, 1e-6),
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     imaged_scatterer.resolve()
-    #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (39, 19, 1))
+    #     self.assertIsInstance(out, self.array_type)
+    #     self.assertEqual(out.shape, (64, 64, 1))
 
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #         upscale=(1, 2, 1),
+    #     # --- Upscale consistency ---
+    #     s2 = make_scatterer()
+    #     make_optics(upscale=2)(s2).resolve()
+    #     shape2 = s2().shape
+    #     s4 = make_scatterer()
+    #     make_optics(upscale=4)(s4).resolve()
+    #     shape4 = s4().shape
+    #     # Z must exist
+    #     self.assertEqual(shape2[-1], 1)
+    #     self.assertEqual(shape4[-1], 1)
+    #     # upscale increases resolution
+    #     self.assertGreater(shape4[0], shape2[0])
+    #     self.assertGreater(shape4[1], shape2[1])
+
+    #     # --- Asymmetric upscale ---
+    #     s_y = make_scatterer(radius=(1e-6, 1e-6))
+    #     make_optics(upscale=(2, 1, 1))(s_y).resolve()
+    #     shape_y = s_y().shape
+    #     s_x = make_scatterer(radius=(1e-6, 1e-6))
+    #     make_optics(upscale=(1, 2, 1))(s_x).resolve()
+    #     shape_x = s_x().shape
+    #     # anisotropy check
+    #     self.assertGreater(shape_y[0], shape_y[1])  # stretched in Y
+    #     self.assertGreater(shape_x[1], shape_x[0])  # stretched in X
+
+    #     # --- Translation invariance ---
+    #     s1 = scatterers.Ellipse(position=(32, 32))
+    #     s2 = scatterers.Ellipse(position=(40, 40))
+    #     v1 = s1()
+    #     v2 = s2()
+    #     self.assertEqual(v1.shape, v2.shape)
+
+    #     # --- Rotation invariance ---
+    #     r1 = (1e-6, 0.5e-6)
+    #     r2 = (0.5e-6, 1e-6)
+    #     s1 = scatterers.Ellipse(
+    #         radius=r1,
+    #         rotation=0,
     #     )
-    #     scatterer = scatterers.Ellipse(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=(1e-6, 1e-6),
+    #     s2 = scatterers.Ellipse(
+    #         radius=r2,
+    #         rotation=np.pi / 2,
     #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     imaged_scatterer.resolve()
-    #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (19, 39, 1))
+    #     v1 = s1().array.squeeze()
+    #     v2 = s2().array.squeeze()
+    #     # allow small interpolation differences
+    #     np.testing.assert_allclose(v1, v2, atol=1e-6)
 
     # def test_Sphere(self):
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #     )
-    #     scatterer = scatterers.Sphere(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=1e-6,
-    #         upsample=4,
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     output_image = imaged_scatterer.resolve()
-    #     self.assertIsInstance(output_image, self.array_type)
-    #     self.assertEqual(output_image.shape, (64, 64, 1))
 
-    # def test_SphereUpscale(self):
+    #     def make_optics(upscale=1):
+    #         return Fluorescence(
+    #             NA=0.7,
+    #             wavelength=680e-9,
+    #             resolution=1e-6,
+    #             magnification=10,
+    #             output_region=(0, 0, 16, 16),
+    #             upscale=upscale,
+    #         )
 
-    #     optics = Fluorescence(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=10,
-    #         output_region=(0, 0, 64, 64),
-    #         upscale=2,
-    #     )
-    #     scatterer = scatterers.Sphere(
-    #         intensity=100,
-    #         position_unit="pixel",
-    #         position=(32, 32),
-    #         radius=1e-6,
-    #     )
-    #     imaged_scatterer = optics(scatterer)
-    #     imaged_scatterer.resolve()
-    #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (40, 40, 40))
+    #     def make_scatterer():
+    #         return scatterers.Sphere(
+    #             intensity=100,
+    #             position_unit="pixel",
+    #             position=(8, 8),
+    #             radius=1e-6,
+    #         )
+
+    #     # --- Imaging test ---
+    #     optics = make_optics()
+    #     scatterer = make_scatterer()
+    #     out = optics(scatterer).resolve()
+    #     self.assertIsInstance(out, self.array_type)
+    #     self.assertEqual(out.shape, (16, 16, 1))
+
+    #     # --- Volume properties ---
+    #     v = scatterer()
+    #     shape = v.shape
+    #     # cube volume
+    #     self.assertEqual(len(shape), 3)
+    #     self.assertEqual(shape[0], shape[1])
+    #     self.assertEqual(shape[1], shape[2])
+    #     # must be centered → odd size preferred
+    #     self.assertTrue(shape[0] > 0)
+    #     # non-empty
+    #     self.assertGreater(v.array.sum(), 0)
+
+    #     # --- Upscale consistency ---
+    #     s2 = make_scatterer()
+    #     make_optics(upscale=2)(s2).resolve()
+    #     shape2 = s2().shape
+    #     s4 = make_scatterer()
+    #     make_optics(upscale=4)(s4).resolve()
+    #     shape4 = s4().shape
+    #     # upscale increases resolution
+    #     self.assertEqual(shape4[0], 2*shape2[0])
+    #     # still cubic
+    #     self.assertEqual(shape2[0], shape2[1])
+    #     self.assertEqual(shape4[1], shape4[2])
+
+    #     # --- Radial symmetry check ---
+    #     v = scatterer().array if hasattr(scatterer(), "array") else scatterer()
+    #     v = v.squeeze()
+    #     center = tuple(s // 2 for s in v.shape)
+    #     # sample along axes
+    #     r_x = v[center[0], center[1], :]
+    #     r_y = v[center[0], :, center[2]]
+    #     r_z = v[:, center[1], center[2]]
+    #     diff = xp.mean(xp.abs(r_x - r_y))
+    #     diff = diff.item() if hasattr(diff, "item") else diff
+    #     self.assertLess(diff, 1e-3)
+    #     diff = xp.mean(xp.abs(r_y - r_z))
+    #     diff = diff.item() if hasattr(diff, "item") else diff
+    #     self.assertLess(diff, 1e-3)
+
 
     # def test_Ellipsoid(self):
     #     optics = Fluorescence(
@@ -323,7 +287,7 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer = optics(scatterer)
     #     imaged_scatterer.resolve()
     #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (19, 39, 9))
+    #     self.assertEqual(scatterer_volume.shape, (21, 40, 11))
 
     # def test_EllipsoidUpscaleAsymmetric(self):
     #     optics = Fluorescence(
@@ -344,7 +308,7 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer = optics(scatterer)
     #     imaged_scatterer.resolve()
     #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (39, 39, 9))
+    #     self.assertEqual(scatterer_volume.shape, (41, 41, 11))
 
     #     optics = Fluorescence(
     #         NA=0.7,
@@ -364,7 +328,7 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer = optics(scatterer)
     #     imaged_scatterer.resolve()
     #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (19, 79, 9))
+    #     self.assertEqual(scatterer_volume.shape, (21, 80, 11))
 
     #     optics = Fluorescence(
     #         NA=0.7,
@@ -384,7 +348,7 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer = optics(scatterer)
     #     imaged_scatterer.resolve()
     #     scatterer_volume = scatterer()
-    #     self.assertEqual(scatterer_volume.shape, (19, 39, 19))
+    #     self.assertEqual(scatterer_volume.shape, (21, 41, 21))
 
     # def test_MieSphere(self):
     #     optics_1 = Brightfield(

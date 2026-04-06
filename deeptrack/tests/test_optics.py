@@ -211,9 +211,9 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        rel_error = np.abs(
+        rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
     def test_upscale_fluorescence(self):
@@ -245,15 +245,15 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        rel_error = np.abs(
+        rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
 # TODO: Extending the test and setting the backend to torch
-# @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
-# class TestOptics_PyTorch(TestOptics_NumPy):
-#     BACKEND = "torch"
+@unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+class TestOptics_PyTorch(TestOptics_NumPy):
+    BACKEND = "torch"
 #     pass
 
 if __name__ == "__main__":
