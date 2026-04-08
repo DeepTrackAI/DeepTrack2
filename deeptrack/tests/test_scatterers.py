@@ -433,7 +433,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
         self.assertGreater(float(out.properties["offset_z"]), 0)
 
     def test_MieStratifiedSphere_rejects_nonmonotonic_radii(self):
-        with self.assertRaises(AssertionError):
+        with self.assertRaises(ValueError):
             scatterers.MieStratifiedSphere(
                 radius=(1.0e-6, 0.5e-6),
                 refractive_index=(1.45, 1.52),

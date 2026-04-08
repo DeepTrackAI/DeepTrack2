@@ -2235,15 +2235,20 @@ class MieScatterer(FieldScatterer):
 
 
 class MieSphere(MieScatterer):
-    """Scattered field by a sphere
+    """Scattered field produced by a homogeneous sphere.
 
-    Should be calculated on at least a 64 by 64 grid. Use padding in the
-    optics if necessary.
+    This class computes the coherent scattered field of a spherical particle in
+    a homogeneous medium using Mie theory.
 
-    Calculates the scattered field by a spherical particle in a homogenous
-    medium, as predicted by Mie theory. Note that the induced phase shift is
-    calculated in comparison to the `refractive_index_medium` property of the
-    optical device.
+    In `"geometric"` mode, accurate results typically require a sufficiently 
+    large simulation grid (often at least 64 × 64) and adequate padding, 
+    because the scattered field is sampled on a finite virtual plane before 
+    propagation. In contrast, the `"hybrid"` mode is generally less sensitive 
+    to grid size and field-of-view.
+
+    The induced phase shift is defined relative to the
+    `refractive_index_medium` of the optical configuration.
+
 
     Parameters
     ----------
@@ -2278,26 +2283,63 @@ class MieSphere(MieScatterer):
         
     """
 
-
     def __init__(
-        self,
+        self: MieSphere,
         radius: float = 1e-6,
         refractive_index: float = 1.45,
         **kwargs,
-    ) -> None:
+    ):
+        """Initializes the MieSphere feature.
+        
+        Parameters       
+        ----------
+        radius: float
+            Radius of the mie particle in meter.
+        refractive_index: float
+            Refractive index of the particle.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class initializer.
+            
+        """
+        
         def coeffs(
             radius: float,
             refractive_index: float,
             refractive_index_medium: float,
             wavelength: float
-        ):
+        ) -> callable:
+            """Calculates the Mie coefficients for a homogeneous sphere.
+            
+             This function computes the Mie coefficients an and bn for a
+             homogeneous sphere based on the provided radius, refractive index,
+             and wavelength. The coefficients are calculated using the 
+             `mie.coefficients` function, which implements the standard Mie 
+             theory formulas for a homogeneous sphere.
+             
+             Parameters
+             ----------
+             radius: float
+                 The radius of the sphere in meters.
+             refractive_index: float
+                 The refractive index of the sphere.
+             refractive_index_medium: float
+                 The refractive index of the surrounding medium.
+             wavelength: float
+                 The wavelength of the illumination in meters.
+                 
+            Returns
+            -------
+            callable
+                A function that computes the Mie coefficients for a given number of terms.
+            
+            """
 
             if isinstance(radius, Quantity):
                 radius = radius.to("m").magnitude
             if isinstance(wavelength, Quantity):
                 wavelength = wavelength.to("m").magnitude
 
-            def inner(L):
+            def inner(L: int):
                 return mie.coefficients(
                     refractive_index / refractive_index_medium,
                     radius * 2 * np.pi / wavelength * refractive_index_medium,
@@ -2315,17 +2357,16 @@ class MieSphere(MieScatterer):
 
 
 class MieStratifiedSphere(MieScatterer):
-    """Scattered field by a stratified sphere
+    """Scattered field produced by a stratified sphere.
+    
+    In `"geometric"` mode, accurate results typically require a sufficiently 
+    large simulation grid (often at least 64 × 64) and adequate padding, 
+    because the scattered field is sampled on a finite virtual plane before 
+    propagation. In contrast, the `"hybrid"` mode is generally less sensitive 
+    to grid size and field-of-view.
 
-    A stratified sphere is a sphere with several concentric shells of uniform
-    refractive index.
-
-    Should be calculated on at least a 64 by 64 grid. Use padding in the
-    optics if necessary
-
-    Calculates the scattered field in a homogenous medium, as predicted by
-    Mie theory. Note that the induced phase shift is calculated in comparison
-    to the `refractive_index_medium` property of the optical device.
+    The induced phase shift is defined relative to the
+    `refractive_index_medium` of the optical configuration.
 
     Parameters
     ----------
@@ -2361,22 +2402,68 @@ class MieStratifiedSphere(MieScatterer):
     """
 
     def __init__(
-        self,
+        self: MieStratifiedSphere,
         radius: tuple[float, ...] = (1e-6,),
         refractive_index: tuple[float, ...] = (1.45,),
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
-        """Initializes the MieStratifiedSphere feature."""
+        """Initializes the MieStratifiedSphere feature.
+        
+        Parameters
+        ----------
+        radius: tuple[float, ...]
+            The radius of each cell in increasing order.
+        refractive_index: tuple[float, ...]
+            Refractive index of each cell in the same order as `radius`.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class 
+            initializer.
+        
+        """
+
         def coeffs(
-            radius: int | str,
-            refractive_index: float,
+            radius: tuple[float, ...] | np.ndarray,
+            refractive_index: tuple[float | complex, ...] | np.ndarray,
             refractive_index_medium: float,
-            wavelength: float
-        ):
-            assert np.all(
-                radius[1:] >= radius[:-1]
-            ), ("Radius of the shells of a stratified sphere should be "
-               "monotonically increasing")
+            wavelength: float | Quantity,
+        ) -> callable:
+            """Calculates the Mie coefficients for a stratified sphere.
+
+            This function computes the Mie coefficients an and bn for a
+            stratified sphere based on the provided radius, refractive index, 
+            and wavelength. The coefficients are calculated using the 
+            `mie.stratified_coefficients` function, which implements the Mie 
+            theory formulas for a sphere composed of multiple concentric layers
+            with different refractive indices. The `radius` parameter specifies 
+            the radius of each layer, and the `refractive_index` parameter 
+            specifies the refractive index of each layer. The function returns 
+            a callable that computes the Mie coefficients for a given number of 
+            terms.
+
+            Parameters
+            ----------
+            radius: tuple[float, ...] | np.ndarray
+                The radius of each cell in increasing order.
+            refractive_index: tuple[float | complex, ...] | np.ndarray
+                Refractive index of each cell in the same order as `radius`.
+            refractive_index_medium: float
+                The refractive index of the surrounding medium.
+            wavelength: float | Quantity
+                The wavelength of the illumination in meters.
+
+            Returns
+            -------
+            callable
+                A function that computes the Mie coefficients for a given 
+                number of terms.
+            
+            """
+
+            if not np.all(radius[1:] >= radius[:-1]):
+                raise ValueError(
+                    "Radius of the shells of a stratified sphere should be "
+                    "monotonically increasing."
+                )
 
             def inner(
                 L: int
@@ -2397,17 +2484,23 @@ class MieStratifiedSphere(MieScatterer):
             **kwargs,
         )
 
-
 @dataclass
 class ScatteredVolume(Wrapper):
-    """Voxelized volume produced by a VolumeScatterer."""
+    """Voxelized volume produced by a `VolumeScatterer`.
+
+    Provides convenience accessors for the lateral position (`position`) and
+    full 3D position (`pos3d`) stored in the feature properties.
+    
+    """
 
     @property
-    def pos3d(self: ScatteredVolume) -> np.ndarray:
+    def pos3d(self: ScatteredVolume) -> np.ndarray | None:
+        if self.position is None:
+            return None
         return np.array([*self.position, self.z], dtype=float)
 
     @property
-    def position(self: ScatteredVolume) -> np.ndarray:
+    def position(self: ScatteredVolume) -> np.ndarray | None:
         pos = self.properties.get("position", None)
         if pos is None:
             return None
@@ -2427,7 +2520,9 @@ class Incoherent(StructuralFeature):
     """Average intensities over orthogonal polarization states.
 
     This meta-feature evaluates a child feature for a set of polarization
-    configurations and returns the incoherent (intensity) average.
+    configurations and returns the incoherent (intensity) average. If both 
+    `input_unpolarized` and `output_unpolarized` are False, the wrapper acts 
+    as a pass-through and returns the child feature unchanged.
 
     By default, unpolarized states are approximated by averaging over two
     orthogonal linear polarizations (0 and π/2).
@@ -2469,10 +2564,19 @@ class Incoherent(StructuralFeature):
             **kwargs,
         )
         self.feature = self.add_feature(feature)
-
+    
     @staticmethod
-    def _states(base, unpolarized):
-        """Return polarization states to sample."""
+    def _states(
+        base: float | None, 
+        unpolarized: bool,
+    ) -> tuple[float, ...]:
+        """Return polarization states to sample.
+
+        For unpolarized light, two orthogonal linear polarization states
+        (0 and π/2) are used. Otherwise, the provided base state is returned,
+        defaulting to 0 if `base` is None.
+        
+        """
 
         if unpolarized:
             return (0.0, np.pi / 2)
