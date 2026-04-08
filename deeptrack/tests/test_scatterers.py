@@ -187,47 +187,6 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=0)))
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=2)))
 
-    # def test_MieSphere(self):
-    #     optics_1 = Brightfield(
-    #         NA=0.7,
-    #         wavelength=680e-9,
-    #         resolution=1e-6,
-    #         magnification=1,
-    #         output_region=(0, 0, 64, 128),
-    #         padding=(10, 10, 10, 10),
-    #         return_field=True,
-    #         upscale=4,
-    #     )
-
-    #     scatterer = scatterers.MieSphere(
-    #         radius=0.5e-6, refractive_index=1.45 + 0.1j, aperature_angle=0.1
-    #     )
-
-    #     imaged_scatterer_1 = optics_1(scatterer)
-
-    #     imaged_scatterer_1.update().resolve()
-
-    # def test_MieSphere_Coherence_length(self):
-    #     optics_1 = Brightfield(
-    #         NA=0.15,
-    #         wavelength=633e-9,
-    #         resolution=2e-6,
-    #         magnification=1,
-    #         output_region=(0, 0, 256, 256),
-    #         return_field=True,
-    #     )
-
-    #     scatterer = scatterers.MieSphere(
-    #         position=(128, 128),
-    #         radius=3e-6,
-    #         refractive_index=1.45 + 0.1j,
-    #         z=2612 * 1e-6,
-    #         coherence_length=5.9e-05,
-    #     )
-
-    #     imaged_scatterer_1 = optics_1(scatterer)
-
-    #     imaged_scatterer_1.update().resolve()
 
     # def test_MieStratifiedSphere(self):
     #     optics_1 = Brightfield(
@@ -257,7 +216,358 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer_1 = optics_1(scatterer)
     #     imaged_scatterer_1.update().resolve()
 
-# TODO: Extending the test and setting the backend to torch
+class TestScatterers_NumPy_Only(BackendTestBase):
+    BACKEND = "numpy"
+
+    def test_MieSphere(self):
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            position=(16, 16),
+            position_unit="pixel",
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            padding=(0, 0, 0, 0),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            return_fft=False,
+        )
+
+        out = scatterer.resolve()
+
+        self.assertIsInstance(out.array, np.ndarray)
+        self.assertEqual(out.shape, (32, 32, 1))
+        
+        arr = out.array
+        self.assertTrue(np.iscomplexobj(arr))
+        self.assertTrue(np.isfinite(arr.real).all())
+        self.assertTrue(np.isfinite(arr.imag).all())
+        self.assertGreater(np.abs(arr).sum(), 0)
+
+        self.assertTrue(
+            np.allclose(
+                np.asarray(out.properties["position"]),
+                np.array([16, 16]),
+            )
+        )
+
+    def test_MieSphere_rejects_none_polarizations(self):
+        with self.assertRaises(ValueError):
+            scatterers.MieSphere(
+                radius=0.5e-6,
+                refractive_index=1.45,
+                wavelength=680e-9,
+                refractive_index_medium=1.33,
+                NA=0.7,
+                output_region=(0, 0, 32, 32),
+                input_polarization=None,
+                output_polarization=0.0,
+            ).resolve()
+
+        with self.assertRaises(ValueError):
+            scatterers.MieSphere(
+                radius=0.5e-6,
+                refractive_index=1.45,
+                wavelength=680e-9,
+                refractive_index_medium=1.33,
+                NA=0.7,
+                output_region=(0, 0, 32, 32),
+                input_polarization=0.0,
+                output_polarization=None,
+            ).resolve()
+
+    def test_MieSphere_auto_parameters(self):
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            L="auto",
+            collection_angle="auto",
+            offset_z="auto",
+        )
+
+        out = scatterer.resolve()
+
+        self.assertIsInstance(out.array, np.ndarray)
+        self.assertIsInstance(out.properties["L"], int)
+        self.assertGreater(out.properties["L"], 0)
+        self.assertTrue(np.isscalar(out.properties["collection_angle"]))
+        self.assertGreater(float(out.properties["collection_angle"]), 0)
+        self.assertGreater(float(out.properties["offset_z"]), 0)
+
+    def test_MieSphere_modes(self):
+        common_kwargs = dict(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            padding=(0, 0, 0, 0),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            return_fft=False,
+        )
+
+        out_geom = scatterers.MieSphere(
+            mode="geometric",
+            **common_kwargs,
+        ).resolve()
+
+        out_hybrid = scatterers.MieSphere(
+            mode="hybrid",
+            **common_kwargs,
+        ).resolve()
+
+        self.assertIsInstance(out_geom.array, np.ndarray)
+        self.assertIsInstance(out_hybrid.array, np.ndarray)
+
+        self.assertEqual(out_geom.shape, out_hybrid.shape)
+
+        a_geom = out_geom.array
+        a_hybrid = out_hybrid.array
+
+        self.assertTrue(np.iscomplexobj(a_geom))
+        self.assertTrue(np.iscomplexobj(a_hybrid))
+
+        self.assertTrue(np.isfinite(a_geom.real).all())
+        self.assertTrue(np.isfinite(a_geom.imag).all())
+        self.assertTrue(np.isfinite(a_hybrid.real).all())
+        self.assertTrue(np.isfinite(a_hybrid.imag).all())
+
+        self.assertGreater(np.abs(a_geom).sum(), 0)
+        self.assertGreater(np.abs(a_hybrid).sum(), 0)
+
+        ratio = np.abs(a_geom).sum() / np.abs(a_hybrid).sum()
+        self.assertGreater(ratio, 1e-2)
+        self.assertLess(ratio, 1e2)
+
+    def test_MieStratifiedSphere(self):
+        scatterer = scatterers.MieStratifiedSphere(
+            radius=(0.5e-6, 1.0e-6),
+            refractive_index=(1.45, 1.52),
+            position=(16, 16),
+            position_unit="pixel",
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            padding=(0, 0, 0, 0),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            return_fft=False,
+        )
+
+        out = scatterer.resolve()
+
+        self.assertIsInstance(out.array, np.ndarray)
+        self.assertEqual(out.shape[-1], 1)
+
+        arr = out.array
+        self.assertTrue(np.iscomplexobj(arr))
+        self.assertTrue(np.isfinite(arr.real).all())
+        self.assertTrue(np.isfinite(arr.imag).all())
+        self.assertGreater(np.abs(arr).sum(), 0)
+
+        self.assertTrue(
+            np.allclose(
+                np.asarray(out.properties["position"]),
+                np.array([16, 16]),
+            )
+        )
+
+    def test_MieStratifiedSphere_rejects_none_polarizations(self):
+        with self.assertRaises(ValueError):
+            scatterers.MieStratifiedSphere(
+                radius=(0.5e-6, 1.0e-6),
+                refractive_index=(1.45, 1.52),
+                wavelength=680e-9,
+                refractive_index_medium=1.33,
+                NA=0.7,
+                output_region=(0, 0, 32, 32),
+                input_polarization=None,
+                output_polarization=0.0,
+            ).resolve()
+
+        with self.assertRaises(ValueError):
+            scatterers.MieStratifiedSphere(
+                radius=(0.5e-6, 1.0e-6),
+                refractive_index=(1.45, 1.52),
+                wavelength=680e-9,
+                refractive_index_medium=1.33,
+                NA=0.7,
+                output_region=(0, 0, 32, 32),
+                input_polarization=0.0,
+                output_polarization=None,
+            ).resolve()
+
+    def test_MieStratifiedSphere_auto_parameters(self):
+        scatterer = scatterers.MieStratifiedSphere(
+            radius=(0.5e-6, 1.0e-6),
+            refractive_index=(1.45, 1.52),
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            L="auto",
+            collection_angle="auto",
+            offset_z="auto",
+        )
+
+        out = scatterer.resolve()
+
+        self.assertIsInstance(out.array, np.ndarray)
+        self.assertIsInstance(out.properties["L"], int)
+        self.assertGreater(out.properties["L"], 0)
+        self.assertTrue(np.isscalar(out.properties["collection_angle"]))
+        self.assertGreater(float(out.properties["collection_angle"]), 0)
+        self.assertGreater(float(out.properties["offset_z"]), 0)
+
+    def test_MieStratifiedSphere_rejects_nonmonotonic_radii(self):
+        with self.assertRaises(AssertionError):
+            scatterers.MieStratifiedSphere(
+                radius=(1.0e-6, 0.5e-6),
+                refractive_index=(1.45, 1.52),
+                wavelength=680e-9,
+                refractive_index_medium=1.33,
+                NA=0.7,
+                output_region=(0, 0, 32, 32),
+                input_polarization=0.0,
+                output_polarization=0.0,
+            ).resolve()
+
+    def test_MieStratifiedSphere_modes(self):
+        common_kwargs = dict(
+            radius=(0.5e-6, 1.0e-6),
+            refractive_index=(1.45, 1.52),
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            padding=(0, 0, 0, 0),
+            input_polarization=0.0,
+            output_polarization=0.0,
+            return_fft=False,
+        )
+
+        out_geom = scatterers.MieStratifiedSphere(
+            mode="geometric",
+            **common_kwargs,
+        ).resolve()
+
+        out_hybrid = scatterers.MieStratifiedSphere(
+            mode="hybrid",
+            **common_kwargs,
+        ).resolve()
+
+        self.assertIsInstance(out_geom.array, np.ndarray)
+        self.assertIsInstance(out_hybrid.array, np.ndarray)
+
+        self.assertEqual(out_geom.shape, out_hybrid.shape)
+
+        a_geom = out_geom.array
+        a_hybrid = out_hybrid.array
+
+        self.assertTrue(np.iscomplexobj(a_geom))
+        self.assertTrue(np.iscomplexobj(a_hybrid))
+
+        self.assertTrue(np.isfinite(a_geom.real).all())
+        self.assertTrue(np.isfinite(a_geom.imag).all())
+        self.assertTrue(np.isfinite(a_hybrid.real).all())
+        self.assertTrue(np.isfinite(a_hybrid.imag).all())
+
+        self.assertGreater(np.abs(a_geom).sum(), 0)
+        self.assertGreater(np.abs(a_hybrid).sum(), 0)
+
+        ratio = np.abs(a_geom).sum() / np.abs(a_hybrid).sum()
+        self.assertGreater(ratio, 1e-2)
+        self.assertLess(ratio, 1e2)
+
+    def test_Incoherent_passthrough(self):
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            input_polarization=0.0,
+            output_polarization=0.0,
+        )
+
+        wrapped = scatterers.Incoherent(
+            scatterer,
+            input_unpolarized=False,
+            output_unpolarized=False,
+        )
+
+        out_direct = scatterer.resolve()
+        out_wrapped = wrapped.resolve()
+
+        np.testing.assert_allclose(out_direct.array, out_wrapped.array)
+
+    def test_Incoherent_unpolarized_input(self):
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            input_polarization=0.0,
+            output_polarization=0.0,
+        )
+
+        wrapped = scatterers.Incoherent(
+            scatterer,
+            input_unpolarized=True,
+            output_unpolarized=False,
+        )
+
+        out = wrapped.resolve()
+        arr = out
+
+        self.assertEqual(arr.shape, (32, 32, 1))
+        self.assertTrue(np.isfinite(arr).all())
+        self.assertGreater(arr.sum(), 0)
+        self.assertTrue(np.isrealobj(arr) or np.allclose(arr.imag, 0))
+
+    def test_Incoherent_unpolarized_input_and_output(self):
+        scatterer = scatterers.MieSphere(
+            radius=0.5e-6,
+            refractive_index=1.45,
+            wavelength=680e-9,
+            refractive_index_medium=1.33,
+            NA=0.7,
+            output_region=(0, 0, 32, 32),
+            input_polarization=0.0,
+            output_polarization=0.0,
+        )
+
+        wrapped = scatterers.Incoherent(
+            scatterer,
+            input_unpolarized=True,
+            output_unpolarized=True,
+        )
+
+        out = wrapped.resolve()
+        arr = out
+
+        self.assertEqual(arr.shape, (32, 32, 1))
+        self.assertTrue(np.isfinite(arr).all())
+        self.assertGreater(arr.sum(), 0)
+        self.assertTrue(np.isrealobj(arr) or np.allclose(arr.imag, 0))
+
+
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestScatterers_Torch(TestScatterers_NumPy):
     BACKEND = "torch"
@@ -305,6 +615,10 @@ class TestMath_TorchOnly(BackendTestBase):
                 self.assertNotEqual(loss.item(), prev_loss)
             prev_loss = loss.item()
         self.assertTrue(abs(intensity.item() - true_intensity) < 0.5)
+
+        
+
+    
 
 
 if __name__ == "__main__":
