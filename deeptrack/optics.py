@@ -75,35 +75,12 @@ real-world experiments.
 Utility Functions:
 
 - `_get_position(image, mode, return_z)`
-
-    def _get_position(
-        image: np.ndarray, mode: str = "corner", return_z: bool = False
-    ) -> tuple[int, int, Optional[int]]
-
     Extracts the position of the upper-left corner of a scatterer in the image.
 
-- `_create_volume(list_of_scatterers:, pad, output_region, refractive_index_medium, **kwargs)`
-
-    def _create_volume(
-        list_of_scatterers: list[np.ndarray],
-        pad: int,
-        output_region: tuple[int, int, int, int],
-        refractive_index_medium: float,
-        **kwargs: Any,
-    ) -> np.ndarray
-
+- `_create_volume(list_of_scatterers, pad, output_region, refractive_index_medium, **kwargs)`
     Combines multiple scatterer objects into a single 3D volume for imaging.
 
 - `_pad_volume(volume, limits, padding, output_region, **kwargs)`
-
-    def _pad_volume(
-        volume: np.ndarray,
-        limits: np.ndarray,
-        padding: tuple[int, int, int, int],
-        output_region: tuple[int, int, int, int],
-        **kwargs: Any,
-    ) -> tuple[np.ndarray, np.ndarray]
-
     Pads a volume with zeros to avoid edge effects during imaging.
 
 Examples
@@ -154,10 +131,9 @@ from deeptrack.features import propagate_data_to_dependencies
 from deeptrack.features import DummyFeature, Feature, StructuralFeature
 from deeptrack.types import PropertyLike
 
-from deeptrack import image
 from deeptrack import units_registry as u
 
-from deeptrack import TORCH_AVAILABLE, image
+from deeptrack import TORCH_AVAILABLE
 from deeptrack.backend import xp, config
 from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
@@ -169,7 +145,6 @@ if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Microscope - torch, typing, docstring, unit test
 class Microscope(StructuralFeature):
     """Simulates imaging of a sample using an optical system.
 
@@ -183,10 +158,10 @@ class Microscope(StructuralFeature):
 
     Parameters
     ----------
-    sample: Feature
+    sample:
         A feature-set resolving a list of images describing the sample to be
         imaged.
-    objective: Feature
+    objective: Optics
         A feature-set defining the optical device that images the sample.
 
     Attributes
@@ -195,7 +170,7 @@ class Microscope(StructuralFeature):
         If True, the feature is distributed across multiple workers.
     _sample: Feature
         The feature-set defining the sample to be imaged.
-    _objective: Feature
+    _objective: Optics
         The feature-set defining the optical system imaging the sample.
 
     Methods
@@ -230,7 +205,7 @@ class Microscope(StructuralFeature):
     def __init__(
         self:  Microscope,
         sample: Feature,
-        objective: Feature,
+        objective: Optics,
         **kwargs: Any,
     ):
         """Initialize the `Microscope` instance.
@@ -240,7 +215,7 @@ class Microscope(StructuralFeature):
         sample: Feature
             A feature-set resolving a list of images describing the sample to be
             imaged.
-        objective: Feature
+        objective: Optics
             A feature-set defining the optical device that images the sample.
         **kwargs: Any
             Additional parameters passed to the base `StructuralFeature` class.
@@ -249,7 +224,7 @@ class Microscope(StructuralFeature):
         ----------
         _sample: Feature
             The feature-set defining the sample to be imaged.
-        _objective: Feature
+        _objective: Optics
             The feature-set defining the optical system imaging the sample.
 
         """
@@ -318,9 +293,9 @@ class Microscope(StructuralFeature):
         >>> scatterer = dt.PointParticle()
         >>> optics = dt.Brightfield()
         >>> microscope = dt.Microscope(sample=scatterer, objective=optics)
-        >>> image = microscope.get(None, upscale=(2, 2, 2))
+        >>> image = microscope.get(None)
         >>> print(image.shape)
-        (256, 256, 1)
+        (128, 128, 1)
 
         """
 
@@ -416,9 +391,8 @@ class Microscope(StructuralFeature):
         return imaged_sample
 
 
-#TODO ***??*** revise Optics - torch, typing, docstring, unit test
 class Optics(Feature):
-    """Abstract base optics class.
+    """Base class for optical systems.
 
     Provides structure and methods common for most optical devices. Subclasses
     implement specific optical systems by defining imaging properties and
@@ -443,7 +417,7 @@ class Optics(Feature):
         Padding applied to the sample volume to avoid edge effects, 
         by default (10, 10, 10, 10).
     output_region: array_like[int, int, int, int], optional
-        Region of the image to output (x, y, width, height). If None, the 
+        Region of the image to output (x_min, y_min, x_max, y_max). If None, the 
         entire image is returned, by default (0, 0, 128, 128).
     pupil: Feature, optional
         Feature-set resolving the pupil function at focus. By default, no pupil
@@ -473,25 +447,27 @@ class Optics(Feature):
     padding: array_like[int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int]
-        Region of the output image to extract (x, y, width, height).
+        Region of the output image to extract (x_min, y_min, x_max, y_max).
     voxel_size: function
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
     upscale: int
         Scaling factor for the resolution of the optical system.
-    limits: array_like[int, int]
-        Limits of the volume to be imaged.
+    limits: np.ndarray | torch.Tensor | None
+        Array of shape (3, 2) with volume bounds
+        `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+        If `None`, bounds are initialized to zeros.
     fields: list[Feature]
         List of fields to be imaged.
 
     Methods
     -------
-    `_process_properties(propertydict: dict[str, Any]) -> dict[str, Any]`
+    `_process_properties(propertydict) -> dict[str, Any]`
         Processes and validates the input properties.
-    `_pupil(shape:  array_like[int, int], NA: float, wavelength: float, refractive_index_medium: float, include_aberration: bool, defocus: float, **kwargs: Any) -> array_like[complex]`
+    `_pupil(shape, NA, wavelength, refractive_index_medium, include_aberration, defocus, **kwargs) -> array_like[complex]`
         Calculates the pupil function at different focal points.
-    `_pad_volume(volume: array_like[complex], limits: array_like[int, int], padding: array_like[int], output_region: array_like[int], **kwargs: Any) -> tuple`
+    `_pad_volume(volume, limits, padding, output_region, **kwargs) -> tuple`
         Pads the volume with zeros to avoid edge effects.
     `__call__(sample: Feature, **kwargs: Any) -> Microscope`
         Creates a Microscope instance with the given sample and optics.
@@ -519,13 +495,13 @@ class Optics(Feature):
         NA: PropertyLike[float] = 0.7,
         wavelength: PropertyLike[float] = 0.66e-6,
         magnification: PropertyLike[float] = 10,
-        resolution: PropertyLike[float | tuple[float, float]] = 1e-6,
+        resolution: PropertyLike[float | tuple[float, float] | tuple[float, float, float]] = 1e-6,
         refractive_index_medium: PropertyLike[float] = 1.33,
         padding: PropertyLike[tuple[int, int, int, int]] = (10, 10, 10, 10),
         output_region: PropertyLike[tuple[int, int, int, int]] = (0, 0, 128, 128),
-        pupil: Feature = None,
-        illumination: Feature = None,
-        upscale: int = 1,
+        pupil: Feature | None = None,
+        illumination: Feature | None = None,
+        upscale: PropertyLike[int | tuple[int, int, int]] = 1,
         **kwargs: Any,
     ):
         """Initialize the `Optics` instance.
@@ -547,8 +523,8 @@ class Optics(Feature):
             Padding applied to the sample volume to avoid edge effects,
             by default (10, 10, 10, 10).
         output_region: array_like[int, int, int, int], optional
-            Region of the image to output (x, y, width, height). If None, the
-            entire image is returned, by default (0, 0, 128, 128).
+            Region of the image to output (x_min, y_min, x_max, y_max). If 
+            None, the entire image is returned, by default (0, 0, 128, 128).
         pupil: Feature, optional
             Feature-set resolving the pupil function at focus. By default, no pupil
             is applied.
@@ -576,15 +552,17 @@ class Optics(Feature):
         padding: array_like[int]
             Padding applied to the sample volume to reduce edge effects.
         output_region: array_like[int]
-            Region of the output image to extract (x, y, width, height).
+            Region of the output image to extract (x_min, y_min, x_max, y_max).
         voxel_size: function
             Function returning the voxel size of the optical system.
         pixel_size: function
             Function returning the pixel size of the optical system.
         upscale: int
             Scaling factor for the resolution of the optical system.
-        limits: array_like[int, int]
-            Limits of the volume to be imaged.
+        limits: np.ndarray | torch.Tensor | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
         fields: list[Feature]
             List of fields to be imaged.
 
@@ -596,15 +574,6 @@ class Optics(Feature):
             Calculate the pixel size.
 
         """
-
-        def validate_scattered(self, scattered):
-            pass
-
-        def extract_contrast_volume(self, scattered):
-            pass
-
-        def downscale_image(self, image, upscale):
-            pass
 
         def get_voxel_size(
             resolution: float | tuple[float, float] | tuple[float, float, float],
@@ -980,32 +949,35 @@ class Optics(Feature):
     def _pad_volume(
         self: Optics,
         volume: np.ndarray | torch.Tensor,
-        limits: tuple[int, int, int, int] | None = None,
+        limits: np.ndarray | torch.Tensor | None = None,
         padding: tuple[int, int, int, int] | None = None,
         output_region: tuple[int, int, int, int] | None = None,
         **kwargs: Any,
-    ) -> tuple[np.ndarray | torch.Tensor, tuple[int, int, int, int]]:
+    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor]:
         """Pads the volume with zeros to avoid edge effects.
 
         Parameters
         ----------
         volume: np.ndarray | torch.Tensor
             The volume to pad.
-        limits: tuple[int, int, int, int] | None
-            The limits of the volume.
-        padding: tuple[int, int, int, int] | None
+        limits: np.ndarray | torch.Tensor | None = None
+            The limits of the volume. Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
+        padding: tuple[int, int, int, int] | None = None
             The padding to apply. Format is (left, right, top, bottom).
-        output_region: tuple[int, int, int, int] | None
-            The region of the volume to return. Used to remove regions of the
-            volume that are far outside the view. If None, the full volume is
-            returned.
+        output_region: tuple[int, int, int, int] | None = None
+            The region of the volume to return (x_min, y_min, x_max, y_max). 
+            Used to remove regions of the volume that are far outside the view. 
+            If None, the full volume is returned.
 
         Returns
         -------
         new_volume: np.ndarray | torch.Tensor
             The padded volume.
-        new_limits: tuple[int, int, int, int]
-            The new limits of the volume.
+        new_limits: np.ndarray | torch.Tensor
+            Array of shape (3, 2) with updated bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
 
         Examples
         --------
@@ -1035,8 +1007,13 @@ class Optics(Feature):
         else:
             limits = xp.asarray(limits)
 
+        if padding is None:
+            padding = (0, 0, 0, 0)
+
+        if output_region is None:
+            output_region = (None, None, None, None)
+
         padding = xp.asarray(padding)
-        output_region = xp.asarray(output_region)
 
         import torch
 
@@ -1045,16 +1022,14 @@ class Optics(Feature):
         else:
             new_limits = limits.copy()
 
+        x0, y0, x1, y1 = output_region
 
-        # Replace None-like entries (NumPy/Torch safe)
-        for i in range(4):
-            if output_region[i] is None:
-                output_region[i] = (
-                    new_limits[0, 0] if i == 0 else
-                    new_limits[0, 1] if i == 1 else
-                    new_limits[1, 0] if i == 2 else
-                    new_limits[1, 1]
-                )
+        x0 = new_limits[0, 0] if x0 is None else x0
+        y0 = new_limits[1, 0] if y0 is None else y0
+        x1 = new_limits[0, 1] if x1 is None else x1
+        y1 = new_limits[1, 1] if y1 is None else y1
+
+        output_region = xp.asarray((x0, y0, x1, y1))
 
         for i in range(2):
             new_limits[i, 0] = xp.minimum(
@@ -1147,7 +1122,7 @@ class Fluorescence(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int], optional
-        Region of the output image to extract (x, y, width, height). If None, 
+        Region of the output image to extract (x_min, y_min, x_max, y_max). If None, 
         returns the full image.
     pupil: Feature, optional
         A feature set defining the pupil function at focus. The input is 
@@ -1173,21 +1148,23 @@ class Fluorescence(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
-        Region of the output image to extract (x, y, width, height).
+        Region of the output image to extract (x_min, y_min, x_max, y_max).
     voxel_size: function
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
     upscale: int
         Scaling factor for the resolution of the optical system.
-    limits: array_like[int, int]
-        Limits of the volume to be imaged.
+    limits: np.ndarray | torch.Tensor | None
+        Array of shape (3, 2) with volume bounds
+        `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+        If `None`, bounds are initialized to zeros.
     fields: list[Feature]
         List of fields to be imaged
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], limits: array_like[int, int], **kwargs: Any) -> np.ndarray`
+    `get(illuminated_volume, limits, **kwargs) -> np.ndarray`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1214,7 +1191,27 @@ class Fluorescence(Optics):
             )
 
 
-    def extract_contrast_volume(self, scattered: ScatteredVolume, **kwargs) -> np.ndarray | torch.Tensor:
+    def extract_contrast_volume(
+        self: Fluorescence, 
+        scattered: ScatteredVolume, 
+        **kwargs: Any
+    ) -> np.ndarray | torch.Tensor:
+        """Extract the fluorescence-emitting contrast volume.
+
+        The fluorescence model interprets the scatterer output as a discretized 
+        source distribution. Depending on how the scatterer is represented on 
+        the grid, additional measure corrections may already be included in the 
+        scatterer mask:
+
+        - `PointParticle` includes voxel-volume scaling
+        - `Ellipse` includes axial-thickness scaling
+        - volumetric scatterers such as `Sphere` and `Ellipsoid` require no 
+        additional geometric measure correction beyond their voxelized support
+
+        This method therefore applies only the fluorescence intensity scaling 
+        itself.
+
+        """
         scale = np.asarray(get_active_scale(), float)
         scale_volume = np.prod(scale)
 
@@ -1268,7 +1265,7 @@ class Fluorescence(Optics):
     def get(
         self: Fluorescence,
         illuminated_volume: np.ndarray | torch.Tensor,
-        limits: np.ndarray,
+        limits: np.ndarray | torch.Tensor | None,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """ Backend-dispatched fluorescence imaging.
@@ -1277,8 +1274,10 @@ class Fluorescence(Optics):
         ----------
         illuminated_volume: np.ndarray | torch.Tensor
             The illuminated 3D volume to be imaged.
-        limits: np.ndarray
-            Boundaries of the illuminated volume in each dimension.
+        limits: np.ndarray | torch.Tensor | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
         **kwargs: Any
             Additional properties for the imaging process, such as:
             - 'padding': Padding to apply to the sample.
@@ -1324,7 +1323,7 @@ class Fluorescence(Optics):
     def _get_numpy(
         self:  Fluorescence,
         illuminated_volume: np.ndarray,
-        limits: np.ndarray,
+        limits: np.ndarray |  None,
         **kwargs: Any,
     ) -> np.ndarray:
         """Simulates the imaging process using a fluorescence microscope.
@@ -1336,8 +1335,10 @@ class Fluorescence(Optics):
         ----------
         illuminated_volume: np.ndarray | torch.Tensor
             The illuminated 3D volume to be imaged.
-        limits: array_like[int, int]
-            Boundaries of the illuminated volume in each dimension.
+        limits: np.ndarray | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
         **kwargs: Any
             Additional properties for the imaging process, such as:
             - 'padding': Padding to apply to the sample.
@@ -1465,7 +1466,7 @@ class Fluorescence(Optics):
     def _get_torch(
         self: Fluorescence,
         illuminated_volume: torch.Tensor,
-        limits: torch.Tensor,
+        limits: torch.Tensor | None,
         **kwargs: Any,
     ) -> torch.Tensor:
         """ Torch implementation of fluorescence imaging. 
@@ -1607,7 +1608,7 @@ class Brightfield(Optics):
     padding: array_like[int, int, int, int]
         Padding added to the sample volume to minimize edge effects.
     output_region: array_like[int, int, int, int], optional
-        Specifies the region of the image to output (x, y, width, height).
+        Specifies the region of the image to output (x_min, y_min, x_max, y_max).
         Default is None, which outputs the entire image.
     pupil: Feature, optional
         Feature-set defining the pupil function. The input is the 
@@ -1630,23 +1631,23 @@ class Brightfield(Optics):
     padding: array_like[int, int, int, int]
         Padding applied to the sample volume to reduce edge effects.
     output_region: array_like[int, int, int, int]
-        Region of the output image to extract (x, y, width, height).
+        Region of the output image to extract (x_min, y_min, x_max, y_max).
     voxel_size: function
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
     upscale: int
         Scaling factor for the resolution of the optical system.
-    limits: array_like[int, int]
-        Limits of the volume to be imaged.
+    limits: np.ndarray | torch.Tensor | None
+        Array of shape (3, 2) with volume bounds
+        `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+        If `None`, bounds are initialized to zeros.
     fields: list[Feature]
         List of fields to be imaged.
 
     Methods
     -------
-    `get(illuminated_volume: array_like[complex], 
-        limits: array_like[int, int], fields: array_like[complex], 
-        **kwargs: Any) -> np.ndarray`
+    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
         Simulates imaging with brightfield microscopy.
 
 
@@ -1711,8 +1712,8 @@ class Brightfield(Optics):
     def get(
         self: Brightfield,
         illuminated_volume: np.ndarray | torch.Tensor,
-        limits: tuple[int, int, int, int],
-        fields: np.ndarray | torch.Tensor,
+        limits: list[ScatteredField],        
+        fields: list[ScatteredField],
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Simulates imaging with brightfield microscopy.
@@ -1726,10 +1727,14 @@ class Brightfield(Optics):
         ----------
         illuminated_volume: np.ndarray | torch.Tensor
             Discretized volume representing the sample to be imaged.
-        limits: tuple[int, int, int, int]
-            Boundaries of the sample volume in each dimension.
-        fields: np.ndarray | torch.Tensor
-            Input fields to be used in the imaging process.
+        limits: np.ndarray | torch.Tensor | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
+        fields: list[ScatteredField]
+            Additional coherent fields to be added at the detector plane.
+            Each field must provide an `.array` with shape `(H, W)` or 
+            `(H, W, 1)`.
         **kwargs: Any
             Additional parameters for the imaging process, including:
             - 'padding': Padding to apply to the sample volume.
@@ -1756,7 +1761,7 @@ class Brightfield(Optics):
         ... )
         >>> volume = np.ones((128, 128, 10), dtype=complex)
         >>> limits = np.array([[0, 128], [0, 128], [0, 10]])
-        >>> fields = np.array([np.ones((162, 162), dtype=complex)])
+        >>> fields = [dt.ScatteredField(array=np.ones((162, 162, 1), dtype=complex))]
         >>> properties = optics.properties()
         >>> filtered_properties = {
         ...     k: v for k, v in properties.items()
@@ -1950,7 +1955,7 @@ class ISCAT(Brightfield):
         Padding for the sample volume to minimize edge effects. Format: 
         (left, right, top, bottom).
     output_region: array_like of int
-        Region of the image to output as (x, y, width, height). If None 
+        Region of the image to output as (x_min, y_min, x_max, y_max). If None 
         (default), the entire image is returned.
     pupil: Feature
         Feature-set defining the pupil function at focus. The feature-set 
@@ -2011,7 +2016,6 @@ class ISCAT(Brightfield):
             )
   
 
-#TODO ***??*** revise Darkfield - torch, typing, docstring, unit test      
 class Darkfield(Brightfield):
     """Images coherently illuminated samples using Darkfield microscopy.
 
@@ -2040,7 +2044,7 @@ class Darkfield(Brightfield):
         Padding for the sample volume to minimize edge effects. Format: 
         (left, right, top, bottom).
     output_region: array_like of int
-        Region of the image to output as (x, y, width, height). If None 
+        Region of the image to output as (x_min, y_min, x_max, y_max). If None 
         (default), the entire image is returned.
     pupil: Feature
         Feature-set defining the pupil function at focus. The feature-set 
@@ -2162,8 +2166,8 @@ class Darkfield(Brightfield):
     def get(
         self: Darkfield,
         illuminated_volume: np.ndarray | torch.Tensor,
-        limits: tuple[int, int, int, int],
-        fields: np.ndarray | torch.Tensor,
+        limits: np.ndarray | torch.Tensor | None,
+        fields: list[ScatteredField],
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Retrieve the darkfield image of the illuminated volume.
@@ -2172,10 +2176,14 @@ class Darkfield(Brightfield):
         ----------
         illuminated_volume: array_like
             The volume of the sample being illuminated.
-        limits: array_like
-            The spatial limits of the volume.
-        fields: array_like
-            The fields interacting with the sample.
+        limits: np.ndarray | torch.Tensor | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
+        fields: list[ScatteredField]
+            Additional coherent fields to be added at the detector plane.
+            Each field must provide an `.array` with shape `(H, W)` or 
+            `(H, W, 1)`.
         **kwargs: Any
             Additional parameters passed to the super class's get method.
 
@@ -3045,7 +3053,7 @@ class SampleToMasks(Feature):
 
     Parameters
     ----------
-    transformation_function: Callable[[np.ndarray], np.ndarray]
+    transformation_function: Callable[[np.ndarray | torch.Tensor], np.ndarray | torch.Tensor]
         A function that transforms each input image into a mask with 
         `number_of_masks` layers.
     number_of_masks: PropertyLike[int], optional
@@ -3134,8 +3142,8 @@ class SampleToMasks(Feature):
     """
 
     def __init__(
-        self: Feature,
-        transformation_function: Callable[[np.ndarray], np.ndarray, torch.Tensor],
+        self: SampleToMasks,
+        transformation_function: Callable[[np.ndarray | torch.Tensor], np.ndarray | torch.Tensor],
         number_of_masks: PropertyLike[int] = 1,
         output_region: PropertyLike[tuple[int, int, int, int]] = None,
         merge_method: PropertyLike[str | Callable | list[str | Callable]] = "add",
@@ -3145,7 +3153,7 @@ class SampleToMasks(Feature):
 
         Parameters
         ----------
-        transformation_function: Callable[[np.ndarray], np.ndarray]
+        transformation_function: Callable[[np.ndarray | torch.Tensor], np.ndarray | torch.Tensor]
             Function to transform input images into masks.
         number_of_masks: PropertyLike[int], optional
             Number of mask layers. Default is 1.
@@ -3167,18 +3175,18 @@ class SampleToMasks(Feature):
         )
 
     def get(
-        self: Feature,
-        image: np.ndarray,
-        transformation_function: Callable[list[np.ndarray] | np.ndarray | torch.Tensor],
+        self: SampleToMasks,
+        scatterer: ScatteredVolume,
+        transformation_function: Callable[[np.ndarray | torch.Tensor], np.ndarray | torch.Tensor],
         **kwargs: Any,
     ) -> np.ndarray:
         """Apply the transformation function to a single image.
 
         Parameters
         ----------
-        image: np.ndarray
-            The input image.
-        transformation_function: Callable[[np.ndarray], np.ndarray]
+        scatterer: ScatteredVolume
+            The wrapper object containing the image to be transformed.
+        transformation_function: Callable[[np.ndarray | torch.Tensor], np.ndarray | torch.Tensor]
             Function to transform the image.
         **kwargs: dict[str, Any]
             Additional parameters.
@@ -3190,10 +3198,11 @@ class SampleToMasks(Feature):
 
         """
 
-        return transformation_function(image.array)
+        return transformation_function(scatterer.array)
+
 
     def _process_and_get(
-        self: Feature,
+        self: SampleToMasks,
         images: list[np.ndarray] | np.ndarray | list[torch.Tensor] | torch.Tensor,
         **kwargs: Any,
     ) -> np.ndarray:
@@ -3328,18 +3337,18 @@ class SampleToMasks(Feature):
         return output
 
 
-#TODO ***??*** revise _get_position - torch, typing, docstring, unit test
 def _get_position(
     scatterer: ScatteredVolume,
     mode: str = "corner",
     return_z: bool = False,
-) -> np.ndarray:
+) -> np.ndarray | None:
     """Extracts the position of the upper-left corner of a scatterer.
 
     Parameters
     ----------
-    image: numpy.ndarray
-        Input image or volume containing the scatterer.
+    scatterer: ScatteredVolume
+        Scatterer whose position is read from its properties and adjusted
+        relative to its voxelized support.
     mode: str, optional
         Mode for position extraction. Default is "corner".
     return_z: bool, optional
@@ -3347,7 +3356,7 @@ def _get_position(
 
     Returns
     -------
-    numpy.ndarray
+    numpy.ndarray or None
         Array containing the position of the scatterer.
     
     """
@@ -3365,7 +3374,11 @@ def _get_position(
     else:
         shift = np.zeros((num_outputs))
 
-    position = np.array(scatterer.get_property("position", default=None))
+    raw_position = scatterer.get_property("position", default=None)
+    if raw_position is None:
+        return None
+
+    position = np.asarray(raw_position)
 
     if position is None:
         return position
@@ -3421,22 +3434,19 @@ def _bilinear_interpolate(
 
 
 
-#TODO ***??*** revise _create_volume - torch, typing, docstring, unit test
 
 # This is where differentiability respect to position, shape, etc is broken.
 def _create_volume(
-    list_of_scatterers: list,
-    pad: tuple = (0, 0, 0, 0),
-    output_region: tuple = (None, None, None, None),
-    refractive_index_medium: float = 1.33,
-    backend: Literal["numpy", "torch"] = "numpy",
+    list_of_scatterers: ScatteredVolume | list[ScatteredVolume],
+    pad: tuple[int, int, int, int] = (0, 0, 0, 0),
+    output_region: tuple[int | None, int | None, int | None, int | None] = (None, None, None, None),
     **kwargs: Any,
-) -> tuple:
+) -> tuple[np.ndarray | torch.Tensor, np.ndarray | None]:
     """Converts a list of scatterers into a volumetric representation.
 
     Parameters
     ----------
-    list_of_scatterers: list or single scatterer
+    list_of_scatterers: single ScatteredVolume or list of ScatteredVolume
         List of scatterers to include in the volume.
     pad: tuple of int, optional
         Padding for the volume in the format (left, right, top, bottom).
@@ -3455,8 +3465,10 @@ def _create_volume(
     tuple
         - volume: numpy.ndarray
             The generated volume containing the scatterers.
-        - limits: numpy.ndarray
-            Spatial limits of the volume.
+        - limits: np.ndarray | torch.Tensor | None
+            Array of shape (3, 2) with volume bounds
+            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
+            If `None`, bounds are initialized to zeros.
 
     Notes
     -----
@@ -3491,11 +3503,10 @@ def _create_volume(
         else:
             raise RuntimeError(f"Unknown backend: {backend}")
 
-
     volume = np.zeros((1, 1, 1), dtype=complex)
     limits = None
     OR = np.zeros((4,))
-    OR[0] = np.inf if output_region[0] is None else int(
+    OR[0] = -np.inf if output_region[0] is None else int(
         output_region[0] - pad[0]
     )
     OR[1] = -np.inf if output_region[1] is None else int(
@@ -3504,15 +3515,9 @@ def _create_volume(
     OR[2] = np.inf if output_region[2] is None else int(
         output_region[2] + pad[2]
     )
-    OR[3] = -np.inf if output_region[3] is None else int(
+    OR[3] = np.inf if output_region[3] is None else int(
         output_region[3] + pad[3]
     )
-
-    scale = np.array(get_active_scale())
-
-    # This accounts for upscale doing AveragePool instead of SumPool. This is
-    # a bit of a hack, but it works for now.
-    # fudge_factor = scale[0] * scale[1] / scale[2]
 
     for scatterer in list_of_scatterers:
 
@@ -3524,6 +3529,13 @@ def _create_volume(
             )
 
         position = _get_position(scatterer, mode="corner", return_z=True)
+        if position is None:
+            warnings.warn(
+                "Optical device received a scatterer without a position property. "
+                "It will be ignored.",
+                UserWarning,
+            )
+            continue
 
         if limits is None:
             limits = np.zeros((3, 2), dtype=np.int32)
@@ -3539,7 +3551,7 @@ def _create_volume(
             continue
         
         # Pad scatterer to avoid edge effects during interpolation
-        padded_scatterer_arr = np.pad(  #Use Pad instead and make it torch-compatible?
+        padded_scatterer_arr = np.pad(
                 scatterer.array,
                 [(2, 2), (2, 2), (2, 2)],
                 "constant",

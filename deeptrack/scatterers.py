@@ -2590,8 +2590,12 @@ class Incoherent(StructuralFeature):
         _ID: tuple = (),
         **kwargs: Any,
     ) -> Any:
-        """Evaluates the feature for different polarization states and returns 
-            the incoherent average.
+        """Incoherently average the feature over polarization states.
+        
+        Evaluates the feature for different polarization states and returns 
+        the incoherent average. If both `input_unpolarized` and 
+        `output_unpolarized` are False, the feature is evaluated once with the 
+        provided polarization states (or defaults) and returned directly.
         
         Parameters
         ----------

@@ -250,11 +250,9 @@ class TestOptics_NumPy(BackendTestBase):
         ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
-# TODO: Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestOptics_PyTorch(TestOptics_NumPy):
     BACKEND = "torch"
-#     pass
 
 if __name__ == "__main__":
     unittest.main()
