@@ -20,7 +20,9 @@ Key Features
   devices, defining core imaging properties such as resolution, magnification,
   numerical aperture (NA), and wavelength. Subclasses like `Brightfield`,
   `Fluorescence`, `Holography`, `Darkfield`, and `ISCAT` offer specialized
-  configurations tailored to different imaging techniques.
+  configurations tailored to different imaging techniques. Subclasses support
+  internal oversampling via `upscale`, enabling more accurate propagation and 
+  detector integration before returning the final image on the detector grid.
 
 - **Sample Illumination and Volume Simulation**
 
@@ -31,7 +33,7 @@ Key Features
 
 - **Integration with feature pipelines**
 
-  Full compatibility with feature pipelines, allows for dynamic and complex
+  Full compatibility with feature pipelines allows dynamic and complex
   simulations, incorporating physics-based models and real-time adjustments to
   sample and imaging properties.
 
@@ -39,7 +41,7 @@ Module Structure
 ----------------
 Classes:
 
-- `Microscope`: Combines a sample-producing feature with an optical system. It 
+- `Microscope`: Combines a sample-producing feature with an optical system. It
 validates scatterer/optics compatibility, merges volumetric scatterers, 
 forwards coherent fields, and applies detector downscaling when required.
 
@@ -48,13 +50,13 @@ properties such as numerical aperture, wavelength, magnification, resolution,
 padding, output region, illumination, pupil, and upscale.
 
 - `Brightfield`: Coherent imaging model based on slice-by-slice propagation 
-through a contrast volume. Additional `ScatteredField` objects may be added at 
+through a contrast volume. Additional `ScatteredField` objects may be added at
 the detector plane.
 
 - `Holography`: Alias of `Brightfield`, representing coherent holographic 
 imaging.
 
-- `Darkfield`:Variant of `Brightfield` that suppresses the unscattered 
+- `Darkfield`: Variant of `Brightfield` that suppresses the unscattered 
 reference field and returns a darkfield-like intensity.
 
 - `ISCAT`: Brightfield-based coherent imaging configuration for interferometric
@@ -78,7 +80,7 @@ Utility Functions:
 - `_get_position(image, mode, return_z)`
     Extracts the position of the upper-left corner of a scatterer in the image.
 
-- `_create_volume(list_of_scatterers, pad, output_region, refractive_index_medium, **kwargs)`
+- `_create_volume(list_of_scatterers, pad, output_region, **kwargs)`
     Combines multiple scatterer objects into a single 3D volume for imaging.
 
 - `_pad_volume(volume, limits, padding, output_region, **kwargs)`
@@ -112,7 +114,6 @@ Simulating an image with the `Fluorescence` class:
 
 from __future__ import annotations
 
-from pint import Quantity
 import itertools
 import warnings
 from typing import TYPE_CHECKING, Any, Callable
@@ -154,6 +155,10 @@ class Microscope(StructuralFeature):
     - interprets volume-based scatterers into scalar fields when needed
     - delegates numerical propagation to the objective (Optics)
     - performs detector downscaling according to its physical semantics
+
+    The microscope evaluates the sample in an internally upscaled coordinate
+    system determined by `objective.upscale`. The final image is then 
+    downscaled to detector resolution using the optics-specific detector model.
 
     Parameters
     ----------
@@ -212,8 +217,8 @@ class Microscope(StructuralFeature):
         Parameters
         ----------
         sample: Feature
-            A feature-set resolving a list of images describing the sample to be
-            imaged.
+            A feature-set resolving a list of images describing the sample to 
+            be imaged.
         objective: "Optics"
             A feature-set defining the optical device that images the sample.
         **kwargs: Any
@@ -415,16 +420,20 @@ class Optics(Feature):
         Padding applied to the sample volume to avoid edge effects, 
         by default (10, 10, 10, 10).
     output_region: array_like[int, int, int, int], optional
-        Region of the image to output (x_min, y_min, x_max, y_max). If None, the 
-        entire image is returned, by default (0, 0, 128, 128).
+        Region of the image to output (x_min, y_min, x_max, y_max). If None, 
+        the entire image is returned, by default (0, 0, 128, 128).
     pupil: Feature, optional
         Feature-set resolving the pupil function at focus. By default, no pupil
         is applied.
     illumination: Feature, optional
         Feature-set resolving the illumination source. By default, no specific 
         illumination is applied.
-    upscale: int, optional
-        Scaling factor for the resolution of the optical system, by default 1.
+    upscale: int or tuple[int, int, int], optional
+        Internal oversampling factor used during image formation. A scalar 
+        applies the same factor along all axes; a tuple specifies 
+        `(ux, uy, uz)`. Larger values improve spatial sampling during 
+        propagation, after which the simulated image is downscaled back to 
+        detector resolution.
     **kwargs: Any
         Additional parameters passed to the base `Feature` class.
 
@@ -450,8 +459,12 @@ class Optics(Feature):
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
-    upscale: int
-        Scaling factor for the resolution of the optical system.
+    upscale: int or tuple[int, int, int], optional
+        Internal oversampling factor used during image formation. A scalar 
+        applies the same factor along all axes; a tuple specifies 
+        `(ux, uy, uz)`. Larger values improve spatial sampling during 
+        propagation, after which the simulated image is downscaled back to 
+        detector resolution.
     limits: np.ndarray | torch.Tensor | None
         Array of shape (3, 2) with volume bounds
         `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
@@ -529,8 +542,10 @@ class Optics(Feature):
         illumination: Feature, optional
             Feature-set resolving the illumination source. By default, no 
             specific illumination is applied.
-        upscale: int, optional
-            Scaling factor for the resolution of the optical system, by default 1.
+        upscale: int | tuple[int, int, int]
+            Internal oversampling factor used during image formation. Larger 
+            values improve spatial sampling during propagation, after which the
+            simulated image is downscaled back to detector resolution.
         **kwargs: Any
             Additional parameters passed to the base `Feature` class.
 
@@ -555,8 +570,8 @@ class Optics(Feature):
             Function returning the voxel size of the optical system.
         pixel_size: function
             Function returning the pixel size of the optical system.
-        upscale: int
-            Scaling factor for the resolution of the optical system.
+        upscale: PropertyLike[int | tuple[int, int, int]]
+            Oversampling factor for the resolution of the optical system.
         limits: np.ndarray | torch.Tensor | None
             Array of shape (3, 2) with volume bounds
             `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
@@ -601,7 +616,7 @@ class Optics(Feature):
             resolution: float | tuple[float, float] | tuple[float, float, float],
             magnification: float,
         ) -> float:
-            """ Calculate the pixel size.
+            """Calculate the pixel size.
 
             It differs from the voxel size by only being a single value.
 
@@ -1143,7 +1158,7 @@ class Fluorescence(Optics):
         the unaberrated pupil.
     illumination: Feature, optional
         A feature set defining the illumination source.
-    upscale: int, optional
+    upscale: PropertyLike[int | tuple[int, int, int]]
         Scaling factor for the resolution of the optical system.
     **kwargs: Any
 
@@ -1167,7 +1182,7 @@ class Fluorescence(Optics):
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
-    upscale: int
+    upscale: PropertyLike[int | tuple[int, int, int]]
         Scaling factor for the resolution of the optical system.
     limits: np.ndarray | torch.Tensor | None
         Array of shape (3, 2) with volume bounds
@@ -1258,10 +1273,27 @@ class Fluorescence(Optics):
     def downscale_image(
         self: Fluorescence,
         image: np.ndarray | torch.Tensor, 
-        upscale: int,
+        upscale: int | tuple[int, int, int]
     ) -> np.ndarray | torch.Tensor:
-        """Detector downscaling (energy conserving).
-        
+        """Downscale an internally oversampled image to detector resolution.
+
+        The fluorescence model performs image formation on an upscaled grid and 
+        then applies detector integration. The result is normalized to account 
+        for the oversampling factors. Normalization includes `uz` because 
+        fluorescence emission is accumulated over the internally oversampled 
+        axial coordinate before detector downscaling.
+
+        Parameters
+        ----------
+        image: np.ndarray | torch.Tensor
+            The upscaled image to be downscaled.
+        upscale: int | tuple[int, int, int]
+            The internal oversampling factor used during image formation.
+
+        Returns
+        -------
+        np.ndarray | torch.Tensor
+            The downscaled image at detector resolution.
 
         """
         if not np.any(np.array(upscale) != 1):
@@ -1649,7 +1681,7 @@ class Brightfield(Optics):
         Function returning the voxel size of the optical system.
     pixel_size: function
         Function returning the pixel size of the optical system.
-    upscale: int
+    upscale: PropertyLike[int | tuple[int, int, int]]
         Scaling factor for the resolution of the optical system.
     limits: np.ndarray | torch.Tensor | None
         Array of shape (3, 2) with volume bounds
@@ -3466,9 +3498,6 @@ def _create_volume(
     output_region: tuple of int, optional
         Region to output, defined as (x_min, y_min, x_max, y_max). Default is 
         None.
-    refractive_index_medium: float, optional
-        Refractive index of the medium surrounding the scatterers. Default is 
-        1.33.
     **kwargs: Any
         Additional arguments for customization.
 
@@ -3477,10 +3506,9 @@ def _create_volume(
     tuple
         - volume: numpy.ndarray
             The generated volume containing the scatterers.
-        - limits: np.ndarray | torch.Tensor | None
-            Array of shape (3, 2) with volume bounds
-            `[[x_min, x_max], [y_min, y_max], [z_min, z_max]]`.
-            If `None`, bounds are initialized to zeros.
+        - limits: np.ndarray | None
+            Array of shape (3, 2) giving the volume bounds. Returns `None` if 
+            no scatterer contributes to the volume.
 
     Notes
     -----
