@@ -1,10 +1,9 @@
 """Features for optical imaging of samples.
 
-This module provides classes and functionalities for simulating optical
-imaging systems, enabling the generation of realistic camera images of
-biological and physical samples. The primary goal is to offer tools for
-modeling and computing optical phenomena such as brightfield, fluorescence,
-holography, and other imaging modalities.
+This module provides features for simulating optical image formation from
+sample representations such as `ScatteredVolume` and `ScatteredField`.
+It includes a high-level `Microscope` wrapper, a base `Optics` class, and
+specialized optical systems for coherent and incoherent imaging.
 
 Key Features
 ------------
@@ -40,37 +39,39 @@ Module Structure
 ----------------
 Classes:
 
-- `Microscope`: Represents a simulated optical microscope that integrates the 
-sample and optical systems. It provides an interface to simulate imaging by 
-combining the sample properties with the configured optical system.
+- `Microscope`: Combines a sample-producing feature with an optical system. It 
+validates scatterer/optics compatibility, merges volumetric scatterers, 
+forwards coherent fields, and applies detector downscaling when required.
 
-- `Optics`: An abstract base class representing a generic optical device. 
-Subclasses implement specific optical systems by defining imaging properties 
-and behaviors.
+- `Optics`: Base class for optical systems. It defines common imaging 
+properties such as numerical aperture, wavelength, magnification, resolution, 
+padding, output region, illumination, pupil, and upscale.
 
-- `Brightfield`:  Simulates brightfield microscopy, commonly used for observing
-unstained or stained samples under transmitted light. This class serves as the 
-base for additional imaging techniques.
+- `Brightfield`: Coherent imaging model based on slice-by-slice propagation 
+through a contrast volume. Additional `ScatteredField` objects may be added at 
+the detector plane.
 
-- `Holography`: Simulates holographic imaging, capturing phase information from
-the sample. Suitable for reconstructing 3D images and measuring refractive 
-index variations.  
+- `Holography`: Alias of `Brightfield`, representing coherent holographic 
+imaging.
 
-- `Darkfield`: Simulates darkfield microscopy, which enhances contrast by 
-imaging scattered light against a dark background. Often used to highlight fine
-structures in samples.  
+- `Darkfield`:Variant of `Brightfield` that suppresses the unscattered 
+reference field and returns a darkfield-like intensity.
 
-- `ISCAT`: Simulates interferometric scattering microscopy (ISCAT), an advanced 
-technique for detecting small particles or molecules based on scattering and 
-interference.  
+- `ISCAT`: Brightfield-based coherent imaging configuration for interferometric
+scattering microscopy.
 
-- `Fluorescence`: Simulates fluorescence microscopy, modeling emission 
-processes for fluorescent samples. Includes essential optical system 
-configurations and fluorophore behavior.
+- `Fluorescence`: Incoherent imaging model in which volumetric scatterers are 
+interpreted as emitting sources and projected through a fluorescence 
+point-spread function.
 
-- `IlluminationGradient`: Adds a gradient to the illumination of the sample, 
-enabling simulations of non-uniform lighting conditions often seen in 
-real-world experiments.
+- `IlluminationGradient`: Modifies the amplitude of an input field by applying 
+a planar gradient and constant offset while preserving phase.
+
+- `NonOverlapping`: Resamples scatterer positions to enforce non-overlapping 
+volumetric placement.
+
+- `SampleToMasks`: Converts positioned sample objects into one or more mask 
+layers.
 
 Utility Functions:
 
@@ -107,18 +108,18 @@ Simulating an image with the `Fluorescence` class:
 
 """
 
-#TODO ***??*** revise class docstring
 #TODO ***??*** revise DTAT323
-#TODO ***??*** polish imports
 
 from __future__ import annotations
 
 from pint import Quantity
-from typing import Any, TYPE_CHECKING, Iterable, Callable, Literal
-import warnings
 import itertools
+import warnings
+from typing import TYPE_CHECKING, Any, Callable
+
 
 import numpy as np
+from pint import Quantity
 
 from deeptrack.backend.units import (
     ConversionTable,
@@ -127,8 +128,7 @@ from deeptrack.backend.units import (
     get_active_voxel_size,
 )
 from deeptrack.math import AveragePooling, SumPooling, pad_image_to_fft
-from deeptrack.features import propagate_data_to_dependencies
-from deeptrack.features import DummyFeature, Feature, StructuralFeature
+from deeptrack.features import DummyFeature, Feature, StructuralFeature, propagate_data_to_dependencies
 from deeptrack.types import PropertyLike
 
 from deeptrack import units_registry as u
@@ -139,7 +139,6 @@ from deeptrack.scatterers import ScatteredVolume, ScatteredField
 
 if TORCH_AVAILABLE:
     import torch
-    import torch.nn.functional as F
 
 if TYPE_CHECKING:
     import torch
@@ -158,10 +157,10 @@ class Microscope(StructuralFeature):
 
     Parameters
     ----------
-    sample:
-        A feature-set resolving a list of images describing the sample to be
-        imaged.
-    objective: Optics
+    sample: Feature
+        A feature resolving one or more scatterers to be imaged, typically
+        `ScatteredVolume`, `ScatteredField`, or a list containing them.
+    objective: "Optics"
         A feature-set defining the optical device that images the sample.
 
     Attributes
@@ -170,7 +169,7 @@ class Microscope(StructuralFeature):
         If True, the feature is distributed across multiple workers.
     _sample: Feature
         The feature-set defining the sample to be imaged.
-    _objective: Optics
+    _objective: "Optics"
         The feature-set defining the optical system imaging the sample.
 
     Methods
@@ -205,7 +204,7 @@ class Microscope(StructuralFeature):
     def __init__(
         self:  Microscope,
         sample: Feature,
-        objective: Optics,
+        objective: "Optics",
         **kwargs: Any,
     ):
         """Initialize the `Microscope` instance.
@@ -215,7 +214,7 @@ class Microscope(StructuralFeature):
         sample: Feature
             A feature-set resolving a list of images describing the sample to be
             imaged.
-        objective: Optics
+        objective: "Optics"
             A feature-set defining the optical device that images the sample.
         **kwargs: Any
             Additional parameters passed to the base `StructuralFeature` class.
@@ -224,7 +223,7 @@ class Microscope(StructuralFeature):
         ----------
         _sample: Feature
             The feature-set defining the sample to be imaged.
-        _objective: Optics
+        _objective: "Optics"
             The feature-set defining the optical system imaging the sample.
 
         """
@@ -257,10 +256,9 @@ class Microscope(StructuralFeature):
         ux, uy, uz = int(ux), int(uy), int(uz)
 
         image = xp.roll(image, shift=(ux//2, uy//2), axis=(0, 1)) 
-        # norm = ux*uy
 
         # Detector integration
-        return AveragePooling((ux, uy))(image)# SumPooling((ux, uy))(image)/norm
+        return AveragePooling((ux, uy))(image)
 
     def get(
         self: Microscope,
@@ -526,11 +524,11 @@ class Optics(Feature):
             Region of the image to output (x_min, y_min, x_max, y_max). If 
             None, the entire image is returned, by default (0, 0, 128, 128).
         pupil: Feature, optional
-            Feature-set resolving the pupil function at focus. By default, no pupil
-            is applied.
+            Feature-set resolving the pupil function at focus. By default, no 
+            pupil is applied.
         illumination: Feature, optional
-            Feature-set resolving the illumination source. By default, no specific
-            illumination is applied.
+            Feature-set resolving the illumination source. By default, no 
+            specific illumination is applied.
         upscale: int, optional
             Scaling factor for the resolution of the optical system, by default 1.
         **kwargs: Any
@@ -739,12 +737,15 @@ class Optics(Feature):
         defocus: float or list[float]
             The defocus of the system. If a list is given, the pupil is
             calculated for each focal point. Defocus is given in meters.
+        kwargs: Any
+            Additional parameters.
 
         Returns
         -------
         pupil: np.ndarray
-            The pupil function. Shape is (z, y, x).
-
+            Complex array with shape (Z, H, W), where Z is the number of focal
+            points defined by the length of `defocus`.
+        
         Examples
         --------
         Calculating the pupil function:
@@ -825,12 +826,29 @@ class Optics(Feature):
         """
         Torch implementation of _pupil().
 
+        Parameters
+        ----------
+        shape: np.ndarray | tuple[int, int] | list[int]
+            The shape of the pupil function.
+        NA: float
+            The NA of the limiting aperture.
+        wavelength: float
+            The wavelength of the scattered light in meters.
+        refractive_index_medium: float
+            The refractive index of the medium.
+        include_aberration: bool
+            If True, the aberration is included in the pupil function.
+        defocus: float or torch.Tensor
+            The defocus of the system. If a tensor is given, the pupil is
+            calculated for each focal point. Defocus is given in meters.
+        kwargs: Any
+            Additional parameters.
+
         Returns
         -------
         torch.Tensor
             Complex tensor with shape (Z, H, W), matching the NumPy version
-            semantics: (z, y, x) where your code uses shape=(shape[0], shape[1])
-            but constructs meshgrid(y, x) and ends up with (shape[0], shape[1]).
+            semantics.
         """
         
         # Resolve device
@@ -894,8 +912,6 @@ class Optics(Feature):
 
         pupil_function = (RHO.real < 1.0).to(complex_dtype)
 
-        # z_shift term:
-        # 2*pi*n/wavelength * vz * sqrt(1 - (NA/n)^2 * RHO)
         k0 = 2.0 * np.pi * float(refractive_index_medium) / float(wavelength)
         alpha = (float(NA) / float(refractive_index_medium)) ** 2
 
@@ -904,7 +920,6 @@ class Optics(Feature):
 
         z_shift = (k0 * float(vz)) * sqrt_term  # complex
 
-        # NumPy: z_shift[z_shift.imag != 0] = 0
         # Torch equivalent:
         z_shift = torch.where(
             z_shift.imag.abs() > 1e-12,
@@ -1098,7 +1113,6 @@ class Optics(Feature):
         return Microscope(sample, self, **kwargs)
 
 
-#TODO ***??*** revise Fluorescence - torch, typing, docstring, unit test
 class Fluorescence(Optics):
     """Optical device for fluorescent imaging.
 
@@ -1579,7 +1593,6 @@ class Fluorescence(Optics):
         return output_image
 
 
-#TODO ***??*** revise Brightfield - torch, typing, docstring, unit test
 class Brightfield(Optics):
     """Simulates imaging of coherently illuminated samples.
 
@@ -1712,16 +1725,16 @@ class Brightfield(Optics):
     def get(
         self: Brightfield,
         illuminated_volume: np.ndarray | torch.Tensor,
-        limits: list[ScatteredField],        
+        limits: np.ndarray | torch.Tensor | None,
         fields: list[ScatteredField],
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Simulates imaging with brightfield microscopy.
 
-        This method propagates light through the given volume, applying 
-        pupil functions at various defocus levels and incorporating 
-        refraction corrections in real space to produce the final 
-        brightfield image.
+        This method propagates a coherent field through the contrast volume 
+        slice by slice, applies the pupil response, optionally adds externally 
+        supplied `ScatteredField` contributions at the detector plane, and 
+        returns either the complex field or its intensity.
 
         Parameters
         ----------
@@ -1913,7 +1926,6 @@ class Brightfield(Optics):
         return output_image
 
 
-#TODO ***??*** revise Holography - torch, typing, docstring, unit test
 class Holography(Brightfield):
     """An alias for the Brightfield class, representing holographic 
     imaging setups.
@@ -1925,7 +1937,6 @@ class Holography(Brightfield):
     pass
 
 
-#TODO ***??*** revise ISCAT - torch, typing, docstring, unit test
 class ISCAT(Brightfield):
     """Images coherently illuminated samples using Interferometric Scattering 
     (ISCAT) microscopy.
@@ -2060,7 +2071,7 @@ class Darkfield(Brightfield):
 
     Methods
     -------
-    get(illuminated_volume, limits, fields, **kwargs)
+    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
         Retrieves the darkfield image of the illuminated volume.
 
     Examples
@@ -2162,7 +2173,6 @@ class Darkfield(Brightfield):
         # Energy-conserving detector integration
         return SumPooling((ux,ux))(image)
 
-    #Retrieve get as super
     def get(
         self: Darkfield,
         illuminated_volume: np.ndarray | torch.Tensor,
@@ -2171,6 +2181,10 @@ class Darkfield(Brightfield):
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Retrieve the darkfield image of the illuminated volume.
+
+        This method reuses the coherent propagation model of `Brightfield`, but 
+        returns a darkfield-like signal obtained from the propagated field 
+        after suppressing the unscattered reference contribution.
 
         Parameters
         ----------
@@ -2199,10 +2213,8 @@ class Darkfield(Brightfield):
         return xp.square(xp.abs(field-1))
 
 
-#TODO ***??*** revise IlluminationGradient - torch, typing, docstring, unit test
 class IlluminationGradient(Feature):
-    """
-    Adds a gradient to the illumination of the sample.
+    """Adds a gradient to the illumination of the sample.
 
     This class modifies the amplitude of the field by adding a planar gradient
     and a constant offset. The amplitude is clipped within the specified 
@@ -2235,7 +2247,7 @@ class IlluminationGradient(Feature):
 
     Methods
     -------
-    get(image, gradient, constant, vmin, vmax, **kwargs)
+    `get(image, gradient, constant, vmin, vmax, **kwargs) -> array`
         Applies the gradient and constant offset to the amplitude of the field.
 
     Examples
