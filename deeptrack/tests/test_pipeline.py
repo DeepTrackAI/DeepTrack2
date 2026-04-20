@@ -2,15 +2,16 @@
 # import sys
 # sys.path.append(".")  # Adds the module to path
 
+# Test combined optics and scatterers.
+
 import unittest
 
-from deeptrack import optics
 import numpy as np
 
+from deeptrack.backend import TORCH_AVAILABLE
 from deeptrack.optics import Fluorescence, Brightfield
 from deeptrack import scatterers
 
-from deeptrack.backend import TORCH_AVAILABLE, xp
 from deeptrack.tests import BackendTestBase
 
 if TORCH_AVAILABLE:
@@ -28,7 +29,7 @@ class TestScatterers_NumPy(BackendTestBase):
             return torch.Tensor
         else:
             raise ValueError(f"Unsupported backend: {self.BACKEND}")
-        
+
     def test__all__(self):
         from deeptrack import (
             PointParticle,
@@ -41,10 +42,12 @@ class TestScatterers_NumPy(BackendTestBase):
         )
 
     def to_numpy(self, x):
-        return x.detach().cpu().numpy() if hasattr(x, "detach") else np.asarray(x)
+        return (
+            x.detach().cpu().numpy() if hasattr(x, "detach") else np.asarray(x)
+        )
 
     def test_PointParticle_Fluorescence(self):
-        
+
         scatterer = scatterers.PointParticle(
             intensity=100,
             position_unit="pixel",
@@ -68,7 +71,7 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertGreater(arr_np.max(), 0)
 
     def test_PointParticle_Fluorescence_upscale(self):
-        
+
         scatterer = scatterers.PointParticle(
             intensity=100,
             position_unit="pixel",
@@ -81,7 +84,7 @@ class TestScatterers_NumPy(BackendTestBase):
             resolution=1e-6,
             magnification=10,
             output_region=(0, 0, 32, 32),
-        )    
+        )
 
         optics_upscaled = Fluorescence(
             NA=0.7,
@@ -104,7 +107,9 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertGreater(arr_np_upscaled.max(), 0)
 
         # Peak location should remain stable
-        peak = np.unravel_index(np.argmax(arr_np[..., 0]), arr_np[..., 0].shape)
+        peak = np.unravel_index(
+            np.argmax(arr_np[..., 0]), arr_np[..., 0].shape
+        )
         peak_upscaled = np.unravel_index(
             np.argmax(arr_np_upscaled[..., 0]),
             arr_np_upscaled[..., 0].shape,
@@ -117,7 +122,7 @@ class TestScatterers_NumPy(BackendTestBase):
         )
 
     def test_PointParticle_Fluorescence_upscale_asymmetric(self):
-        
+
         scatterer = scatterers.PointParticle(
             intensity=100,
             position_unit="pixel",
@@ -130,7 +135,7 @@ class TestScatterers_NumPy(BackendTestBase):
             resolution=1e-6,
             magnification=10,
             output_region=(0, 0, 32, 32),
-        )    
+        )
 
         optics_upscaled = Fluorescence(
             NA=0.7,
@@ -153,7 +158,9 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertGreater(arr_np_upscaled.max(), 0)
 
         # Peak location should remain stable
-        peak = np.unravel_index(np.argmax(arr_np[..., 0]), arr_np[..., 0].shape)
+        peak = np.unravel_index(
+            np.argmax(arr_np[..., 0]), arr_np[..., 0].shape
+        )
         peak_upscaled = np.unravel_index(
             np.argmax(arr_np_upscaled[..., 0]),
             arr_np_upscaled[..., 0].shape,
@@ -273,7 +280,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Ellipse_Brightfield(self):
         scatterer = scatterers.Ellipse(
             refractive_index=1.45,
@@ -301,7 +307,6 @@ class TestScatterers_NumPy(BackendTestBase):
         arr = self.to_numpy(output_image)
         self.assertTrue(np.isfinite(arr).all())
         self.assertGreater(np.abs(arr).sum(), 0)
-
 
     def test_Ellipse_Brightfield_upscale(self):
         scatterer = scatterers.Ellipse(
@@ -453,7 +458,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Sphere_Fluorescence_upscale_asymmetric(self):
         scatterer = scatterers.Sphere(
             intensity=100,
@@ -493,7 +497,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Sphere_Brightfield(self):
         scatterer = scatterers.Sphere(
             refractive_index=1.45,
@@ -520,7 +523,6 @@ class TestScatterers_NumPy(BackendTestBase):
         arr = self.to_numpy(output_image)
         self.assertTrue(np.isfinite(arr).all())
         self.assertGreater(np.abs(arr).sum(), 0)
-
 
     def test_Sphere_Brightfield_upscale(self):
         scatterer = scatterers.Sphere(
@@ -604,7 +606,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Ellipsoid_Fluorescence(self):
         scatterer = scatterers.Ellipsoid(
             intensity=100,
@@ -671,7 +672,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Ellipsoid_Fluorescence_upscale_asymmetric(self):
         scatterer = scatterers.Ellipsoid(
             intensity=100,
@@ -711,7 +711,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
-
     def test_Ellipsoid_Brightfield(self):
         scatterer = scatterers.Ellipsoid(
             refractive_index=1.45,
@@ -738,7 +737,6 @@ class TestScatterers_NumPy(BackendTestBase):
         arr = self.to_numpy(output_image)
         self.assertTrue(np.isfinite(arr).all())
         self.assertGreater(np.abs(arr).sum(), 0)
-
 
     def test_Ellipsoid_Brightfield_upscale(self):
         scatterer = scatterers.Ellipsoid(
@@ -873,8 +871,12 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             output_polarization=0.0,
         )
 
-        out_geom = optics(scatterers.MieSphere(mode="geometric", **common)).resolve()
-        out_hybrid = optics(scatterers.MieSphere(mode="hybrid", **common)).resolve()
+        out_geom = optics(
+            scatterers.MieSphere(mode="geometric", **common)
+        ).resolve()
+        out_hybrid = optics(
+            scatterers.MieSphere(mode="hybrid", **common)
+        ).resolve()
 
         self.assertEqual(out_geom.shape, (64, 64, 1))
         self.assertEqual(out_hybrid.shape, (64, 64, 1))
@@ -941,6 +943,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
         self.assertEqual(arr.shape, (64, 64, 1))
         self.assertTrue(np.isfinite(arr).all())
         self.assertGreater(arr.sum(), 0)
+
 
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestScatterers_Torch(TestScatterers_NumPy):

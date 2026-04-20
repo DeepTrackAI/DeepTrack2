@@ -13,13 +13,13 @@ Scatterers produce either voxelized volumes (for geometrical optics models)
 or complex fields (for wave-optical models such as Mie scattering).
 
 Volume-based scatterers are evaluated on a discrete grid defined by the active
-optics configuration, and can be supersampled (`upsample`) for improved 
-accuracy. Upsampling does not change the physical size of the scatterer, but 
-rather the resolution at which it is evaluated. Field-based scatterers are 
-evaluated directly as complex fields without supersampling. 
+optics configuration, and can be supersampled (`upsample`) for improved
+accuracy. Upsampling does not change the physical size of the scatterer, but
+rather the resolution at which it is evaluated. Field-based scatterers are
+evaluated directly as complex fields without supersampling.
 
-`Upsample` should not be confused with `Optics.upscale`, which applies to the 
-entire imaging pipeline and can be used to improve the accuracy of the optics 
+`Upsample` should not be confused with `Optics.upscale`, which applies to the
+entire imaging pipeline and can be used to improve the accuracy of the optics
 model itself.
 
 Key Features
@@ -30,7 +30,7 @@ Key Features
     positioning. Multiple scatterers can be combined and overlaid using feature
     composition. For example, two orthogonal ellipses can form a cross, or two
     concentric spheres can represent a core–shell particle.
-    
+
 - **Defocusing**
 
     The `z` parameter defines the axial position relative to the focal plane,
@@ -42,12 +42,12 @@ Key Features
     fluorescence scaling under discretization. Point-like emitters are scaled
     by voxel volume, planar emitters by axial voxel size, while volumetric
     emitters require no additional correction beyond their voxelized support.
-    
+
 - **Mie Scatterers**
 
     Includes Mie-theory-based scatterers that compute scattering harmonics up
-    to a specified order using utilities from `deeptrack.backend.mie`. 
-    Supported implementations include homogeneous spheres and stratified 
+    to a specified order using utilities from `deeptrack.backend.mie`.
+    Supported implementations include homogeneous spheres and stratified
     spheres with multiple concentric layers of distinct refractive indices.
 
 - **Backend Compatibility**
@@ -55,7 +55,7 @@ Key Features
     Geometry-based scatterers support both NumPy and PyTorch arrays.
     Mie-based scatterers currently rely on NumPy implementations and
     do not fully support PyTorch execution.
-    
+
 Module Structure
 ----------------
 Classes:
@@ -74,7 +74,7 @@ Classes:
 - `MieScatterer`: Mie scatterer base class.
 - `MieSphere`: Extends `MieScatterer` to the spherical case.
 - `MieStratifiedSphere`:  Extends `MieScatterer` to the stratified sphere case.
-    A stratified sphere consists of concentric shells with distinct refractive 
+    A stratified sphere consists of concentric shells with distinct refractive
     indices.
 - `Incoherent`: A wrapper to treat coherent scatterers as incoherent sources.
 
@@ -171,8 +171,6 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 """
 
-#TODO ***??*** revise DTAT321
-
 from __future__ import annotations
 
 import warnings
@@ -180,7 +178,6 @@ from typing import Any, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
-from numpy.typing import NDArray
 from pint import Quantity
 from dataclasses import dataclass
 
@@ -192,7 +189,11 @@ from deeptrack.backend.units import (
 )
 from deeptrack.backend import mie, TORCH_AVAILABLE, xp
 from deeptrack.math import AveragePooling, pad_image_to_fft
-from deeptrack.features import Feature, StructuralFeature, MERGE_STRATEGY_APPEND
+from deeptrack.features import (
+    Feature,
+    StructuralFeature,
+    MERGE_STRATEGY_APPEND,
+)
 from deeptrack.wrappers import Wrapper
 from deeptrack import units_registry as u
 
@@ -229,21 +230,21 @@ class Scatterer(Feature):
     ----------
     position: tuple[float, float] | tuple[float, float, float], optional
         The position of the particle, length 2 or 3. Third index is optional,
-        and represents the position in the direction normal to the camera 
+        and represents the position in the direction normal to the camera
         plane. Default is (32.0, 32.0).
     z: float, optional
-        The position in the direction normal to the camera plane. Used if 
+        The position in the direction normal to the camera plane. Used if
         `position` is of length 2. Default is 0.0.
     value: float, optional
         A default value of the characteristic of the particle. Used by optics
-        unless a more direct property is set (eg. `refractive_index` for 
+        unless a more direct property is set (eg. `refractive_index` for
         `Brightfield` and `intensity` for `Fluorescence`). Default is 1.0.
     position_unit: str, optional
         The unit of the provided position property. Can be "meter" or "pixel".
         Default is "pixel".
     upsample: int, optional
-        Geometry supersampling factor for volume-based scatterers. The 
-        scatterer is evaluated on a finer grid and downsampled by average 
+        Geometry supersampling factor for volume-based scatterers. The
+        scatterer is evaluated on a finer grid and downsampled by average
         pooling. Ignored by field-based scatterers.
     upsample_axes: tuple of int, optional
         Deprecated. Previously selected the axes along which supersampling was
@@ -256,15 +257,15 @@ class Scatterer(Feature):
         the active optics configuration.
     **kwargs: Any
         Additional feature properties forwarded to the parent `Feature` class.
-        
+
     Methods
     -------
     `_antialias_volume(volume, factor) -> array`
         Geometry-only supersampling anti-aliasing.
     `_process_properties(properties) -> dict`
-        Preprocess the input to the method `.get()`. This method is called 
+        Preprocess the input to the method `.get()`. This method is called
         before the scatterer is evaluated.
-    `_process_and_get(*args, voxel_size, upsample, upsample_axes, crop_empty, **kwargs) -> list[array]`
+    `_process_and_get(...) -> list[array]`
         Post-processes the created object.
     `_wrap_output(array, props) -> ScatteredVolume or ScatteredField`
         Wraps the output of the scatterer in the appropriate class.
@@ -273,7 +274,7 @@ class Scatterer(Feature):
     -----
     For developers extending the class hierarchy:
     __list_merge_strategy__: str
-        The strategy for merging lists of properties when multiple scatterers 
+        The strategy for merging lists of properties when multiple scatterers
         are combined. Default is "append", which concatenates the lists.
     __distributed__: bool
         Determines whether `.get(image, **kwargs)` is applied to each element
@@ -295,7 +296,10 @@ class Scatterer(Feature):
 
     def __init__(
         self: Scatterer,
-        position: tuple[float, float] | tuple[float, float, float] = (32.0, 32.0),
+        position: tuple[float, float] | tuple[float, float, float] = (
+            32.0,
+            32.0,
+        ),
         z: float = 0.0,
         value: float = 1.0,
         position_unit: str = "pixel",
@@ -307,12 +311,12 @@ class Scatterer(Feature):
         """Initialize the scatterer with the given properties."""
 
         upsample_axes = kwargs.pop("upsample_axes", None)
-        
+
         if upsample_axes is not None:
             warnings.warn(
-                "`upsample_axes` is deprecated and will be removed in a future "
-                "release. Supersampling is now applied uniformly to all "
-                "applicable axes.",
+                "`upsample_axes` is deprecated and will be removed in a "
+                "future release. Supersampling is now applied uniformly to "
+                "all applicable axes.",
                 DeprecationWarning,
                 stacklevel=2,
             )
@@ -332,8 +336,8 @@ class Scatterer(Feature):
         )
 
     def _antialias_volume(
-        self: Scatterer, 
-        volume: np.ndarray | torch.Tensor, 
+        self: Scatterer,
+        volume: np.ndarray | torch.Tensor,
         factor: int,
     ) -> np.ndarray | torch.Tensor:
         """Geometry-only supersampling anti-aliasing.
@@ -354,17 +358,14 @@ class Scatterer(Feature):
             The downsampled volume after anti-aliasing.
 
         """
-        
+
         if factor == 1:
             return volume
-        
+
         # Avoid pooling along dimensions smaller than the pooling factor
         # (e.g., Z=1 for 2D scatterers like Ellipse)
         shape = volume.shape
-        pool = tuple(
-            factor if s >= factor else 1
-            for s in shape
-        )
+        pool = tuple(factor if s >= factor else 1 for s in shape)
         # average pooling conserves fractional occupancy
         return AveragePooling(pool)(volume)
 
@@ -373,15 +374,15 @@ class Scatterer(Feature):
         properties: dict,
     ) -> dict:
         """Preprocess the input to the method `.get()`
-        
-        This method is called before the scatterer is evaluated, and can be 
+
+        This method is called before the scatterer is evaluated, and can be
         used to preprocess the input properties.
 
         Parameters
         ----------
         properties: dict
-            The properties of the scatterer, which are passed to the method 
-            `.get()`. This method can modify the properties before they are 
+            The properties of the scatterer, which are passed to the method
+            `.get()`. This method can modify the properties before they are
             used for evaluation.
 
         Returns
@@ -395,7 +396,7 @@ class Scatterer(Feature):
         properties = super()._process_properties(properties)
         self._processed_properties = True
         return properties
-        
+
     def _process_and_get(
         self: Scatterer,
         *args: Any,
@@ -406,40 +407,40 @@ class Scatterer(Feature):
         **kwargs: Any,
     ) -> list[np.ndarray | torch.Tensor]:
         """Post-processes the created object.
-        
-        Post-process the created object to handle upsampling, as well as 
+
+        Post-process the created object to handle upsampling, as well as
         cropping empty slices.
 
         Parameters
         ----------
         *args: Any
-            Positional arguments passed to the method. Not used in this 
+            Positional arguments passed to the method. Not used in this
             implementation.
         voxel_size: array
-            Voxel size supplied by the feature pipeline. In practice, 
-            scatterers use the active optics configuration 
-            (`get_active_voxel_size()`) to ensure that geometry evaluation is 
-            consistent with the current imaging context. This argument is 
-            considered framework-internal and is not intended as a user-facing 
+            Voxel size supplied by the feature pipeline. In practice,
+            scatterers use the active optics configuration
+            (`get_active_voxel_size()`) to ensure that geometry evaluation is
+            consistent with the current imaging context. This argument is
+            considered framework-internal and is not intended as a user-facing
             override.
         upsample: int
-            Geometry supersampling factor for volume-based scatterers. Ignored 
+            Geometry supersampling factor for volume-based scatterers. Ignored
             by field-based scatterers.
         upsample_axes: tuple of ints, optional
-            Deprecated. Previously selected the axes along which supersampling 
-            was applied. This parameter is now ignored, and supersampling is 
+            Deprecated. Previously selected the axes along which supersampling
+            was applied. This parameter is now ignored, and supersampling is
             applied uniformly to all applicable axes when `upsample` > 1.
         crop_empty: bool, optional
-            Whether to remove slices in which all elements are zero. This can 
+            Whether to remove slices in which all elements are zero. This can
             be used to reduce the size of the created scatterer, which can be
-            beneficial for memory and computational efficiency when the 
+            beneficial for memory and computational efficiency when the
             scatterer is small compared to the voxel size. Default is True.
 
         Returns
         -------
         list of array or tensor
-            The created scatterer after post-processing. 
-        
+            The created scatterer after post-processing.
+
         """
 
         if not self._processed_properties:
@@ -452,7 +453,9 @@ class Scatterer(Feature):
 
         voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
 
-        apply_supersampling = upsample > 1 and isinstance(self, VolumeScatterer)
+        apply_supersampling = upsample > 1 and isinstance(
+            self, VolumeScatterer
+        )
 
         if upsample > 1 and not apply_supersampling:
             warnings.warn(
@@ -474,7 +477,11 @@ class Scatterer(Feature):
         if apply_supersampling:
             new_image = self._antialias_volume(new_image, factor=upsample)
 
-        if new_image.numel() == 0 if apc.is_torch_array(new_image) else new_image.size == 0:
+        if (
+            new_image.numel() == 0
+            if apc.is_torch_array(new_image)
+            else new_image.size == 0
+        ):
             warnings.warn(
                 "Scatterer created that is smaller than a pixel. "
                 + "This may yield inconsistent results."
@@ -494,12 +501,10 @@ class Scatterer(Feature):
         return [self._wrap_output(new_image, kwargs)]
 
     def _wrap_output(
-        self: Scatterer, 
-        array: np.ndarray | torch.Tensor, 
-        props: dict
+        self: Scatterer, array: np.ndarray | torch.Tensor, props: dict
     ) -> ScatteredVolume | ScatteredField:
         """Wraps the output of the scatterer in the appropriate class.
-        
+
         This method must be implemented by subclasses to wrap the output in the
         appropriate type (`ScatteredVolume` or `ScatteredField`).
 
@@ -517,7 +522,7 @@ class Scatterer(Feature):
             The wrapped scatterer output.
 
         """
-        
+
         raise NotImplementedError(
             f"{self.__class__.__name__} must implement _wrap_output()"
         )
@@ -527,12 +532,12 @@ class VolumeScatterer(Scatterer):
     """Abstract scatterer producing ScatteredVolume outputs."""
 
     def _wrap_output(
-        self: VolumeScatterer, 
-        array: np.ndarray | torch.Tensor, 
+        self: VolumeScatterer,
+        array: np.ndarray | torch.Tensor,
         props: dict,
     ) -> ScatteredVolume:
         """Abstract scatterer producing ScatteredVolume outputs.
-        
+
         This method wraps the output of the scatterer in a ScatteredVolume
         object, which is used to represent the spatial occupancy of the
         scatterer. The properties of the scatterer are passed to the
@@ -561,19 +566,19 @@ class VolumeScatterer(Scatterer):
 
 class FieldScatterer(Scatterer):
     """Abstract scatterer producing ScatteredField outputs."""
-    
+
     def _wrap_output(
-        self: FieldScatterer, 
-        array: np.ndarray | torch.Tensor, 
+        self: FieldScatterer,
+        array: np.ndarray | torch.Tensor,
         props: dict,
     ) -> ScatteredField:
         """Abstract scatterer producing ScatteredField outputs.
-        
+
         This method wraps the output of the scatterer in a ScatteredField
         object, which is used to represent the complex field produced by the
         scatterer. The properties of the scatterer are passed to the
         constructor of the ScatteredField class.
-        
+
         Parameters
         ----------
         array: np.ndarray or torch.Tensor
@@ -588,7 +593,7 @@ class FieldScatterer(Scatterer):
             The wrapped scatterer output.
 
         """
-        
+
         return ScatteredField(
             array=array,
             properties=props.copy(),
@@ -602,8 +607,8 @@ class PointParticle(VolumeScatterer):
     handled at the optics level.
 
     For fluorescence imaging, a point particle is a zero-dimensional emitter
-    represented on a discrete voxel grid. To preserve the correct emitted 
-    measure under discretization, the returned voxel is scaled by the voxel 
+    represented on a discrete voxel grid. To preserve the correct emitted
+    measure under discretization, the returned voxel is scaled by the voxel
     volume.
 
     Parameters
@@ -613,7 +618,7 @@ class PointParticle(VolumeScatterer):
         and represents the position in the direction normal to the
         camera plane.
     z : float, optional
-        The position in the direction normal to the camera plane. Used if 
+        The position in the direction normal to the camera plane. Used if
         `position` is of length 2.
     value : float, optional
         A default value of the characteristic of the particle. Used by
@@ -639,7 +644,7 @@ class PointParticle(VolumeScatterer):
         """Return the voxelized point particle.
 
         The point particle is represented by a single voxel. For fluorescence
-        imaging, this voxel is scaled by the voxel volume so that the discrete 
+        imaging, this voxel is scaled by the voxel volume so that the discrete
         source has the correct measure under changes in grid resolution.
 
         Parameters
@@ -655,7 +660,7 @@ class PointParticle(VolumeScatterer):
         -------
         np.ndarray or torch.Tensor
             A (1, 1, 1) array or tensor representing the point particle.
-        
+
         """
 
         scale = xp.asarray(get_active_scale(), dtype=xp.float32)
@@ -666,18 +671,18 @@ class PointParticle(VolumeScatterer):
 class Ellipse(VolumeScatterer):
     """Generate a 2D elliptical scatterer.
 
-    Build a 2D ellipse on a voxel grid, defined by its radii and rotation. 
+    Build a 2D ellipse on a voxel grid, defined by its radii and rotation.
     The ellipse is represented as a planar object embedded in a 3D voxel grid,
-    with support on a single z-slice. For fluorescence imaging, the discrete 
+    with support on a single z-slice. For fluorescence imaging, the discrete
     mask is therefore scaled by the axial voxel size to account for the missing
     thickness of the continuous emitter.
 
-    Supports both NumPy and PyTorch backends.    
+    Supports both NumPy and PyTorch backends.
 
     Parameters
     ----------
     radius: float | tuple[float, float]
-        Radius of the ellipse in meters. If a single value is provided, a 
+        Radius of the ellipse in meters. If a single value is provided, a
         circular shape is assumed.
     rotation: float
         Orientation angle of the ellipse in the camera plane in radians.
@@ -695,7 +700,7 @@ class Ellipse(VolumeScatterer):
     upsample: int
         Upsamples the calculations of the pixel occupancy fraction.
     transpose: bool
-        If True, the radius components are aligned with the (y, x) axes before 
+        If True, the radius components are aligned with the (y, x) axes before
         rotation.
 
     """
@@ -716,10 +721,7 @@ class Ellipse(VolumeScatterer):
             radius=radius, rotation=rotation, transpose=transpose, **kwargs
         )
 
-    def _process_properties(
-        self,
-        properties: dict
-    ) -> dict:
+    def _process_properties(self, properties: dict) -> dict:
         """Preprocess the input to the method .get()
 
         Ensures that the radius is an array of length 2. If the radius
@@ -738,7 +740,7 @@ class Ellipse(VolumeScatterer):
             r = xp.stack([r[0], r[0]])
         else:
             r = r[:2]
-        
+
         properties["radius"] = r
 
         return properties
@@ -754,11 +756,11 @@ class Ellipse(VolumeScatterer):
     ) -> np.ndarray | torch.Tensor:
         """Evaluate the ellipse on a voxel grid.
 
-        The ellipse is defined by its radii and rotation and evaluated on a 
+        The ellipse is defined by its radii and rotation and evaluated on a
         grid with spacing given by `voxel_size`.
 
-        For fluorescence imaging, the returned planar mask is scaled by the 
-        axial voxel size so that the discrete source has the correct measure 
+        For fluorescence imaging, the returned planar mask is scaled by the
+        axial voxel size so that the discrete source has the correct measure
         under changes in z-resolution.
 
         Parameters
@@ -787,9 +789,7 @@ class Ellipse(VolumeScatterer):
 
         # Create a grid to calculate on.
         rad = radius[:2]
-        rad_ceil = int(
-            xp.ceil(xp.max(rad) / xp.min(voxel_size)).item()
-        )
+        rad_ceil = int(xp.ceil(xp.max(rad) / xp.min(voxel_size)).item())
         Y, X = xp.meshgrid(
             xp.arange(-rad_ceil, rad_ceil) * voxel_size[1],
             xp.arange(-rad_ceil, rad_ceil) * voxel_size[0],
@@ -803,14 +803,14 @@ class Ellipse(VolumeScatterer):
 
         # Evaluate ellipse.
         mask = xp.asarray(
-            (Xt * Xt) / (rad[0] * rad[0]) +
-            (Yt * Yt) / (rad[1] * rad[1]) < 1,
+            (Xt * Xt) / (rad[0] * rad[0]) + (Yt * Yt) / (rad[1] * rad[1]) < 1,
             dtype=xp.float32,
         )
         mask = xp.expand_dims(mask, axis=-1)
-        
+
         scale = xp.asarray(get_active_scale(), dtype=xp.float32)
-        # The returned value is scaled to preserve intensity under discretization.
+        # The returned value is scaled to preserve intensity
+        # under discretization.
         mask = mask * scale[2]
         return mask
 
@@ -820,7 +820,7 @@ class Sphere(VolumeScatterer):
 
     `Sphere` is a true volumetric scatterer. Its support spans a 3D voxelized
     region, so the correct spatial measure is already represented by the extent
-    of the discrete mask. No additional fluorescence measure correction is 
+    of the discrete mask. No additional fluorescence measure correction is
     required.
 
     Parameters
@@ -840,20 +840,16 @@ class Sphere(VolumeScatterer):
         for `Brightfield` and `intensity` for `Fluorescence`).
     upsample: int
         Upsamples the calculations of the pixel occupancy fraction.
-        
+
     """
 
     __conversion_table__ = ConversionTable(
         radius=(u.meter, u.meter),
     )
 
-    def __init__(
-        self,
-        radius: float = 1e-6,
-        **kwargs
-    ):
+    def __init__(self, radius: float = 1e-6, **kwargs):
         """Initialize the sphere scatterer."""
-        
+
         super().__init__(radius=radius, **kwargs)
 
     def get(
@@ -866,26 +862,26 @@ class Sphere(VolumeScatterer):
         """Evaluate the sphere on a voxel grid.
 
         The sphere is defined by its radius, and evaluated on a grid with
-        spacing given by `voxel_size`. The returned value is a 3D array where 
-        each voxel is assigned 1 if inside the sphere and 0 otherwise.. 
-        
+        spacing given by `voxel_size`. The returned value is a 3D array where
+        each voxel is assigned 1 if inside the sphere and 0 otherwise..
+
         Parameters
         ----------
         args: Any
-            Positional arguments passed to the method. Not used in this 
+            Positional arguments passed to the method. Not used in this
             implementation.
         radius : float
             Radius of the sphere in meters.
         voxel_size : array-like
             Size of voxels along each axis.
         kwargs: Any
-            Keyword arguments passed to the method. 
-                
+            Keyword arguments passed to the method.
+
         Returns
         -------
         np.ndarray or torch.Tensor
             A 3D array representing the spherical mask.
-        
+
         """
 
         # Create a grid to calculate on.
@@ -893,11 +889,11 @@ class Sphere(VolumeScatterer):
         rad = xp.asarray(radius) / voxel_size
         rad = xp.broadcast_to(rad, (3,))
         rad_ceil = xp.ceil(rad)
-        
+
         x = xp.arange(-rad_ceil[0], rad_ceil[0])
         y = xp.arange(-rad_ceil[1], rad_ceil[1])
         z = xp.arange(-rad_ceil[2], rad_ceil[2])
-        
+
         X, Y, Z = xp.meshgrid(
             (y / rad[1]) ** 2,
             (x / rad[0]) ** 2,
@@ -915,9 +911,9 @@ class Sphere(VolumeScatterer):
 class Ellipsoid(VolumeScatterer):
     """Generates an ellipsoidal scatterer.
 
-    `Ellipsoid` is a true volumetric scatterer. Its support spans a 3D 
-    voxelized region, so the correct spatial measure is already represented by 
-    the extent of the discrete mask. No additional fluorescence measure 
+    `Ellipsoid` is a true volumetric scatterer. Its support spans a 3D
+    voxelized region, so the correct spatial measure is already represented by
+    the extent of the discrete mask. No additional fluorescence measure
     correction is required.
 
     Parameters
@@ -959,7 +955,9 @@ class Ellipsoid(VolumeScatterer):
 
     def __init__(
         self,
-        radius: float | tuple[float, float] | tuple[float, float, float] = 1e-6,
+        radius: (
+            float | tuple[float, float] | tuple[float, float, float]
+        ) = 1e-6,
         rotation: float | tuple[float, float] | tuple[float, float, float] = 0,
         transpose: bool = False,
         **kwargs,
@@ -970,10 +968,7 @@ class Ellipsoid(VolumeScatterer):
             radius=radius, rotation=rotation, transpose=transpose, **kwargs
         )
 
-    def _process_properties(
-        self,
-        propertydict: dict
-    ) -> dict:
+    def _process_properties(self, propertydict: dict) -> dict:
         """Preprocess the input to the method `.get()`
 
         Ensures that the radius and the rotation properties both are arrays of
@@ -988,7 +983,7 @@ class Ellipsoid(VolumeScatterer):
         Parameters
         ----------
         propertydict: dict
-            The properties of the scatterer, which are preprocessed and passed 
+            The properties of the scatterer, which are preprocessed and passed
             to the `get` method.
 
         Returns
@@ -1034,7 +1029,7 @@ class Ellipsoid(VolumeScatterer):
             # If two values, pad with one zero.
             # rotation = (*rotation, 0)
             rot = xp.stack([rot[0], rot[1], xp.asarray(0.0)])
-        elif n == 3:        
+        elif n == 3:
             # If three values, convert to tuple for consistency.
             rot = rot[:3]
         propertydict["rotation"] = rot
@@ -1051,10 +1046,10 @@ class Ellipsoid(VolumeScatterer):
         **kwargs,
     ) -> np.ndarray | torch.Tensor:
         """Evaluate the ellipsoid on a voxel grid.
-        
+
         The ellipsoid is defined by its radii and rotation, and evaluated on a
-        grid with spacing given by `voxel_size`. The returned value is a 3D 
-        array where each voxel is assigned 1 if inside the ellipsoid and 0 
+        grid with spacing given by `voxel_size`. The returned value is a 3D
+        array where each voxel is assigned 1 if inside the ellipsoid and 0
         otherwise.
 
         Parameters
@@ -1069,7 +1064,7 @@ class Ellipsoid(VolumeScatterer):
         voxel_size : array-like
             Size of voxels along each axis.
         transpose : bool
-            Whether to align the first axis of the radius with the first axis 
+            Whether to align the first axis of the radius with the first axis
             of the created volume before rotation.
         kwargs: Any
             Keyword arguments passed to the method.
@@ -1078,7 +1073,7 @@ class Ellipsoid(VolumeScatterer):
         -------
         np.ndarray or torch.Tensor
             A (X, Y, Z) array representing the ellipsoidal mask.
-            
+
 
         """
 
@@ -1090,10 +1085,7 @@ class Ellipsoid(VolumeScatterer):
             # Swap the first and second value of the radius vector.
             radius = xp.stack([radius[1], radius[0], radius[2]])
 
-
-        rad_ceil = int(
-            xp.ceil(xp.max(radius) / xp.min(voxel_size)).item()
-        )
+        rad_ceil = int(xp.ceil(xp.max(radius) / xp.min(voxel_size)).item())
 
         # Create grid to calculate on.
         x = xp.arange(-rad_ceil, rad_ceil) * voxel_size[0]
@@ -1117,9 +1109,10 @@ class Ellipsoid(VolumeScatterer):
         ZR = (-sin[1] * X) + cos[1] * sin[2] * Y + cos[1] * cos[2] * Z
 
         mask = xp.asarray(
-            (XR / radius[0]) ** 2 +
-            (YR / radius[1]) ** 2 +
-            (ZR / radius[2]) ** 2 <= 1,
+            (XR / radius[0]) ** 2
+            + (YR / radius[1]) ** 2
+            + (ZR / radius[2]) ** 2
+            <= 1,
             dtype=xp.float32,
         )
         return mask
@@ -1141,8 +1134,9 @@ class MieScatterer(FieldScatterer):
     Parameters
     ----------
     coefficients: callable
-        Factory function receiving the current feature properties and returning a
-        callable `f(L)` that yields the Mie coefficients `(an, bn)` up to order `L`.
+        Factory function receiving the current feature properties and returning
+        a callable `f(L)` that yields the Mie coefficients `(an, bn)` up to
+        order `L`.
     offset_z: "auto" | float
         Distance from the particle in the z direction where the field is
         evaluated. If `"auto"`, this is calculated from the pixel size and
@@ -1154,14 +1148,14 @@ class MieScatterer(FieldScatterer):
     input_polarization: float | Quantity | str
         Polarization angle of the incident illumination in radians. If a float
         (or `Quantity`), it specifies the orientation of a linear polarizer
-        before the sample. If set to `"circular"`, circular polarization is 
-        approximated by assigning equal weights to the two orthogonal 
-        scattering components. `None` is not supported in coherent mode. Use 
+        before the sample. If set to `"circular"`, circular polarization is
+        approximated by assigning equal weights to the two orthogonal
+        scattering components. `None` is not supported in coherent mode. Use
         `Incoherent` to model unpolarized illumination.
     output_polarization: float | Quantity
         Angle of a polarization analyzer placed after the sample, in radians.
-        If a float (or `Quantity`), the detected field is projected onto the 
-        corresponding linear polarization direction. `None` is not supported in 
+        If a float (or `Quantity`), the detected field is projected onto the
+        corresponding linear polarization direction. `None` is not supported in
         coherent mode. Use `Incoherent` to model detection without analyzer.
     L: int | str
         Number of terms used to evaluate the Mie series. If `"auto"`,
@@ -1206,7 +1200,7 @@ class MieScatterer(FieldScatterer):
         Optional pupil function applied to the scattered field. This can be
         used to simulate aberrations or other modifications of the optical
         system.
-        
+
     """
 
     __conversion_table__ = ConversionTable(
@@ -1244,25 +1238,25 @@ class MieScatterer(FieldScatterer):
         **kwargs: Any,
     ):
         """Initialize the Mie scatterer.
-        
+
         Parameters
         ----------
         coefficients: callable
-            Factory function receiving the current feature properties and 
-            returning a callable `f(L)` that yields the Mie coefficients 
-            `(an, bn)` up to order `L`. 
+            Factory function receiving the current feature properties and
+            returning a callable `f(L)` that yields the Mie coefficients
+            `(an, bn)` up to order `L`.
         input_polarization: float | Quantity | str
-            Polarization angle of the incident illumination in radians. If a 
-            float (or `Quantity`), it specifies the orientation of a linear 
-            polarizer before the sample. If set to `"circular"`, circular 
-            polarization is approximated by assigning equal weights to the two 
-            orthogonal scattering components. `None` is not supported in 
+            Polarization angle of the incident illumination in radians. If a
+            float (or `Quantity`), it specifies the orientation of a linear
+            polarizer before the sample. If set to `"circular"`, circular
+            polarization is approximated by assigning equal weights to the two
+            orthogonal scattering components. `None` is not supported in
             coherent mode. Use `Incoherent` to model unpolarized illumination.
         output_polarization: float | Quantity
-            Angle of a polarization analyzer placed after the sample, in 
-            radians. If a float (or `Quantity`), the detected field is 
-            projected onto the corresponding linear polarization direction. 
-            `None` is not supported in coherent mode. Use `Incoherent` to 
+            Angle of a polarization analyzer placed after the sample, in
+            radians. If a float (or `Quantity`), the detected field is
+            projected onto the corresponding linear polarization direction.
+            `None` is not supported in coherent mode. Use `Incoherent` to
             model detection without analyzer.
         offset_z: "auto" | float
             Distance from the particle in the z direction where the field is
@@ -1288,18 +1282,18 @@ class MieScatterer(FieldScatterer):
             Padding applied to the output field in (left, top, right, bottom)
             order.
         output_region: tuple[int, int, int, int] | None
-            The region of the output field to return, defined as (x_start, 
+            The region of the output field to return, defined as (x_start,
             y_start, x_end, y_end). If None, the entire field is returned.
         polarization_angle: float
-            Deprecated alias for `input_polarization`. Please use 
+            Deprecated alias for `input_polarization`. Please use
             `input_polarization` instead.
         working_distance: float
             Distance from the objective to the focal plane in meters. Used for
-            calculating the phase curvature of the field at the objective 
+            calculating the phase curvature of the field at the objective
             pupil.
         position_objective: tuple[float, float]
-            Lateral position of the objective relative to the particle in 
-            meters. Used for calculating the phase curvature of the field at 
+            Lateral position of the objective relative to the particle in
+            meters. Used for calculating the phase curvature of the field at
             the objective pupil.
         return_fft: bool
             If True, the feature returns the Fourier transform of the field
@@ -1315,40 +1309,40 @@ class MieScatterer(FieldScatterer):
             Scaling factor applied to the scattered field amplitude.
         phase_shift_correction: bool
             If True, applies a phase correction to the field according to
-            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in 
+            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in
             ISCAT simulations.
         mode : {"geometric", "hybrid"}
-            Determines how the scattered field is constructed before 
+            Determines how the scattered field is constructed before
             propagation. Both modes use the same Mie coefficients but differ in
             how the scattered field is represented prior to propagation through
             the optical system.
             - "geometric"
               Evaluates the scattered field as a spherical wave on a virtual
-              plane located at ``offset_z`` from the particle. The field 
+              plane located at ``offset_z`` from the particle. The field
               includes the geometric propagation factor ``exp(i k R) / R`` and
-              is sampled on a finite spatial grid before being propagated 
-              through the optical system. Because the field is computed on a 
-              finite plane, the result can be sensitive to the simulated 
+              is sampled on a finite spatial grid before being propagated
+              through the optical system. Because the field is computed on a
+              finite plane, the result can be sensitive to the simulated
               field-of-view.
             - "hybrid"
-              Constructs the scattered field using the Mie scattering 
-              amplitudes `S1` and `S2` mapped to spatial frequencies 
-              corresponding to the objective pupil. The field is then 
-              propagated to the detector. This approach is less sensitive to 
-              the simulated field-of-view and generally more numerically 
+              Constructs the scattered field using the Mie scattering
+              amplitudes `S1` and `S2` mapped to spatial frequencies
+              corresponding to the objective pupil. The field is then
+              propagated to the detector. This approach is less sensitive to
+              the simulated field-of-view and generally more numerically
               stable.
         pupil: None | ndarray
             Optional pupil function applied to the scattered field. This can be
             used to simulate aberrations or other modifications of the optical
             system.
-            
+
         """
 
         self.mode = mode
         self.pupil = pupil
         if polarization_angle is not None:
             warnings.warn(
-                "polarization_angle is deprecated. " 
+                "polarization_angle is deprecated. "
                 "Please use input_polarization instead"
             )
             input_polarization = polarization_angle
@@ -1386,8 +1380,8 @@ class MieScatterer(FieldScatterer):
     ) -> dict:
         """Validate and infer Mie-scatterer properties.
 
-        This method enforces coherent-mode polarization requirements and 
-        resolves automatic values for `L`, `collection_angle`, and `offset_z` 
+        This method enforces coherent-mode polarization requirements and
+        resolves automatic values for `L`, `collection_angle`, and `offset_z`
         from the current optical configuration.
 
         Parameters
@@ -1410,21 +1404,25 @@ class MieScatterer(FieldScatterer):
 
         if inp is None:
             raise ValueError(
-                "input_polarization must be specified for coherent scattering. "
-                "Use the Incoherent feature to model unpolarized illumination."
+                "input_polarization must be specified for coherent "
+                "scattering. Use the Incoherent feature to model unpolarized "
+                "illumination."
             )
 
         if out is None:
             raise ValueError(
-                "output_polarization=None (no analyzer) is not supported in coherent mode. "
-                "Use the Incoherent feature to model detection without analyzer."
+                "output_polarization=None (no analyzer) is not supported in "
+                "coherent mode. Use the Incoherent feature to model detection "
+                "without analyzer."
             )
 
         if properties["L"] == "auto":
             try:
                 v = (
-                    2 * np.pi *
-                    np.max(properties["radius"]) / properties["wavelength"]
+                    2
+                    * np.pi
+                    * np.max(properties["radius"])
+                    / properties["wavelength"]
                 )
 
                 properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
@@ -1444,7 +1442,7 @@ class MieScatterer(FieldScatterer):
 
             # offset_z should be calculated with the physical size of the image
             # not the fft-padded size
-            min_edge_size=np.min([xSize,ySize])
+            min_edge_size = np.min([xSize, ySize])
             properties["offset_z"] = (
                 min_edge_size
                 * 0.45
@@ -1480,9 +1478,7 @@ class MieScatterer(FieldScatterer):
         )
 
     def get_xy_grid(
-        self: MieScatterer,
-        shape: tuple[int, int],
-        voxel_size: np.ndarray
+        self: MieScatterer, shape: tuple[int, int], voxel_size: np.ndarray
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generates meshgrid for X and Y given the shape and voxel size.
 
@@ -1501,10 +1497,9 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        x = np.arange(shape[0]) - shape[0] / 2 
-        y = np.arange(shape[1]) - shape[1] / 2 
+        x = np.arange(shape[0]) - shape[0] / 2
+        y = np.arange(shape[1]) - shape[1] / 2
         return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
-    
 
     def get_detector_mask(
         self: MieScatterer,
@@ -1532,7 +1527,7 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        return np.sqrt(X ** 2 + Y ** 2) < radius
+        return np.sqrt(X**2 + Y**2) < radius
 
     def _plane_in_polar_coords_geometric(
         self: MieScatterer,
@@ -1541,20 +1536,20 @@ class MieScatterer(FieldScatterer):
         plane_position: np.ndarray,
         illumination_angle: float,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Calculates the polar coordinates of the virtual plane for the geometric mode.
+        """Calculate the polar coordinates of virtual plane for geometric mode.
 
-        In geometric mode, the virtual plane is defined in the spatial domain 
-        at a distance `offset_z` from the particle. The coordinates are 
-        calculated based on the plane position, voxel size, and illumination 
-        angle, and are used to compute the spherical wave representation of the 
-        scattered field on the virtual plane, which is then propagated through 
-        the optical system. The coordinates include the distance from the 
-        particle to each point on the plane (R3), the cosine of the angle 
-        between the illumination direction and the local normal at each point 
-        (cos_theta), the cosine of the angle between the illumination direction 
-        and the local normal adjusted by the illumination angle 
-        (illumination_cos_theta), and the azimuthal angle in the plane of the 
-        virtual field (phi). 
+        In geometric mode, the virtual plane is defined in the spatial domain
+        at a distance `offset_z` from the particle. The coordinates are
+        calculated based on the plane position, voxel size, and illumination
+        angle, and are used to compute the spherical wave representation of the
+        scattered field on the virtual plane, which is then propagated through
+        the optical system. The coordinates include the distance from the
+        particle to each point on the plane (R3), the cosine of the angle
+        between the illumination direction and the local normal at each point
+        (cos_theta), the cosine of the angle between the illumination direction
+        and the local normal adjusted by the illumination angle
+        (illumination_cos_theta), and the azimuthal angle in the plane of the
+        virtual field (phi).
 
         Parameters
         ----------
@@ -1571,8 +1566,8 @@ class MieScatterer(FieldScatterer):
         -------
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]
             The polar coordinates (R3, cos_theta, illumination_cos_theta, phi)
-            of the virtual plane. 
-        
+            of the virtual plane.
+
         """
 
         X, Y = self.get_xy_grid(shape, voxel_size)
@@ -1585,27 +1580,29 @@ class MieScatterer(FieldScatterer):
         R3 = np.sqrt(R2_squared + Z**2)
 
         cos_theta = Z / R3
-        illumination_cos_theta = np.cos(np.arccos(cos_theta) + illumination_angle)
+        illumination_cos_theta = np.cos(
+            np.arccos(cos_theta) + illumination_angle
+        )
         phi = np.arctan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi
-    
+
     def _plane_in_polar_coords_hybrid(
         self: MieScatterer,
         shape: tuple[int, int],
         voxel_size: np.ndarray,
         plane_position: np.ndarray,
         illumination_angle: float,
-        k: float
+        k: float,
     ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        """Calculates the polar coordinates of the virtual plane for the hybrid mode.
+        """Calculate the polar coordinates of virtual plane for hybrid mode.
 
-        In hybrid mode, the virtual plane is defined in the spatial frequency 
-        domain corresponding to the objective pupil. The coordinates are 
-        calculated based on the plane position, voxel size, and illumination 
-        angle, and are used to map the Mie scattering amplitudes onto the 
+        In hybrid mode, the virtual plane is defined in the spatial frequency
+        domain corresponding to the objective pupil. The coordinates are
+        calculated based on the plane position, voxel size, and illumination
+        angle, and are used to map the Mie scattering amplitudes onto the
         pupil-frequency representation.
-        
+
         Parameters
         ----------
         shape: tuple[int, int]
@@ -1617,16 +1614,16 @@ class MieScatterer(FieldScatterer):
         illumination_angle: float
             The angle of illumination in radians.
         k: float
-            The wavenumber of the illumination, calculated as 
+            The wavenumber of the illumination, calculated as
             2 * π / wavelength * refractive_index_medium.
 
         Returns
         -------
         tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]
-            The polar coordinates (R3, cos_theta, illumination_cos_theta, phi) 
-            of the virtual plane, and a boolean mask indicating which points 
+            The polar coordinates (R3, cos_theta, illumination_cos_theta, phi)
+            of the virtual plane, and a boolean mask indicating which points
             are within the objective pupil.
-        
+
         """
 
         X, Y = self.get_xy_grid(shape, voxel_size)
@@ -1638,15 +1635,15 @@ class MieScatterer(FieldScatterer):
         R2_squared = X**2 + Y**2
         R3 = np.sqrt(R2_squared + Z**2)
 
-        Q = np.sqrt(R2_squared)/voxel_size[0]**2*2*np.pi/shape[0]
-        sin_theta=Q/(k)
-        pupil_mask=sin_theta<1
-        cos_theta=np.zeros(sin_theta.shape)
-        cos_theta[pupil_mask]=np.sqrt(1-sin_theta[pupil_mask]**2)
+        Q = np.sqrt(R2_squared) / voxel_size[0] ** 2 * 2 * np.pi / shape[0]
+        sin_theta = Q / (k)
+        pupil_mask = sin_theta < 1
+        cos_theta = np.zeros(sin_theta.shape)
+        cos_theta[pupil_mask] = np.sqrt(1 - sin_theta[pupil_mask] ** 2)
 
-        illumination_cos_theta = (
-            np.cos(np.arccos(cos_theta) + illumination_angle)
-            )
+        illumination_cos_theta = np.cos(
+            np.arccos(cos_theta) + illumination_angle
+        )
         phi = np.arctan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi, pupil_mask
@@ -1659,7 +1656,7 @@ class MieScatterer(FieldScatterer):
         output_polarization: float | int | Quantity,
     ) -> tuple[np.ndarray, np.ndarray]:
         """Calculates the polarization coefficients for the scattered field.
-        
+
         Parameters
         ----------
         phi: np.ndarray
@@ -1669,21 +1666,21 @@ class MieScatterer(FieldScatterer):
             local normal at each point in the virtual field.
         input_polarization: float | int | str | Quantity
             The polarization state of the incident illumination. Can be a float
-            representing the angle of linear polarization, the string 
-            "circular" for circular polarization, or a Quantity with angle 
+            representing the angle of linear polarization, the string
+            "circular" for circular polarization, or a Quantity with angle
             units.
         output_polarization: float | int | Quantity
-            The angle of the polarization analyzer for detection. Can be a 
-            float representing the angle of linear polarization, or a Quantity 
+            The angle of the polarization analyzer for detection. Can be a
+            float representing the angle of linear polarization, or a Quantity
             with angle units.
-            
+
         Returns
         -------
         tuple[np.ndarray, np.ndarray]
             The coefficients S1_coef and S2_coef that weight the scattering
-            amplitudes S1 and S2 based on the input and output polarization 
+            amplitudes S1 and S2 based on the input and output polarization
             states.
-            
+
         """
 
         if isinstance(input_polarization, (float, int, str, Quantity)):
@@ -1694,29 +1691,36 @@ class MieScatterer(FieldScatterer):
                 S1_coef = np.sin(phi + input_polarization)
                 S2_coef = np.cos(phi + input_polarization)
 
-            elif isinstance(input_polarization, str) and input_polarization == "circular":
+            elif (
+                isinstance(input_polarization, str)
+                and input_polarization == "circular"
+            ):
                 S1_coef = 1 / np.sqrt(2)
                 S2_coef = 1j / np.sqrt(2)
             else:
-                raise TypeError(f"Unsupported input_polarization: {input_polarization}")
+                raise TypeError(
+                    f"Unsupported input_polarization: {input_polarization}"
+                )
 
         if isinstance(output_polarization, (float, int, Quantity)):
             if isinstance(output_polarization, Quantity):
                 output_polarization = output_polarization.to("rad").magnitude
 
             S1_coef *= np.sin(phi + output_polarization)
-            S2_coef *= np.cos(phi + output_polarization) * illumination_cos_theta
+            S2_coef *= (
+                np.cos(phi + output_polarization) * illumination_cos_theta
+            )
 
         return S1_coef, S2_coef
-    
+
     def _mie_scattering(
         self: MieScatterer,
         L: int,
         illumination_cos_theta: np.ndarray,
         coefficients: callable,
-    )  -> tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         """Calculates the Mie scattering amplitudes S1 and S2.
-        
+
         Parameters
         ----------
         L: int
@@ -1727,12 +1731,12 @@ class MieScatterer(FieldScatterer):
         coefficients: callable
             Callable such that `coefficients(L)` returns the Mie coefficients
             `(an, bn)` up to order `L`.
-            
+
         Returns
         -------
         tuple[np.ndarray, np.ndarray]
             The scattering amplitudes S1 and S2.
-            
+
         """
 
         A, B = coefficients(L)
@@ -1744,7 +1748,7 @@ class MieScatterer(FieldScatterer):
         S2 = sum(E[i] * B[i] * PI[i] + E[i] * A[i] * TAU[i] for i in range(L))
 
         return S1, S2
-    
+
     def _common_setup(
         self: MieScatterer,
         position: tuple[float, float, float],
@@ -1756,13 +1760,15 @@ class MieScatterer(FieldScatterer):
         z: float,
         working_distance: float,
         position_objective: tuple[float, float, float],
-    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, np.ndarray]:
+    ) -> tuple[
+        np.ndarray, np.ndarray, np.ndarray, float, float, float, np.ndarray
+    ]:
         """Performs common setup steps for both geometric and hybrid modes.
 
-        This method computes the initial field array, voxel size, scaled 
-        position, pupil physical size, wavenumber, and relative position of the 
-        particle to the objective. These calculations are shared between the 
-        geometric and hybrid modes, so they are factored out into a common 
+        This method computes the initial field array, voxel size, scaled
+        position, pupil physical size, wavenumber, and relative position of the
+        particle to the objective. These calculations are shared between the
+        geometric and hybrid modes, so they are factored out into a common
         method to avoid code duplication.
 
         Parameters
@@ -1788,11 +1794,11 @@ class MieScatterer(FieldScatterer):
 
         Returns
         -------
-        tuple[np.ndarray, np.ndarray, np.ndarray, float, float, float, np.ndarray]
+        tuple[array, array, array, float, float, float, array]
             A tuple containing the initialized field array, voxel size, scaled
             position, pupil physical size, wavenumber, and relative position of
             the particle to the objective.
-         
+
         """
 
         xSize, ySize = self.get_xy_size(output_region, padding)
@@ -1801,7 +1807,11 @@ class MieScatterer(FieldScatterer):
 
         arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
 
-        position = np.array(position) * scale[: len(position)] * voxel_size[: len(position)]
+        position = (
+            np.array(position)
+            * scale[: len(position)]
+            * voxel_size[: len(position)]
+        )
         z = z * voxel_size[2] * scale[2]
 
         pupil_physical_size = working_distance * np.tan(collection_angle) * 2
@@ -1815,37 +1825,45 @@ class MieScatterer(FieldScatterer):
             )
         )
 
-        return arr, voxel_size, position, z, pupil_physical_size, k, relative_position
+        return (
+            arr,
+            voxel_size,
+            position,
+            z,
+            pupil_physical_size,
+            k,
+            relative_position,
+        )
 
     def get(
-        self: MieScatterer, 
+        self: MieScatterer,
         *args,
-        mode=None, 
+        mode=None,
         **kwargs: Any,
     ) -> np.ndarray:
         """Evaluate the Mie scatterer field based on the specified mode.
-        
+
         This method dispatches the field calculation to either the geometric or
         hybrid implementation based on the `mode` argument. If `mode` is not
         provided, it defaults to the mode specified during initialization.
-        
+
         Parameters
         ----------
         args: Any
             Positional arguments passed to the method.
         mode: str | None
-            The mode to use for field calculation. Can be "geometric" or 
-            "hybrid". If None, the mode specified during initialization is 
+            The mode to use for field calculation. Can be "geometric" or
+            "hybrid". If None, the mode specified during initialization is
             used.
         kwargs: Any
             Keyword arguments passed to the method.
 
-        Returns        
+        Returns
         -------
         np.ndarray
             The calculated scattered field based on the specified mode.
-        
-        """ 
+
+        """
 
         mode = self.mode if mode is None else mode
 
@@ -1857,7 +1875,7 @@ class MieScatterer(FieldScatterer):
             raise NotImplementedError("Pure Fourier mode not implemented yet.")
 
         raise ValueError(f"Unknown mode: {mode}")
-    
+
     def _solve_geometric(
         self: MieScatterer,
         inp: Any,
@@ -1885,21 +1903,21 @@ class MieScatterer(FieldScatterer):
         **kwargs: Any,
     ) -> np.ndarray:
         """Calculates the scattered field using the geometric mode.
-        
+
         In geometric mode, the scattered field is evaluated as a spherical wave
         on a virtual plane located at a distance `offset_z` from the particle.
-        The field includes the geometric propagation factor `exp(i k R) / R` 
-        and is sampled on a finite spatial grid before being propagated through 
-        the optical system. The coordinates of the virtual plane are calculated 
-        based on the plane position, voxel size, and illumination angle, and 
-        are used to compute the spherical wave representation of the scattered 
-        field on the virtual plane, which is then propagated through the optical 
-        system.
+        The field includes the geometric propagation factor `exp(i k R) / R`
+        and is sampled on a finite spatial grid before being propagated through
+        the optical system. The coordinates of the virtual plane are calculated
+        based on the plane position, voxel size, and illumination angle, and
+        are used to compute the spherical wave representation of the scattered
+        field on the virtual plane, which is then propagated through the
+        optical system.
 
         Parameters
         ----------
         inp: Any
-            The input to the method, which can be used for additional 
+            The input to the method, which can be used for additional
             processing if needed.
         position: np.ndarray
             The position of the particle in (x, y, z) coordinates.
@@ -1920,10 +1938,10 @@ class MieScatterer(FieldScatterer):
         output_polarization: np.ndarray
             The angle of the polarization analyzer for detection.
         coefficients: np.ndarray
-            The Mie coefficients used to calculate the scattering amplitudes 
+            The Mie coefficients used to calculate the scattering amplitudes
             S1 and S2.
         offset_z: float
-            The distance from the particle in the z direction where the field 
+            The distance from the particle in the z direction where the field
             is evaluated.
         z: float
             The axial position of the particle relative to the camera plane.
@@ -1932,10 +1950,10 @@ class MieScatterer(FieldScatterer):
         position_objective: np.ndarray
             The position of the objective lens in (x, y, z) coordinates.
         return_fft: bool
-            If True, the method returns the Fourier transform of the field 
+            If True, the method returns the Fourier transform of the field
             rather than the spatial field itself.
         coherence_length: float
-            The temporal coherence length of the illumination in meters. If 
+            The temporal coherence length of the illumination in meters. If
             None, illumination is assumed to be fully coherent.
         output_region: tuple[int, int]
             The coordinates defining the output region.
@@ -1945,7 +1963,7 @@ class MieScatterer(FieldScatterer):
             The scaling factor applied to the scattered field amplitude.
         phase_shift_correction: bool
             If True, applies a phase correction to the field according to
-            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in 
+            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in
             ISCAT simulations.
         pupil: np.ndarray | None
             Optional pupil function applied to the scattered field. This can be
@@ -1959,49 +1977,77 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        arr, voxel_size, position, z, pupil_physical_size, k, relative_position = self._common_setup(
-            position, padding, output_region, wavelength, refractive_index_medium,
-            collection_angle, z, working_distance, position_objective
+        (
+            arr,
+            voxel_size,
+            position,
+            z,
+            pupil_physical_size,
+            k,
+            relative_position,
+        ) = self._common_setup(
+            position,
+            padding,
+            output_region,
+            wavelength,
+            refractive_index_medium,
+            collection_angle,
+            z,
+            working_distance,
+            position_objective,
         )
 
         ratio = offset_z / (working_distance - z)
 
-        R3_field, cos_theta_field, illumination_angle_field, phi_field = \
+        R3_field, cos_theta_field, illumination_angle_field, phi_field = (
             self._plane_in_polar_coords_geometric(
-                arr.shape, voxel_size, relative_position * ratio, illumination_angle
+                arr.shape,
+                voxel_size,
+                relative_position * ratio,
+                illumination_angle,
             )
-        
+        )
+
         cos_phi_field = np.cos(phi_field)
         sin_phi_field = np.sin(phi_field)
 
         x_farfield = (
             position[0]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * cos_phi_field / ratio
+            + R3_field
+            * np.sqrt(1 - cos_theta_field**2)
+            * cos_phi_field
+            / ratio
         )
         y_farfield = (
             position[1]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * sin_phi_field / ratio
+            + R3_field
+            * np.sqrt(1 - cos_theta_field**2)
+            * sin_phi_field
+            / ratio
         )
 
-        pupil_mask = (
-            (x_farfield - position_objective[0]) ** 2
-            + (y_farfield - position_objective[1]) ** 2
-            < (pupil_physical_size / 2) ** 2
-        )
+        pupil_mask = (x_farfield - position_objective[0]) ** 2 + (
+            y_farfield - position_objective[1]
+        ) ** 2 < (pupil_physical_size / 2) ** 2
         cos_theta_field = cos_theta_field[pupil_mask]
-            
 
         R3_field = R3_field[pupil_mask]
         phi_field = phi_field[pupil_mask]
         illumination_angle_field = illumination_angle_field[pupil_mask]
 
         S1_coef, S2_coef = self._polarization_coefficients(
-            phi_field, illumination_angle_field, input_polarization, output_polarization
+            phi_field,
+            illumination_angle_field,
+            input_polarization,
+            output_polarization,
         )
-        S1, S2 = self._mie_scattering(L, illumination_angle_field, coefficients)
+        S1, S2 = self._mie_scattering(
+            L, illumination_angle_field, coefficients
+        )
 
         arr[pupil_mask] = (
-            -1j / (k * R3_field)
+            -1j
+            / (k * R3_field)
             * np.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         ) / amp_factor
@@ -2021,7 +2067,7 @@ class MieScatterer(FieldScatterer):
                 -mask.shape[0] // 2 : mask.shape[0] // 2,
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
-            mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
+            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
             arr = arr * mask
 
         fourier_field = np.fft.fft2(arr)
@@ -2048,7 +2094,7 @@ class MieScatterer(FieldScatterer):
         if return_fft:
             return fourier_field[..., np.newaxis]
         return np.fft.ifft2(fourier_field)[..., np.newaxis]
-    
+
     def _solve_hybrid(
         self: MieScatterer,
         inp: Any,
@@ -2078,17 +2124,17 @@ class MieScatterer(FieldScatterer):
         """Calculates the scattered field using the hybrid mode.
 
         In hybrid mode, the scattered field is constructed using the Mie
-        scattering amplitudes S1 and S2 mapped to spatial frequencies 
+        scattering amplitudes S1 and S2 mapped to spatial frequencies
         corresponding to the objective pupil. The field is then propagated to
-        the detector. This approach is less sensitive to the simulated 
-        field-of-view and generally more numerically stable compared to the 
-        geometric mode, which evaluates the scattered field as a spherical 
+        the detector. This approach is less sensitive to the simulated
+        field-of-view and generally more numerically stable compared to the
+        geometric mode, which evaluates the scattered field as a spherical
         wave on a virtual plane.
 
         Parameters
         ----------
         inp: Any
-            The input to the method, which can be used for additional 
+            The input to the method, which can be used for additional
             processing if needed.
         position: np.ndarray
             The position of the particle in (x, y, z) coordinates.
@@ -2109,7 +2155,7 @@ class MieScatterer(FieldScatterer):
         output_polarization: np.ndarray
             The angle of the polarization analyzer for detection.
         coefficients: np.ndarray
-            The Mie coefficients used to calculate the scattering amplitudes 
+            The Mie coefficients used to calculate the scattering amplitudes
             S1 and S2.
         offset_z: float
             The distance from the particle in the z direction where the field
@@ -2134,7 +2180,7 @@ class MieScatterer(FieldScatterer):
             The scaling factor applied to the scattered field amplitude.
         phase_shift_correction: bool
             If True, applies a phase correction to the field according to
-            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in 
+            arr *= exp(1j * k * z + 1j * π / 2). This correction is used in
             ISCAT simulations.
         pupil: np.ndarray | None
             Optional pupil function applied to the scattered field. This can be
@@ -2148,29 +2194,58 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        arr, voxel_size, position, z, pupil_physical_size, k, relative_position = self._common_setup(
-            position, padding, output_region, wavelength, refractive_index_medium,
-            collection_angle, z, working_distance, position_objective
+        (
+            arr,
+            voxel_size,
+            position,
+            z,
+            pupil_physical_size,
+            k,
+            relative_position,
+        ) = self._common_setup(
+            position,
+            padding,
+            output_region,
+            wavelength,
+            refractive_index_medium,
+            collection_angle,
+            z,
+            working_distance,
+            position_objective,
         )
 
         ratio = offset_z / (working_distance - z)
 
-        
-        R3_field, cos_theta_field, illumination_angle_field, phi_field, pupil_mask = \
-            self._plane_in_polar_coords_hybrid(
-                arr.shape, voxel_size, relative_position * ratio, illumination_angle, k
-            )
+        (
+            R3_field,
+            cos_theta_field,
+            illumination_angle_field,
+            phi_field,
+            pupil_mask,
+        ) = self._plane_in_polar_coords_hybrid(
+            arr.shape,
+            voxel_size,
+            relative_position * ratio,
+            illumination_angle,
+            k,
+        )
 
         cos_phi_field = np.cos(phi_field)
         sin_phi_field = np.sin(phi_field)
 
         x_farfield = (
             position[0]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * cos_phi_field / ratio
+            + R3_field
+            * np.sqrt(1 - cos_theta_field**2)
+            * cos_phi_field
+            / ratio
         )
         y_farfield = (
             position[1]
-            + R3_field * np.sqrt(1 - cos_theta_field**2) * sin_phi_field / ratio
+            + R3_field
+            * np.sqrt(1 - cos_theta_field**2)
+            * sin_phi_field
+            / ratio
         )
 
         phi_valid = phi_field[pupil_mask]
@@ -2198,7 +2273,7 @@ class MieScatterer(FieldScatterer):
                 -mask.shape[0] // 2 : mask.shape[0] // 2,
                 -mask.shape[1] // 2 : mask.shape[1] // 2,
             ]
-            mask = np.exp(-0.5 * (x ** 2 + y ** 2) / ((sigma) ** 2))
+            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
             arr = arr * mask
 
         if pupil is not None and len(pupil) > 0:
@@ -2206,9 +2281,11 @@ class MieScatterer(FieldScatterer):
             c1 = arr.shape[1] // 2
             h0 = pupil.shape[0] // 2
             h1 = pupil.shape[1] // 2
-            arr[c0 - h0:c0 + h0, c1 - h1:c1 + h1] *= pupil
+            arr[c0 - h0 : c0 + h0, c1 - h1 : c1 + h1] *= pupil
 
-        fourier_field = np.fft.ifft2(np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr))))
+        fourier_field = np.fft.ifft2(
+            np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))
+        )
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
@@ -2240,10 +2317,10 @@ class MieSphere(MieScatterer):
     This class computes the coherent scattered field of a spherical particle in
     a homogeneous medium using Mie theory.
 
-    In `"geometric"` mode, accurate results typically require a sufficiently 
-    large simulation grid (often at least 64 × 64) and adequate padding, 
-    because the scattered field is sampled on a finite virtual plane before 
-    propagation. In contrast, the `"hybrid"` mode is generally less sensitive 
+    In `"geometric"` mode, accurate results typically require a sufficiently
+    large simulation grid (often at least 64 × 64) and adequate padding,
+    because the scattered field is sampled on a finite virtual plane before
+    propagation. In contrast, the `"hybrid"` mode is generally less sensitive
     to grid size and field-of-view.
 
     The induced phase shift is defined relative to the
@@ -2278,9 +2355,9 @@ class MieSphere(MieScatterer):
         Defines the polarization angle of the input. For simulating circularly
         polarized light we recommend a coherent sum of two simulated fields.
     output_polarization: float | Quantity
-        Defines the angle of the polarization filter after the sample. For 
+        Defines the angle of the polarization filter after the sample. For
         off-axis, keep the same as input_polarization.
-        
+
     """
 
     def __init__(
@@ -2290,8 +2367,8 @@ class MieSphere(MieScatterer):
         **kwargs,
     ):
         """Initializes the MieSphere feature.
-        
-        Parameters       
+
+        Parameters
         ----------
         radius: float
             Radius of the mie particle in meter.
@@ -2299,23 +2376,23 @@ class MieSphere(MieScatterer):
             Refractive index of the particle.
         **kwargs: Any
             Additional keyword arguments passed to the parent class initializer.
-            
+
         """
-        
+
         def coeffs(
             radius: float,
             refractive_index: float,
             refractive_index_medium: float,
-            wavelength: float
+            wavelength: float,
         ) -> callable:
             """Calculates the Mie coefficients for a homogeneous sphere.
-            
+
              This function computes the Mie coefficients an and bn for a
              homogeneous sphere based on the provided radius, refractive index,
-             and wavelength. The coefficients are calculated using the 
-             `mie.coefficients` function, which implements the standard Mie 
+             and wavelength. The coefficients are calculated using the
+             `mie.coefficients` function, which implements the standard Mie
              theory formulas for a homogeneous sphere.
-             
+
              Parameters
              ----------
              radius: float
@@ -2326,12 +2403,13 @@ class MieSphere(MieScatterer):
                  The refractive index of the surrounding medium.
              wavelength: float
                  The wavelength of the illumination in meters.
-                 
+
             Returns
             -------
             callable
-                A function that computes the Mie coefficients for a given number of terms.
-            
+                A function that computes the Mie coefficients for a given
+                number of terms.
+
             """
 
             if isinstance(radius, Quantity):
@@ -2358,11 +2436,11 @@ class MieSphere(MieScatterer):
 
 class MieStratifiedSphere(MieScatterer):
     """Scattered field produced by a stratified sphere.
-    
-    In `"geometric"` mode, accurate results typically require a sufficiently 
-    large simulation grid (often at least 64 × 64) and adequate padding, 
-    because the scattered field is sampled on a finite virtual plane before 
-    propagation. In contrast, the `"hybrid"` mode is generally less sensitive 
+
+    In `"geometric"` mode, accurate results typically require a sufficiently
+    large simulation grid (often at least 64 × 64) and adequate padding,
+    because the scattered field is sampled on a finite virtual plane before
+    propagation. In contrast, the `"hybrid"` mode is generally less sensitive
     to grid size and field-of-view.
 
     The induced phase shift is defined relative to the
@@ -2396,9 +2474,9 @@ class MieStratifiedSphere(MieScatterer):
         Defines the polarization angle of the input. For simulating circularly
         polarized light we recommend a coherent sum of two simulated fields.
     output_polarization: float | Quantity
-        Defines the angle of the polarization filter after the sample. For 
+        Defines the angle of the polarization filter after the sample. For
         off-axis, keep the same as input_polarization.
-        
+
     """
 
     def __init__(
@@ -2408,7 +2486,7 @@ class MieStratifiedSphere(MieScatterer):
         **kwargs: Any,
     ) -> None:
         """Initializes the MieStratifiedSphere feature.
-        
+
         Parameters
         ----------
         radius: tuple[float, ...]
@@ -2416,9 +2494,9 @@ class MieStratifiedSphere(MieScatterer):
         refractive_index: tuple[float, ...]
             Refractive index of each cell in the same order as `radius`.
         **kwargs: Any
-            Additional keyword arguments passed to the parent class 
+            Additional keyword arguments passed to the parent class
             initializer.
-        
+
         """
 
         def coeffs(
@@ -2430,14 +2508,14 @@ class MieStratifiedSphere(MieScatterer):
             """Calculates the Mie coefficients for a stratified sphere.
 
             This function computes the Mie coefficients an and bn for a
-            stratified sphere based on the provided radius, refractive index, 
-            and wavelength. The coefficients are calculated using the 
-            `mie.stratified_coefficients` function, which implements the Mie 
+            stratified sphere based on the provided radius, refractive index,
+            and wavelength. The coefficients are calculated using the
+            `mie.stratified_coefficients` function, which implements the Mie
             theory formulas for a sphere composed of multiple concentric layers
-            with different refractive indices. The `radius` parameter specifies 
-            the radius of each layer, and the `refractive_index` parameter 
-            specifies the refractive index of each layer. The function returns 
-            a callable that computes the Mie coefficients for a given number of 
+            with different refractive indices. The `radius` parameter specifies
+            the radius of each layer, and the `refractive_index` parameter
+            specifies the refractive index of each layer. The function returns
+            a callable that computes the Mie coefficients for a given number of
             terms.
 
             Parameters
@@ -2454,9 +2532,9 @@ class MieStratifiedSphere(MieScatterer):
             Returns
             -------
             callable
-                A function that computes the Mie coefficients for a given 
+                A function that computes the Mie coefficients for a given
                 number of terms.
-            
+
             """
 
             if not np.all(radius[1:] >= radius[:-1]):
@@ -2465,13 +2543,14 @@ class MieStratifiedSphere(MieScatterer):
                     "monotonically increasing."
                 )
 
-            def inner(
-                L: int
-            ):
+            def inner(L: int):
                 return mie.stratified_coefficients(
                     np.array(refractive_index) / refractive_index_medium,
-                    np.array(radius) * 2 * np.pi / wavelength
-                    *refractive_index_medium,
+                    np.array(radius)
+                    * 2
+                    * np.pi
+                    / wavelength
+                    * refractive_index_medium,
                     L,
                 )
 
@@ -2484,13 +2563,14 @@ class MieStratifiedSphere(MieScatterer):
             **kwargs,
         )
 
+
 @dataclass
 class ScatteredVolume(Wrapper):
     """Voxelized volume produced by a `VolumeScatterer`.
 
     Provides convenience accessors for the lateral position (`position`) and
     full 3D position (`pos3d`) stored in the feature properties.
-    
+
     """
 
     @property
@@ -2513,15 +2593,16 @@ class ScatteredVolume(Wrapper):
 @dataclass
 class ScatteredField(Wrapper):
     """Complex field produced by a FieldScatterer."""
+
     pass
 
-    
+
 class Incoherent(StructuralFeature):
     """Average intensities over orthogonal polarization states.
 
     This meta-feature evaluates a child feature for a set of polarization
-    configurations and returns the incoherent (intensity) average. If both 
-    `input_unpolarized` and `output_unpolarized` are False, the wrapper acts 
+    configurations and returns the incoherent (intensity) average. If both
+    `input_unpolarized` and `output_unpolarized` are False, the wrapper acts
     as a pass-through and returns the child feature unchanged.
 
     By default, unpolarized states are approximated by averaging over two
@@ -2539,23 +2620,23 @@ class Incoherent(StructuralFeature):
         **kwargs: Any,
     ):
         """Initializes the Incoherent feature.
-        
+
         Parameters
         ----------
         feature: Feature
             The child feature to evaluate for different polarization states.
         input_unpolarized: bool, optional
             If True, the input light is treated as unpolarized, and the feature
-            will be evaluated for two orthogonal input polarization states (0 
+            will be evaluated for two orthogonal input polarization states (0
             and π/2).
         output_unpolarized: bool, optional
-            If True, the output light is treated as unpolarized, and the 
-            feature will be evaluated for two orthogonal output polarization 
+            If True, the output light is treated as unpolarized, and the
+            feature will be evaluated for two orthogonal output polarization
             states (0 and π/2).
         **kwargs: dict
-            Additional keyword arguments passed to the parent 
+            Additional keyword arguments passed to the parent
             StructuralFeature.
-                
+
         """
 
         super().__init__(
@@ -2564,10 +2645,10 @@ class Incoherent(StructuralFeature):
             **kwargs,
         )
         self.feature = self.add_feature(feature)
-    
+
     @staticmethod
     def _states(
-        base: float | None, 
+        base: float | None,
         unpolarized: bool,
     ) -> tuple[float, ...]:
         """Return polarization states to sample.
@@ -2575,7 +2656,7 @@ class Incoherent(StructuralFeature):
         For unpolarized light, two orthogonal linear polarization states
         (0 and π/2) are used. Otherwise, the provided base state is returned,
         defaulting to 0 if `base` is None.
-        
+
         """
 
         if unpolarized:
@@ -2591,12 +2672,12 @@ class Incoherent(StructuralFeature):
         **kwargs: Any,
     ) -> Any:
         """Incoherently average the feature over polarization states.
-        
-        Evaluates the feature for different polarization states and returns 
-        the incoherent average. If both `input_unpolarized` and 
-        `output_unpolarized` are False, the feature is evaluated once with the 
+
+        Evaluates the feature for different polarization states and returns
+        the incoherent average. If both `input_unpolarized` and
+        `output_unpolarized` are False, the feature is evaluated once with the
         provided polarization states (or defaults) and returned directly.
-        
+
         Parameters
         ----------
         inputs: Any
@@ -2606,19 +2687,19 @@ class Incoherent(StructuralFeature):
         output_unpolarized: bool
             Whether the output light is unpolarized.
         _ID: tuple, optional
-            The identifier for the current feature evaluation, passed through 
+            The identifier for the current feature evaluation, passed through
             to the child feature.
         **kwargs: dict
-            Additional keyword arguments passed to the child feature.   
+            Additional keyword arguments passed to the child feature.
 
         Returns
         -------
         Any
-            The incoherent average of the feature evaluated over the specified 
+            The incoherent average of the feature evaluated over the specified
             polarization states.
-        
+
         """
-        
+
         # Fast path: no averaging needed
         if not input_unpolarized and not output_unpolarized:
             return self.feature(_ID=_ID, **kwargs)

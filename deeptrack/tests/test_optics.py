@@ -33,12 +33,13 @@ class TestOptics_NumPy(BackendTestBase):
         microscope_type = optics.Fluorescence()
         scatterer = PointParticle(intensity=100)
         microscope = optics.Microscope(
-            sample=scatterer, objective=microscope_type,
+            sample=scatterer,
+            objective=microscope_type,
         )
         output_image = microscope.get(None)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (128, 128, 1))
-    
+
     def test_Optics(self):
         microscope = optics.Optics()
         scatterer = PointParticle()
@@ -194,7 +195,9 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image.shape, (64, 64, 1))
 
     def test_IlluminationGradient(self):
-        illumination_gradient = optics.IlluminationGradient(gradient=(5e-5, 5e-5))
+        illumination_gradient = optics.IlluminationGradient(
+            gradient=(5e-5, 5e-5)
+        )
         microscope = optics.Brightfield(
             NA=0.7,
             wavelength=660e-9,
@@ -246,7 +249,9 @@ class TestOptics_NumPy(BackendTestBase):
 
         rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
+        ).mean() / xp.mean(
+            output_image_no_upscale
+        )  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
     def test_upscale_fluorescence(self):
@@ -279,12 +284,16 @@ class TestOptics_NumPy(BackendTestBase):
 
         rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
+        ).mean() / xp.mean(
+            output_image_no_upscale
+        )  # Mean relative error
         self.assertLess(rel_error, 0.1)
+
 
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestOptics_PyTorch(TestOptics_NumPy):
     BACKEND = "torch"
+
 
 if __name__ == "__main__":
     unittest.main()

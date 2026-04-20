@@ -94,7 +94,7 @@ Process an input image.
 
 from __future__ import annotations
 
-from typing import Any, Callable, TYPE_CHECKING
+from typing import Any, Callable, Iterable, TYPE_CHECKING
 
 import array_api_compat as apc
 import numpy as np
@@ -3663,15 +3663,16 @@ def isotropic_erosion(
 
 _FASTEST_SIZES = []
 for n in range(1, 10):
-    for a in range(1, n):  # start at 1 → at least one factor of 2
-        _FASTEST_SIZES.append(2**a * 3**(n - a - 1))
+    for a in range(1, n):  # Start at 1 -> at least one factor of 2
+        _FASTEST_SIZES.append(2**a * 3 ** (n - a - 1))
 _FASTEST_SIZES = np.unique(_FASTEST_SIZES)
+
 
 def pad_image_to_fft(
     image: np.ndarray | torch.Tensor,
     axes: Iterable[int] = (0, 1),
 ) -> np.ndarray | torch.Tensor:
-    """Pads an image to improve Fast Fourier Transform (FFT) performance.
+    """Pad an image to improve Fast Fourier Transform (FFT) performance.
     Padding is applied at the end of each axis (no centering).
 
     Preserves backend:
@@ -3680,7 +3681,7 @@ def pad_image_to_fft(
 
     This function pads an image by adding zeros to the end of specified axes
     so that their lengths match the nearest larger size in `_FASTEST_SIZES`.
-    Sizes are chosen as products of small prime factors, which are efficient 
+    Sizes are chosen as products of small prime factors, which are efficient
     for FFT algorithms.
 
     Parameters

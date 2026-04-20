@@ -1312,7 +1312,8 @@ class TestMath_Numpy(BackendTestBase):
         out = math.pad_image_to_fft(img)
         if self.BACKEND == "torch":
             self.assertIsInstance(out, torch.Tensor)
-        else: self.assertIsInstance(out, np.ndarray)
+        else:
+            self.assertIsInstance(out, np.ndarray)
         self.assertGreaterEqual(out.shape[0], 5)
         self.assertGreaterEqual(out.shape[1], 11)
 
@@ -1334,7 +1335,6 @@ class TestMath_Numpy(BackendTestBase):
         out1 = math.pad_image_to_fft(img)
         out2 = math.pad_image_to_fft(out1)
         self.assertEqual(out1.shape, out2.shape)
-
 
 
 # Extending the test and setting the backend to torch
@@ -1461,6 +1461,7 @@ class TestMath_TorchOnly(BackendTestBase):
         loss = out.sum()
         loss.backward()
         self.assertIsNotNone(img.grad)
+
 
 if __name__ == "__main__":
     unittest.main()

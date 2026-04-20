@@ -6,10 +6,10 @@ import unittest
 
 import numpy as np
 
-from deeptrack.optics import Fluorescence, Brightfield
+from deeptrack.backend import TORCH_AVAILABLE
+from deeptrack.optics import Fluorescence
 from deeptrack import scatterers
 
-from deeptrack.backend import TORCH_AVAILABLE, xp
 from deeptrack.tests import BackendTestBase
 
 if TORCH_AVAILABLE:
@@ -27,7 +27,7 @@ class TestScatterers_NumPy(BackendTestBase):
             return torch.Tensor
         else:
             raise ValueError(f"Unsupported backend: {self.BACKEND}")
-        
+
     def test__all__(self):
         from deeptrack import (
             PointParticle,
@@ -40,7 +40,9 @@ class TestScatterers_NumPy(BackendTestBase):
         )
 
     def to_numpy(self, x):
-        return x.detach().cpu().numpy() if hasattr(x, "detach") else np.asarray(x)
+        return (
+            x.detach().cpu().numpy() if hasattr(x, "detach") else np.asarray(x)
+        )
 
     def test_PointParticle(self):
 
@@ -81,7 +83,7 @@ class TestScatterers_NumPy(BackendTestBase):
 
         v1 = e1.resolve()
         v3 = e3.resolve()
-        
+
         self.assertIsInstance(v1.array, self.array_type)
         self.assertIsInstance(v3.array, self.array_type)
         self.assertEqual(v1.shape, (3, 5, 1))
@@ -109,7 +111,6 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=0)))
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=1)))
 
-
     def test_Sphere(self):
         s1 = scatterers.Sphere(
             radius=1.5e-6,
@@ -134,15 +135,23 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertEqual(v1.shape, (3, 3, 3))
         self.assertEqual(v3.shape, (3, 3, 3))
 
-        self.assertTrue(np.allclose(np.asarray(v1.properties["position"]), np.array([16, 16])))
-        self.assertTrue(np.allclose(np.asarray(v3.properties["position"]), np.array([16, 16])))
+        self.assertTrue(
+            np.allclose(
+                np.asarray(v1.properties["position"]), np.array([16, 16])
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                np.asarray(v3.properties["position"]), np.array([16, 16])
+            )
+        )
 
         a1 = self.to_numpy(v1.array)
         a3 = self.to_numpy(v3.array)
 
         self.assertGreater(a1.sum(), 0)
         self.assertGreater(a3.sum(), 0)
-        self.assertTrue(np.any((a3 > 0) & (a3 <=1.0)))
+        self.assertTrue(np.any((a3 > 0) & (a3 <= 1.0)))
 
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=0)))
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=1)))
@@ -174,8 +183,16 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertEqual(v1.shape, (5, 6, 3))
         self.assertEqual(v3.shape, (5, 6, 3))
 
-        self.assertTrue(np.allclose(np.asarray(v1.properties["position"]), np.array([16, 16])))
-        self.assertTrue(np.allclose(np.asarray(v3.properties["position"]), np.array([16, 16])))
+        self.assertTrue(
+            np.allclose(
+                np.asarray(v1.properties["position"]), np.array([16, 16])
+            )
+        )
+        self.assertTrue(
+            np.allclose(
+                np.asarray(v3.properties["position"]), np.array([16, 16])
+            )
+        )
 
         a1 = self.to_numpy(v1.array)
         a3 = self.to_numpy(v3.array)
@@ -186,7 +203,6 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=0)))
         self.assertTrue(np.allclose(a1, np.flip(a1, axis=2)))
-
 
     # def test_MieStratifiedSphere(self):
     #     optics_1 = Brightfield(
@@ -216,6 +232,7 @@ class TestScatterers_NumPy(BackendTestBase):
     #     imaged_scatterer_1 = optics_1(scatterer)
     #     imaged_scatterer_1.update().resolve()
 
+
 class TestScatterers_NumPy_Only(BackendTestBase):
     BACKEND = "numpy"
 
@@ -239,7 +256,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
 
         self.assertIsInstance(out.array, np.ndarray)
         self.assertEqual(out.shape, (32, 32, 1))
-        
+
         arr = out.array
         self.assertTrue(np.iscomplexobj(arr))
         self.assertTrue(np.isfinite(arr.real).all())
@@ -615,10 +632,6 @@ class TestMath_TorchOnly(BackendTestBase):
                 self.assertNotEqual(loss.item(), prev_loss)
             prev_loss = loss.item()
         self.assertTrue(abs(intensity.item() - true_intensity) < 0.5)
-
-        
-
-    
 
 
 if __name__ == "__main__":
