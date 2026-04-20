@@ -49,6 +49,7 @@ class TestMath_Numpy(BackendTestBase):
             BilateralBlur,
             isotropic_dilation,
             isotropic_erosion,
+            pad_image_to_fft,
         )
 
     def test_Average(self):
@@ -1305,6 +1306,36 @@ class TestMath_Numpy(BackendTestBase):
         # channel 1 → remains empty (no contamination)
         self.assertEqual(xp.sum(out[..., 1]).item(), 0)
 
+    def test_pad_image_with_fft(self):
+        # --- basic 2D case ---
+        img = xp.zeros((5, 11))
+        out = math.pad_image_to_fft(img)
+        if self.BACKEND == "torch":
+            self.assertIsInstance(out, torch.Tensor)
+        else: self.assertIsInstance(out, np.ndarray)
+        self.assertGreaterEqual(out.shape[0], 5)
+        self.assertGreaterEqual(out.shape[1], 11)
+
+        # --- 3D case with specific axes ---
+        img = xp.zeros((5, 7, 9))
+        out = math.pad_image_to_fft(img, axes=(1,))
+        self.assertEqual(out.shape[0], 5)  # unchanged
+        self.assertGreaterEqual(out.shape[1], 7)  # padded
+        self.assertEqual(out.shape[2], 9)  # unchanged
+
+        # --- 2D case with negative axis ---
+        img = xp.zeros((5, 7))
+        out = math.pad_image_to_fft(img, axes=(-1,))
+        self.assertEqual(out.shape[0], 5)
+        self.assertGreaterEqual(out.shape[1], 7)
+
+        # --- Idempotent ---
+        img = np.zeros((5, 11))
+        out1 = math.pad_image_to_fft(img)
+        out2 = math.pad_image_to_fft(out1)
+        self.assertEqual(out1.shape, out2.shape)
+
+
 
 # Extending the test and setting the backend to torch
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
@@ -1417,13 +1448,19 @@ class TestMath_TorchOnly(BackendTestBase):
 
     def test_Resize_torch_backend(self):
         feature = math.Resize(dsize=(4, 8))
-
         x = torch.rand(16, 16)
         out = feature.resolve(x)
-
         self.assertIsInstance(out, torch.Tensor)
         self.assertEqual(tuple(out.shape), (8, 4))
 
+    def test_pad_image_to_fft_torch_backend(self):
+
+        # --- gradient flow ---
+        img = torch.ones((5, 5), requires_grad=True)
+        out = math.pad_image_to_fft(img)
+        loss = out.sum()
+        loss.backward()
+        self.assertIsNotNone(img.grad)
 
 if __name__ == "__main__":
     unittest.main()

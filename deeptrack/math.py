@@ -43,6 +43,7 @@ Helper functions:
 - `isotropic_erosion`:Apply isotropic erosion to a binary mask.
 - `move_channel_last`: Move the channel axis to the last position.
 - `restore_channel_axis`:Restore the channel axis to its original position.
+- `pad_image_to_fft`: Pad an image to optimal size for FFT-based operations.
 
 Classes:
 
@@ -134,6 +135,7 @@ __all__ = [
     "BilateralBlur",
     "isotropic_dilation",
     "isotropic_erosion",
+    "pad_image_to_fft",
 ]
 
 if TYPE_CHECKING:
@@ -3657,3 +3659,89 @@ def isotropic_erosion(
         return out[..., None]
 
     return out
+
+
+_FASTEST_SIZES = []
+for n in range(1, 10):
+    for a in range(1, n):  # start at 1 → at least one factor of 2
+        _FASTEST_SIZES.append(2**a * 3**(n - a - 1))
+_FASTEST_SIZES = np.unique(_FASTEST_SIZES)
+
+def pad_image_to_fft(
+    image: np.ndarray | torch.Tensor,
+    axes: Iterable[int] = (0, 1),
+) -> np.ndarray | torch.Tensor:
+    """Pads an image to improve Fast Fourier Transform (FFT) performance.
+    Padding is applied at the end of each axis (no centering).
+
+    Preserves backend:
+    - NumPy input → NumPy output
+    - Torch input → Torch output (preserves autograd compatibility)
+
+    This function pads an image by adding zeros to the end of specified axes
+    so that their lengths match the nearest larger size in `_FASTEST_SIZES`.
+    Sizes are chosen as products of small prime factors, which are efficient 
+    for FFT algorithms.
+
+    Parameters
+    ----------
+    image: np.ndarray | torch.Tensor
+        The input image to pad.
+    axes : iterable of int, optional
+        Axes along which to apply padding. Negative axes are supported.
+
+    Returns
+    -------
+    np.ndarray | torch.Tensor
+        The padded image with dimensions optimized for FFT performance.
+
+    Raises
+    ------
+    ValueError
+        If no suitable size is found in `_FASTEST_SIZES` for any axis length.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from deeptrack.image import pad_image_to_fft
+
+    Pad a NumPy array:
+
+    >>> img = np.zeros((5, 11))
+    >>> padded_img = pad_image_to_fft(img)
+    >>> print(padded_img.shape)
+    (6, 12)
+
+    """
+
+    def _closest(dim: int) -> int:
+        for size in _FASTEST_SIZES:
+            if size >= dim:
+                return size
+        raise ValueError(
+            f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
+            f"for dimension {dim}."
+        )
+
+    shape = list(image.shape)
+    new_shape = list(shape)
+
+    for axis in axes:
+        new_shape[axis] = _closest(shape[axis])
+
+    pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
+
+    # --- NumPy backend ---
+    if isinstance(image, np.ndarray):
+        return np.pad(image, pad_sizes, mode="constant")
+
+    # --- Torch backend ---
+    if isinstance(image, torch.Tensor):
+        # torch.nn.functional.pad expects reversed flat list
+        pad = []
+        for before, after in reversed(pad_sizes):
+            pad.extend([before, after])
+
+        return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
+
+    raise TypeError(f"Unsupported type: {type(image)}")

@@ -55,18 +55,22 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             padding=(10, 10, 10, 10),
             output_region=(0, 0, 64, 64),
-            aberration=None,
         )
         scatterer = PointParticle(
-            intensity=100,  # Squared magnitude of the field.
-            position_unit="pixel",  # Units of position (default meter)
-            position=(32, 32),  # Position of the particle
+            intensity=100,
+            position_unit="pixel",
+            position=(32, 32),
         )
-        imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+        output_image = microscope(scatterer).resolve()
+
         self.assertIsInstance(output_image, self.array_type)
-        self.assertEqual(microscope.NA(), 0.7)
         self.assertEqual(output_image.shape, (64, 64, 1))
+        self.assertEqual(microscope.NA(), 0.7)
+
+        img = output_image[..., 0]
+        peak = np.unravel_index(int(xp.argmax(img)), img.shape)
+        self.assertLessEqual(abs(peak[0] - 32), 1)
+        self.assertLessEqual(abs(peak[1] - 32), 1)
 
     def test_Brightfield(self):
         microscope = optics.Brightfield(
@@ -78,7 +82,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
@@ -100,7 +103,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
@@ -111,6 +113,40 @@ class TestOptics_NumPy(BackendTestBase):
         output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
+
+    def test_Brightfield_Holography_equivalence(self):
+        bf = optics.Brightfield(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            upscale=2,
+            output_region=(0, 0, 64, 64),
+            padding=(10, 10, 10, 10),
+        )
+        hg = optics.Holography(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            upscale=2,
+            output_region=(0, 0, 64, 64),
+            padding=(10, 10, 10, 10),
+        )
+
+        scatterer = PointParticle(
+            refractive_index=1.45 + 0.1j,
+            position_unit="pixel",
+            position=(32, 32),
+        )
+
+        img_bf = bf(scatterer).resolve()
+        img_hg = hg(scatterer).resolve()
+
+        err = float(xp.mean(xp.abs(img_bf - img_hg)))
+        self.assertLess(err, 1e-10)
 
     def test_ISCAT(self):
         microscope = optics.ISCAT(
@@ -122,7 +158,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
@@ -134,6 +169,7 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(microscope.illumination_angle(), 3.141592653589793)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
+        self.assertEqual(microscope.amp_factor(), 1)
 
     def test_Darkfield(self):
         microscope = optics.Darkfield(
@@ -145,7 +181,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = PointParticle(
             refractive_index=1.45 + 0.1j,
@@ -169,7 +204,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
             illumination=illumination_gradient,
         )
         scatterer = PointParticle(
@@ -192,7 +226,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = Sphere(
             refractive_index=1.45,
@@ -211,9 +244,9 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        rel_error = np.abs(
+        rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
     def test_upscale_fluorescence(self):
@@ -226,7 +259,6 @@ class TestOptics_NumPy(BackendTestBase):
             upscale=2,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
-            aberration=None,
         )
         scatterer = Sphere(
             intensity=100,
@@ -245,16 +277,14 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
         # Ensure the upscaled image is almost the same as the original image
 
-        rel_error = np.abs(
+        rel_error = xp.abs(
             output_image_2x_upscale - output_image_no_upscale
-        ).mean()/np.mean(output_image_no_upscale)  # Mean relative error
+        ).mean()/xp.mean(output_image_no_upscale)  # Mean relative error
         self.assertLess(rel_error, 0.1)
 
-# TODO: Extending the test and setting the backend to torch
-# @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
-# class TestOptics_PyTorch(TestOptics_NumPy):
-#     BACKEND = "torch"
-#     pass
+@unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
+class TestOptics_PyTorch(TestOptics_NumPy):
+    BACKEND = "torch"
 
 if __name__ == "__main__":
     unittest.main()
