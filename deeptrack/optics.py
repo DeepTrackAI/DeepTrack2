@@ -1124,7 +1124,9 @@ class Optics(Feature):
         else:
             shape = shape.astype(int)
 
-        new_volume = xp.zeros(shape.tolist(), dtype=volume.dtype)
+        new_volume = xp.zeros(
+            shape.tolist(), dtype=volume.dtype, device=volume.device
+        )
 
         old_region = limits - new_limits
         if isinstance(old_region, torch.Tensor):
@@ -3623,7 +3625,7 @@ def _create_volume(
 
     backend = config.get_backend()
 
-    device = None
+    device = config.get_device() if backend == "torch" else None
 
     for s in list_of_scatterers:
         arr = s.array
