@@ -150,7 +150,6 @@ class TestNoises_NumPy(BackendTestBase):
 @unittest.skipUnless(TORCH_AVAILABLE, "PyTorch is not installed.")
 class TestNoises_PyTorch(TestNoises_NumPy):
     BACKEND = "torch"
-    pass
 
 
 if __name__ == "__main__":

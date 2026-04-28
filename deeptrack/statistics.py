@@ -75,10 +75,35 @@ However, other operators can be used in this way:
 
 from __future__ import annotations
 
+from typing import Callable, TYPE_CHECKING
+
 import numpy as np
 
+from deeptrack import TORCH_AVAILABLE
 from deeptrack.features import Feature
-from deeptrack.image import Image
+from deeptrack.backend import xp
+
+if TORCH_AVAILABLE:
+    import torch
+
+__all__ = [
+    "Reducer",
+    "Sum",
+    "Prod",
+    "Mean",
+    "Median",
+    "Std",
+    "Variance",
+    "Cumsum",
+    "Min",
+    "Max",
+    "PeakToPeak",
+    "Quantile",
+    "Percentile",
+]
+
+if TYPE_CHECKING:
+    import torch
 
 
 #TODO ***??*** revise Reducer - torch, typing, docstring, unit test
@@ -103,8 +128,8 @@ class Reducer(Feature):
     """
 
     def __init__(
-        self,
-        function,
+        self: Reducer,
+        function: Callable,
         feature=None,
         distributed=True,
         **kwargs,
@@ -120,7 +145,7 @@ class Reducer(Feature):
         self,
         image_list,
         **feature_input,
-    ) -> list[Image]:
+    ) -> list[np.ndarray | torch.Tensor]:
         self.__distributed__ = feature_input["distributed"]
         return super()._process_and_get(image_list, **feature_input)
 
@@ -150,7 +175,7 @@ class Sum(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.sum,
+            xp.sum,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -172,7 +197,7 @@ class Prod(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.prod,
+            xp.prod,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -194,7 +219,7 @@ class Mean(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.mean,
+            xp.mean,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -216,7 +241,7 @@ class Median(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.median,
+            xp.median,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -238,7 +263,7 @@ class Std(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.std,
+            xp.std,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -260,7 +285,7 @@ class Variance(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.var,
+            xp.var,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -281,7 +306,7 @@ class Cumsum(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.cumsum,
+            xp.cumsum,
             feature=feature,
             axis=axis,
             distributed=distributed,
@@ -302,7 +327,7 @@ class Min(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.min,
+            xp.min,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -324,7 +349,7 @@ class Max(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.max,
+            xp.max,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -346,7 +371,7 @@ class PeakToPeak(Reducer):
         **kwargs,
     ):
         super().__init__(
-            np.ptp,
+            xp.ptp,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -375,7 +400,7 @@ class Quantile(Reducer):
         **kwargs,
     ):
         def quantile(image, **kwargs):
-            return np.quantile(image, self.q(), **kwargs)
+            return xp.quantile(image, self.q(), **kwargs)
 
         super().__init__(
             quantile,
@@ -408,7 +433,7 @@ class Percentile(Reducer):
         **kwargs,
     ):
         def percentile(image, **kwargs):
-            return np.percentile(image, self.q(), **kwargs)
+            return xp.percentile(image, self.q(), **kwargs)
 
         super().__init__(
             percentile,
