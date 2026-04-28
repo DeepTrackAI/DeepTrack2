@@ -1,15 +1,12 @@
-# Use this only when running the test locally.
-# import sys
-# sys.path.append(".")  # Adds the module to path
-
-# Test combined optics and scatterers.
-
 import unittest
+
+import warnings
+from contextlib import contextmanager
 
 import numpy as np
 
 from deeptrack.backend import TORCH_AVAILABLE
-from deeptrack.optics import Fluorescence, Brightfield
+from deeptrack.optics import Fluorescence, Brightfield, Darkfield
 from deeptrack import scatterers
 
 from deeptrack.tests import BackendTestBase
@@ -20,6 +17,23 @@ if TORCH_AVAILABLE:
 
 class TestScatterers_NumPy(BackendTestBase):
     BACKEND = "numpy"
+
+    _EXPECTED_OPTICS_WARNING_PATTERNS = (
+        r"Brightfield imaging from ScatteredVolume assumes a weak-phase / projection approximation.*",
+        r"Darkfield imaging from ScatteredVolume is a very rough approximation.*",
+        r"Approximating darkfield contrast from refractive index.*",
+    )
+
+    @contextmanager
+    def _suppress_expected_optics_warnings(self):
+        with warnings.catch_warnings():
+            for pattern in self._EXPECTED_OPTICS_WARNING_PATTERNS:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=pattern,
+                    category=UserWarning,
+                )
+            yield
 
     @property
     def array_type(self):
@@ -299,7 +313,8 @@ class TestScatterers_NumPy(BackendTestBase):
             output_region=(0, 0, 32, 32),
         )
 
-        output_image = optics(scatterer).resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = optics(scatterer).resolve()
 
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (32, 32, 1))
@@ -336,8 +351,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=3,
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -378,8 +394,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=(1, 5, 2),
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -391,6 +408,34 @@ class TestScatterers_NumPy(BackendTestBase):
         self.assertGreater(np.abs(out2).sum(), 0)
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
+
+    def test_Ellipse_Brightfield_warns_projection_approximation(self):
+        scatterer = scatterers.Ellipse(
+            refractive_index=1.45,
+            position=(16, 16),
+            position_unit="pixel",
+            radius=(3e-6, 2e-6),
+            rotation=0.0,
+            upsample=3,
+        )
+
+        optics = Brightfield(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 32, 32),
+        )
+
+        with self.assertWarnsRegex(
+            UserWarning,
+            r"Brightfield imaging from ScatteredVolume assumes a weak-phase / projection approximation\.",
+        ):
+            output_image = optics(scatterer).resolve()
+
+        self.assertIsInstance(output_image, self.array_type)
+        self.assertEqual(output_image.shape, (32, 32, 1))
 
     def test_Sphere_Fluorescence(self):
         scatterer = scatterers.Sphere(
@@ -515,7 +560,8 @@ class TestScatterers_NumPy(BackendTestBase):
             output_region=(0, 0, 32, 32),
         )
 
-        output_image = optics(scatterer).resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = optics(scatterer).resolve()
 
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (32, 32, 1))
@@ -551,8 +597,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=3,
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -592,8 +639,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=(1, 5, 2),
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -623,7 +671,8 @@ class TestScatterers_NumPy(BackendTestBase):
             output_region=(0, 0, 32, 32),
         )
 
-        output_image = optics(scatterer).resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = optics(scatterer).resolve()
 
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (32, 32, 1))
@@ -658,8 +707,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=3,
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -697,8 +747,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=(1, 5, 2),
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -729,7 +780,8 @@ class TestScatterers_NumPy(BackendTestBase):
             output_region=(0, 0, 32, 32),
         )
 
-        output_image = optics(scatterer).resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = optics(scatterer).resolve()
 
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (32, 32, 1))
@@ -765,8 +817,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=3,
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -806,8 +859,9 @@ class TestScatterers_NumPy(BackendTestBase):
             upscale=(1, 5, 2),
         )
 
-        out1 = self.to_numpy(optics1(scatterer).resolve())
-        out2 = self.to_numpy(optics2(scatterer).resolve())
+        with self._suppress_expected_optics_warnings():
+            out1 = self.to_numpy(optics1(scatterer).resolve())
+            out2 = self.to_numpy(optics2(scatterer).resolve())
 
         self.assertEqual(out1.shape, (32, 32, 1))
         self.assertEqual(out2.shape, (32, 32, 1))
@@ -820,6 +874,62 @@ class TestScatterers_NumPy(BackendTestBase):
 
         self.assertTrue(np.isclose(out1.sum(), out2.sum(), rtol=1e-1))
 
+    def test_Darkfield_ScatteredVolume_warns_rough_approximation(self):
+        scatterer = scatterers.Ellipse(
+            refractive_index=1.45,
+            position=(16, 16),
+            position_unit="pixel",
+            radius=(3e-6, 2e-6),
+            rotation=0.0,
+            upsample=3,
+        )
+
+        optics = Darkfield(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 32, 32),
+        )
+
+        with self.assertWarnsRegex(
+            UserWarning,
+            r"Darkfield imaging from ScatteredVolume is a very rough approximation\.",
+        ):
+            output_image = optics(scatterer).resolve()
+
+        self.assertIsInstance(output_image, self.array_type)
+        self.assertEqual(output_image.shape, (32, 32, 1))
+
+    def test_Darkfield_refractive_index_warns_nonphysical_contrast(self):
+        scatterer = scatterers.Ellipse(
+            refractive_index=1.45,
+            position=(16, 16),
+            position_unit="pixel",
+            radius=(3e-6, 2e-6),
+            rotation=0.0,
+            upsample=3,
+        )
+
+        optics = Darkfield(
+            NA=0.7,
+            wavelength=680e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 32, 32),
+        )
+
+        with self.assertWarnsRegex(
+            UserWarning,
+            r"Approximating darkfield contrast from refractive index\.",
+        ):
+            output_image = optics(scatterer).resolve()
+
+        self.assertIsInstance(output_image, self.array_type)
+        self.assertEqual(output_image.shape, (32, 32, 1))
+
 
 class TestScatterers_NumPy_Only(BackendTestBase):
     BACKEND = "numpy"
@@ -829,7 +939,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             NA=0.7,
             wavelength=680e-9,
             resolution=1e-6,
-            magnification=1,
+            magnification=10,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
             return_field=True,
@@ -858,7 +968,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             NA=0.7,
             wavelength=680e-9,
             resolution=1e-6,
-            magnification=1,
+            magnification=10,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
             return_field=True,
@@ -894,7 +1004,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             NA=0.7,
             wavelength=680e-9,
             resolution=1e-6,
-            magnification=1,
+            magnification=10,
             output_region=(0, 0, 64, 64),
             padding=(10, 10, 10, 10),
             return_field=True,
@@ -923,7 +1033,7 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             NA=0.7,
             wavelength=680e-9,
             resolution=1e-6,
-            magnification=1,
+            magnification=10,
             output_region=(0, 0, 64, 64),
             return_field=True,
         )
@@ -959,7 +1069,7 @@ class TestMath_TorchOnly(BackendTestBase):
         # --- PointParticle intensity optimization ---
         optics = Fluorescence(
             NA=0.7,
-            wavelength=500e-9,
+            wavelength=680e-9,
             resolution=1e-6,
             magnification=4,
             output_region=(0, 0, 32, 32),

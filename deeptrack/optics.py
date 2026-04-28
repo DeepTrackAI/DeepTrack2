@@ -1094,8 +1094,6 @@ class Optics(Feature):
 
         padding = xp.asarray(padding)
 
-        import torch
-
         if isinstance(limits, torch.Tensor):
             new_limits = limits.clone()
         else:
@@ -1571,8 +1569,6 @@ class Fluorescence(Optics):
         Fully differentiable w.r.t. illuminated_volume.
 
         """
-
-        import torch
 
         device = illuminated_volume.device
         dtype = illuminated_volume.dtype
