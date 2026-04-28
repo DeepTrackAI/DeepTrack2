@@ -1094,7 +1094,7 @@ class Optics(Feature):
 
         padding = xp.asarray(padding)
 
-        if isinstance(limits, torch.Tensor):
+        if TORCH_AVAILABLE and isinstance(limits, torch.Tensor):
             new_limits = limits.clone()
         else:
             new_limits = limits.copy()
