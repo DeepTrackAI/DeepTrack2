@@ -79,9 +79,8 @@ from typing import Callable, TYPE_CHECKING
 
 import numpy as np
 
-from deeptrack import TORCH_AVAILABLE
 from deeptrack.features import Feature
-from deeptrack.backend import xp
+from deeptrack.backend import xp, TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
@@ -156,6 +155,12 @@ class Reducer(Feature):
         keepdims=None,
         **kwargs,
     ):
+        
+        # Torch does not accept Python lists in reductions, while NumPy does.
+        # Convert lists/tuples of arrays/tensors into a backend array/tensor.
+        if isinstance(image, (list, tuple)):
+            image = xp.stack(image, axis=0)
+
         if keepdims is None:
             return self.function(image, axis=axis)
         else:
@@ -370,14 +375,38 @@ class PeakToPeak(Reducer):
         distributed=True,
         **kwargs,
     ):
+        def ptp(image, axis=None, keepdims=False, **kwargs):
+            return xp.max(image, axis=axis, keepdims=keepdims) - xp.min(
+                image, axis=axis, keepdims=keepdims
+            )
+
         super().__init__(
-            xp.ptp,
+            ptp,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
             distributed=distributed,
             **kwargs,
         )
+# class PeakToPeak(Reducer):
+#     """Range of values (maximum - minimum) along an axis."""
+
+#     def __init__(
+#         self,
+#         feature=None,
+#         axis=None,
+#         keepdims=False,
+#         distributed=True,
+#         **kwargs,
+#     ):
+#         super().__init__(
+#             xp.ptp,
+#             feature=feature,
+#             axis=axis,
+#             keepdims=keepdims,
+#             distributed=distributed,
+#             **kwargs,
+#         )
 
 
 #TODO ***??*** revise Quantile - torch, typing, docstring, unit test
@@ -413,14 +442,13 @@ class Quantile(Reducer):
         )
 
 
-#TODO ***??*** revise Percentile - torch, typing, docstring, unit test
 class Percentile(Reducer):
     """Compute the q-th percentile of the data along the specified axis.
 
     Parameters
     ==========
     q : float
-       Percentile to compute, (0 through 100).
+       Percentile to compute, 0 through 100.
     """
 
     def __init__(
@@ -433,7 +461,7 @@ class Percentile(Reducer):
         **kwargs,
     ):
         def percentile(image, **kwargs):
-            return xp.percentile(image, self.q(), **kwargs)
+            return xp.quantile(image, self.q() / 100, **kwargs)
 
         super().__init__(
             percentile,
