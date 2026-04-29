@@ -1,8 +1,5 @@
-# Use this only when running the test locally.
-# import sys
-# sys.path.append(".")  # Adds the module to path.
-
 import unittest
+import warnings
 
 from deeptrack.backend._config import xp
 import numpy as np
@@ -17,14 +14,6 @@ if TORCH_AVAILABLE:
 
 class TestStatistics_NumPy(BackendTestBase):
     BACKEND = "numpy"
-
-    # @property
-    # def array_type(self):
-    #     if self.BACKEND == "numpy":
-    #         return xp.ndarray
-    #     if self.BACKEND == "torch":
-    #         return torch.Tensor
-    #     raise ValueError(f"Unsupported backend: {self.BACKEND}")
     
     def test_sum(self):
         input_values = [xp.ones((2,)), xp.ones((2,))]
@@ -162,7 +151,15 @@ class TestStatistics_NumPy(BackendTestBase):
 
     def _test_single_case(self, case, feature_class):
         feature = feature_class(axis=0, distributed=False)
-        result = feature([case])
+        # result = feature([case])
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="invalid value encountered in subtract",
+                category=RuntimeWarning,
+            )
+            result = feature([case])
+
         self.assertIsNotNone(result)
 
     def test_broadcast_list(self):

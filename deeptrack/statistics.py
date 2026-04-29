@@ -6,8 +6,21 @@ function, meaning that 'axis' and 'keepdims' are valid arguments. Moreover,
 they all accept the `distributed` keyword, which determines if each image in
 the input list should be handled individually or not.
 
+Key Features:
+-------------
+- **Statistical Reducers**
+    
+    Reduce some dimension of the input by applying a statistical operation.
+
 Module Structure
 ----------------
+
+Helper functions:
+
+- `_as_float_if_needed`: Convert integer/bool arrays to float for reducers that
+    require floats.
+
+
 Classes:
 
 - `Reducer`: Base class for features that reduce input dimensionality using a
@@ -25,8 +38,8 @@ Classes:
 - `Quantile`: Computes the q-th quantile along the specified axis.
 - `Percentile`: Computes the q-th percentile along the specified axis.
 
-Example
--------
+Examples
+--------
 Reduce input dimensions using the `Sum` operation, with 'distributed' set
 to True:
 
@@ -70,12 +83,9 @@ However, other operators can be used in this way:
 
 """
 
-#TODO ***??*** revise class docstring
-#TODO ***??*** revise DTAT385
-
 from __future__ import annotations
 
-from typing import Callable, TYPE_CHECKING
+from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 
@@ -105,80 +115,255 @@ if TYPE_CHECKING:
     import torch
 
 
-#TODO ***??*** revise Reducer - torch, typing, docstring, unit test
-class Reducer(Feature):
-    """Base class of features that reduce the dimensionality of the input.
+def _as_float_if_needed(
+        image: np.ndarray | torch.Tensor | list | tuple
+    ) -> np.ndarray | torch.Tensor | list | tuple:
+    """Convert integer/bool arrays to float for reducers that require floats.
+
+    Some reducers (e.g., mean, std) require floating-point inputs to avoid
+    issues with integer division or overflow. This function checks if the input
+    array is of an integer or boolean type and converts it to float if 
+    necessary.
 
     Parameters
-    ==========
-    function : Callable
+    ----------
+    image: array-like
+        The input image or array to check and convert.
+
+    Returns
+    -------
+    array-like
+        The input image converted to float if it was of integer or boolean 
+        type, otherwise the original image is returned.
+
+    """
+
+    if not hasattr(image, "dtype"):
+        return image
+
+    if xp.isdtype(image.dtype, "real floating"):
+        return image
+
+    if xp.isdtype(image.dtype, "complex floating"):
+        return image
+
+    return xp.astype(image, xp.float32)
+
+
+class Reducer(Feature):
+    """Base class that reduce input dimensionality with a statistical function.
+
+    Parameters
+    ----------
+    function: Callable
         The function used to reduce the input.
-    feature : Feature, optional
+    feature: Feature, optional
         If not None, the output of this feature is used as the input.
-    distributed : bool
+    distributed: bool
         Whether to apply the reducer to each image in the input list
         individually.
-    axis : int or tuple of int
+    axis: int or tuple of int
         The axis / axes to reduce over.
-    keepdims : bool
+    keepdims: bool
         Whether to keep the singleton dimensions after reducing or squeezing
         them.
+    **kwargs
+        Additional keyword arguments passed to the parent class and the 
+        function.
+
+    Notes
+    -----
+    - The `distributed` keyword is passed to the parent class to determine
+        how to handle the input list of images. If `distributed` is True, the
+        reducer will be applied to each image in the list individually. If 
+        False, the reducer will be applied to the entire list as a single 
+        array.
 
     """
 
     def __init__(
         self: Reducer,
         function: Callable,
-        feature=None,
-        distributed=True,
-        **kwargs,
+        feature: Feature | None = None,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
+        """Initialize the Reducer feature.
+        
+        Parameters
+        ----------
+        function: Callable
+            The function used to reduce the input.
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs
+            Additional keyword arguments passed to the parent class and the
+            function.
+            
+        """
+
         self.function = function
 
-        if feature:
+        if feature is not None:
             super().__init__(_input=feature, distributed=distributed, **kwargs)
         else:
             super().__init__(distributed=distributed, **kwargs)
 
     def _process_and_get(
-        self,
-        image_list,
-        **feature_input,
+        self: Reducer,
+        image_list: list[np.ndarray | torch.Tensor],
+        **feature_input: Any,
     ) -> list[np.ndarray | torch.Tensor]:
+        """Process the input list of images and apply the reduction function.
+        
+        Parameters
+        ----------
+        image_list: list of array-like
+            The list of images to process and reduce.
+        **feature_input: dict
+            Additional keyword arguments passed to the parent class and the
+            function.
+            
+        Returns
+        -------
+        list of array-like
+            The list of reduced images after applying the reduction function.
+
+        """
+        
         self.__distributed__ = feature_input["distributed"]
         return super()._process_and_get(image_list, **feature_input)
 
-    def get(
-        self,
-        image,
-        axis,
-        keepdims=None,
-        **kwargs,
-    ):
-        
-        # Torch does not accept Python lists in reductions, while NumPy does.
-        # Convert lists/tuples of arrays/tensors into a backend array/tensor.
-        if isinstance(image, (list, tuple)):
-            image = xp.stack(image, axis=0)
+    def _as_backend_array(
+        self: Reducer,
+        image: np.ndarray | torch.Tensor | list | tuple,
+    ) -> np.ndarray | torch.Tensor | list | tuple:
+        """Convert the input image to a backend array if it is a list or tuple.
 
+        This function checks if the input image is a list or tuple of arrays 
+        and attempts to stack them into a single backend array. If stacking 
+        fails (e.g., due to incompatible shapes), it falls back to converting 
+        the list/tuple to a numpy array and then to the backend array. If the 
+        input is a scalar, it converts it to a backend array. If the input is 
+        already a backend array, it is returned as is.
+
+        Parameters
+        ----------
+        image: array-like or list/tuple of array-like
+            The input image or list/tuple of images to convert.
+
+        Returns
+        -------
+        array-like or list/tuple of array-like
+            The input image converted to a backend array if it was a 
+            list/tuple, otherwise the original image is returned.
+        
+        """
+        
+        if isinstance(image, (list, tuple)):
+            try:
+                return xp.stack(image, axis=0)
+            except (TypeError, ValueError):
+                return xp.asarray(np.asarray(image))
+            
+        if np.isscalar(image):
+            return xp.asarray(image)
+
+        return image
+
+    def get(
+        self: Reducer,
+        image: np.ndarray | torch.Tensor | list | tuple,
+        axis: int | None,
+        keepdims: bool | None = None,
+        **kwargs: Any,
+    ):
+        """Apply the reduction function to the input image.
+
+        Parameters
+        ----------
+        image: array-like or list/tuple of array-like
+            The input image or list/tuple of images to reduce.
+        axis: int or None
+            The axis or axes along which the reduction is performed. If None,
+            the reduction is performed over all axes.
+        keepdims: bool or None
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them. If None, the default behavior of the reduction 
+            function is used.
+        **kwargs
+            Additional keyword arguments passed to the parent class and the
+            reduction function.
+
+        Returns
+        -------
+        array-like
+            The reduced image after applying the reduction function.
+
+        """
+
+        image = self._as_backend_array(image)
+        
         if keepdims is None:
             return self.function(image, axis=axis)
         else:
             return self.function(image, axis=axis, keepdims=keepdims)
 
 
-#TODO ***??*** revise Sum - torch, typing, docstring, unit test
 class Sum(Reducer):
-    """Compute the sum along the specified axis"""
+    """Compute the sum along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the sum is performed. If None, the sum is
+        performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the sum
+        function.
+    
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Sum,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
+        """Initialize the Sum feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the sum is performed. If None, the sum
+            is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the sum
+            function.
+                
+        """
+        
         super().__init__(
             xp.sum,
             feature=feature,
@@ -189,18 +374,56 @@ class Sum(Reducer):
         )
 
 
-#TODO ***??*** revise Prod - torch, typing, docstring, unit test
 class Prod(Reducer):
-    """Compute the product along the specified axis"""
+    """Compute the product along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the product is performed. If None, the
+        product is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the product
+        function.
+        
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Prod,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
+        """Initialize the Prod feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the product is performed. If None, the
+            product is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the 
+            product function.
+
+        """
         super().__init__(
             xp.prod,
             feature=feature,
@@ -211,20 +434,91 @@ class Prod(Reducer):
         )
 
 
-#TODO ***??*** revise Mean - torch, typing, docstring, unit test
 class Mean(Reducer):
-    """Compute the arithmetic mean along the specified axis."""
+    """Compute the arithmetic mean along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the mean is performed. If None, the mean
+        is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the mean
+        function.
+
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Mean,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
+        """Initialize the Mean feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the mean is performed. If None, the 
+            mean is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the 
+            mean function.
+    
+        """
+        
+        def mean(
+            image: np.ndarray | torch.Tensor | list | tuple, 
+            axis: int | tuple[int, ...] | None = None, 
+            keepdims: bool = False, 
+            **kwargs: Any,
+        ) -> np.ndarray | torch.Tensor:
+            """Compute the mean of the input image along the specified axis.
+            
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the mean of.
+            axis: int or tuple of int or None
+                The axis or axes along which the mean is performed. If None, 
+                the mean is performed over all axes. 
+            keepdims: bool
+                Whether to keep the singleton dimensions after reducing or 
+                squeezing them.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                mean function.
+
+            Returns
+            -------
+            array-like
+                The mean of the input image along the specified axis.
+            
+            """
+
+            image = _as_float_if_needed(image)
+            return xp.mean(image, axis=axis, keepdims=keepdims)
+        
         super().__init__(
-            xp.mean,
+            mean,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -233,20 +527,92 @@ class Mean(Reducer):
         )
 
 
-#TODO ***??*** revise Median - torch, typing, docstring, unit test
 class Median(Reducer):
-    """Compute the median along the specified axis."""
+    """Compute the median along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the median is performed. If None, the
+        median is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the median
+        function.
+
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Median,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
+        """Initialize the Median feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the median is performed. If None, the
+            median is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or squeezing
+            them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the 
+            median function.
+        
+        """
+
+        def median(
+            image: np.ndarray | torch.Tensor | list | tuple, 
+            axis: int | tuple[int, ...] | None = None, 
+            keepdims: bool = False, 
+            **kwargs: Any,
+        ) -> np.ndarray | torch.Tensor:
+            """Compute the median of the input image along the specified axis.
+
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the median 
+                of.
+            axis: int or tuple of int or None
+                The axis or axes along which the median is performed. If None, 
+                the median is performed over all axes. 
+            keepdims: bool
+                Whether to keep the singleton dimensions after reducing or 
+                squeezing them.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the 
+                median function.
+
+            Returns
+            -------
+            array-like
+                The median of the input image along the specified axis.
+
+            """
+
+            image = _as_float_if_needed(image)
+            return xp.quantile(image, 0.5, axis=axis, keepdims=keepdims)
+        
         super().__init__(
-            xp.median,
+            median,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -255,20 +621,93 @@ class Median(Reducer):
         )
 
 
-#TODO ***??*** revise Std - torch, typing, docstring, unit test
 class Std(Reducer):
-    """Compute the standard deviation along the specified axis."""
+    """Compute the standard deviation along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the standard deviation is performed. If 
+        None, the standard deviation is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the 
+        standard deviation function.
+    
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
+        self: Std,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
         **kwargs,
     ):
+        """Initialize the Std feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the standard deviation is performed. 
+            If None, the standard deviation is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the 
+            standard deviation function.
+        
+        """
+        
+        def std(
+            image: np.ndarray | torch.Tensor, 
+            axis: int | tuple[int, ...] | None = None, 
+            keepdims: bool = False, 
+            **kwargs: Any,
+        ) -> np.ndarray | torch.Tensor:
+            """Compute the standard deviation along the specified axis.
+
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the standard
+                deviation of.
+            axis: int or tuple of int or None
+                The axis or axes along which the standard deviation is 
+                performed.
+            keepdims: bool
+                Whether to keep the singleton dimensions after reducing or 
+                squeezing them.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                standard deviation function.
+
+            Returns
+            -------
+            array-like
+                The standard deviation of the input image along the specified 
+                axis.
+
+            """
+        
+            image = _as_float_if_needed(image)
+            return xp.std(image, axis=axis, keepdims=keepdims)
+        
         super().__init__(
-            xp.std,
+            std,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -277,20 +716,91 @@ class Std(Reducer):
         )
 
 
-#TODO ***??*** revise Variance - torch, typing, docstring, unit test
 class Variance(Reducer):
-    """Compute the variance along the specified axis."""
+    """Compute the variance along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the variance is performed. If None, the
+        variance is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the 
+        variance function.
+        
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
+        self: Variance,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
         **kwargs,
     ):
+        """Initialize the Variance feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the variance is performed. If None, 
+            the variance is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the
+            variance function.
+            
+            """
+        
+        def variance(
+            image: np.ndarray | torch.Tensor, 
+            axis: int | tuple[int, ...] | None = None, 
+            keepdims: bool = False, 
+            **kwargs: Any,
+        )-> np.ndarray | torch.Tensor:
+            """Compute the variance along the specified axis.
+            
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the variance
+                of.
+            axis: int or tuple of int or None
+                The axis or axes along which the variance is performed.
+            keepdims: bool
+                Whether to keep the singleton dimensions after reducing or
+                squeezing them.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                variance function.
+
+            Returns
+            -------
+            array-like
+                The variance of the input image along the specified axis.
+            
+            """
+            
+            image = _as_float_if_needed(image)
+            return xp.var(image, axis=axis, keepdims=keepdims)
+        
         super().__init__(
-            xp.var,
+            variance,
             feature=feature,
             axis=axis,
             keepdims=keepdims,
@@ -299,17 +809,50 @@ class Variance(Reducer):
         )
 
 
-#TODO ***??*** revise Cumsum - torch, typing, docstring, unit test
 class Cumsum(Reducer):
-    """Compute the cummulative sum along the specified axis."""
+    """Compute the cumulative sum along the specified axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the cumulative sum is performed. If None,
+        the cumulative sum is performed over all axes.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the
+        cumulative sum function.
+        
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        distributed=True,
+        self: Cumsum,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        distributed: bool = True,
         **kwargs,
     ):
+        """Initialize the Cumsum feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        axis: int or tuple of int or None
+            The axis or axes along which the cumulative sum is performed. If 
+            None, the cumulative sum is performed over all axes.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the
+            cumulative sum function.
+            
+        """
+
         super().__init__(
             xp.cumsum,
             feature=feature,
@@ -319,16 +862,34 @@ class Cumsum(Reducer):
         )
 
 
-#TODO ***??*** revise Min - torch, typing, docstring, unit test
 class Min(Reducer):
-    """Return the minimum of an array or minimum along an axis."""
+    """Return the minimum of an array or minimum along an axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the minimum is performed. If None, the
+        minimum is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the minimum
+        function.
+
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
+        self: Min,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
         **kwargs,
     ):
         super().__init__(
@@ -341,17 +902,35 @@ class Min(Reducer):
         )
 
 
-#TODO ***??*** revise Max - torch, typing, docstring, unit test
 class Max(Reducer):
-    """Return the maximum of an array or maximum along an axis."""
+    """Return the maximum of an array or maximum along an axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the maximum is performed. If None, the
+        maximum is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the maximum
+        function.
+    
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Max,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
         super().__init__(
             xp.max,
@@ -363,19 +942,66 @@ class Max(Reducer):
         )
 
 
-#TODO ***??*** revise PeakToPeak - torch, typing, docstring, unit test
 class PeakToPeak(Reducer):
-    """Range of values (maximum - minimum) along an axis."""
+    """Range of values (maximum - minimum) along an axis.
+    
+    Parameters
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    axis: int or tuple of int or None
+        The axis or axes along which the range is performed. If None, the range
+        is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the range
+        function.
+
+    """
 
     def __init__(
-        self,
-        feature=None,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: PeakToPeak,
+        feature: Feature | None = None,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
-        def ptp(image, axis=None, keepdims=False, **kwargs):
+        def ptp(
+            image: np.ndarray | torch.Tensor, 
+            axis: int | tuple[int, ...] | None = None, 
+            keepdims: bool = False, 
+            **kwargs: Any,
+        )-> np.ndarray | torch.Tensor:
+            """Compute the range (max - min) along the specified axis.
+            
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the range 
+                of.
+            axis: int or tuple of int or None
+                The axis or axes along which the range is performed.
+            keepdims: bool
+                Whether to keep the singleton dimensions after reducing or
+                squeezing them.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                range function.
+            
+            Returns
+            -------
+            array-like
+                The range (max - min) of the input image along the specified 
+                axis.
+            
+            """
+            
             return xp.max(image, axis=axis, keepdims=keepdims) - xp.min(
                 image, axis=axis, keepdims=keepdims
             )
@@ -388,47 +1014,87 @@ class PeakToPeak(Reducer):
             distributed=distributed,
             **kwargs,
         )
-# class PeakToPeak(Reducer):
-#     """Range of values (maximum - minimum) along an axis."""
-
-#     def __init__(
-#         self,
-#         feature=None,
-#         axis=None,
-#         keepdims=False,
-#         distributed=True,
-#         **kwargs,
-#     ):
-#         super().__init__(
-#             xp.ptp,
-#             feature=feature,
-#             axis=axis,
-#             keepdims=keepdims,
-#             distributed=distributed,
-#             **kwargs,
-#         )
 
 
-#TODO ***??*** revise Quantile - torch, typing, docstring, unit test
 class Quantile(Reducer):
     """Compute the q-th quantile of the data along the specified axis.
 
     Parameters
-    ==========
-    q : float
-       Quantile to compute (0 through 1).
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    q: float
+        Quantile to compute, 0 through 1.
+    axis: int or tuple of int or None
+        The axis or axes along which the quantile is performed. If None, the
+        quantile is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the 
+        quantile function.
+
     """
 
     def __init__(
-        self,
-        feature=None,
-        q=0.95,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Quantile,
+        feature: Feature | None = None,
+        q: float = 0.95,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
-        def quantile(image, **kwargs):
+        """Initialize the Quantile feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        q: float
+            Quantile to compute, 0 through 1.
+        axis: int or tuple of int or None
+            The axis or axes along which the quantile is performed. If None, 
+            the quantile is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the
+            quantile function.
+                
+        """
+
+        def quantile(
+            image: np.ndarray | torch.Tensor, 
+            **kwargs: Any,
+        ) -> np.ndarray | torch.Tensor:
+            """Compute the q-th quantile along the specified axis.
+
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the quantile
+                of.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                quantile function.
+
+            Returns
+            -------
+            array-like
+                The q-th quantile of the input image along the specified axis.
+            
+            """
+
+            image = _as_float_if_needed(image)
             return xp.quantile(image, self.q(), **kwargs)
 
         super().__init__(
@@ -446,21 +1112,81 @@ class Percentile(Reducer):
     """Compute the q-th percentile of the data along the specified axis.
 
     Parameters
-    ==========
-    q : float
-       Percentile to compute, 0 through 100.
+    ----------
+    feature: Feature, optional
+        If not None, the output of this feature is used as the input.
+    q: float
+        Percentile to compute, 0 through 100.
+    axis: int or tuple of int or None
+        The axis or axes along which the percentile is performed. If None, the
+        percentile is performed over all axes.
+    keepdims: bool
+        Whether to keep the singleton dimensions after reducing or squeezing
+        them.
+    distributed: bool
+        Whether to apply the reducer to each image in the input list
+        individually.
+    **kwargs: Any
+        Additional keyword arguments passed to the parent class and the
+        percentile function.
+
     """
 
     def __init__(
-        self,
-        feature=None,
-        q=95,
-        axis=None,
-        keepdims=False,
-        distributed=True,
-        **kwargs,
+        self: Percentile,
+        feature: Feature | None = None,
+        q: float = 95,
+        axis: int | tuple[int, ...] | None = None,
+        keepdims: bool = False,
+        distributed: bool = True,
+        **kwargs: Any,
     ):
-        def percentile(image, **kwargs):
+        """Initialize the Percentile feature.
+        
+        Parameters
+        ----------
+        feature: Feature, optional
+            If not None, the output of this feature is used as the input.
+        q: float
+            Percentile to compute, 0 through 100.
+        axis: int or tuple of int or None
+            The axis or axes along which the percentile is performed. If None,
+            the percentile is performed over all axes.
+        keepdims: bool
+            Whether to keep the singleton dimensions after reducing or 
+            squeezing them.
+        distributed: bool
+            Whether to apply the reducer to each image in the input list
+            individually.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent class and the
+            percentile function.
+                
+        """
+        
+        def percentile(
+            image: np.ndarray | torch.Tensor, 
+            **kwargs: Any,
+        ) -> np.ndarray | torch.Tensor:
+            """Compute the q-th percentile along the specified axis.
+            
+            Parameters
+            ----------
+            image: array-like or list/tuple of array-like
+                The input image or list/tuple of images to compute the 
+                percentile of.
+            **kwargs: Any
+                Additional keyword arguments passed to the parent class and the
+                percentile function.
+
+            Returns
+            -------
+            array-like
+                The q-th percentile of the input image along the specified axis.
+            
+            """
+            
+            image = _as_float_if_needed(image)
             return xp.quantile(image, self.q() / 100, **kwargs)
 
         super().__init__(
