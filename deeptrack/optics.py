@@ -1117,7 +1117,7 @@ class Optics(Feature):
             )
 
         shape = new_limits[:, 1] - new_limits[:, 0]
-        if isinstance(shape, torch.Tensor):
+        if TORCH_AVAILABLE and isinstance(shape, torch.Tensor):
             shape = shape.to(dtype=torch.int)
         else:
             shape = shape.astype(int)
@@ -1127,7 +1127,7 @@ class Optics(Feature):
         )
 
         old_region = limits - new_limits
-        if isinstance(old_region, torch.Tensor):
+        if TORCH_AVAILABLE and isinstance(old_region, torch.Tensor):
             old_region = old_region.to(dtype=torch.int)
         else:
             old_region = old_region.astype(int)
