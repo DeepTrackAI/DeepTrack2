@@ -3054,8 +3054,6 @@ class Resize(Feature):
 
         """
 
-        import torch.nn.functional as F
-
         target_w, target_h = map(int, dsize)
 
         # --- normalize channel handling ---
