@@ -1448,12 +1448,20 @@ class Subset(Source):
     only the items at the specified indices. The subset is materialized: all
     fields are sliced at construction time and stored as new sequences.
 
-    Because the subset is materialized, it behaves like a normal `Source`:
+    The subset behaves like a normal `Source` while preserving activation
+    compatibility with the parent source:
 
     - `len(subset)` equals the number of selected indices.
     - `subset[i]` returns the i-th element of the subset.
     - Dynamic field access (e.g., `subset.a()`) uses the subset's own active
-      index and is independent of the parent source.
+      item.
+    - Activating an item from the subset also activates the corresponding item
+      in the parent source.
+
+    This parent activation propagation preserves compatibility with pipelines
+    built from the original source. For example, if a pipeline depends on
+    `source.a`, evaluating it on `subset[i]` updates both `subset.a` and
+    `source.a`.
 
     Parameters
     ----------
@@ -1475,25 +1483,34 @@ class Subset(Source):
     >>> from deeptrack.sources import Source, Subset
 
     Create a source:
-
     >>> source = Source(a=[1, 2, 3], b=[10, 20, 30])
 
     Extract a subset:
-
     >>> subset = Subset(source, [0, 2])
     >>> subset
     Subset(a=[1, 3], b=[10, 30])
 
-    >>> list(subset)
-    [SourceItem({'a': 1, 'b': 10}, 1 callback(s)),
-     SourceItem({'a': 3, 'b': 30}, 1 callback(s))]
+    Activate the first subset item. This updates both the subset and the
+    parent source.
 
-    >>> subset.set_index(0)
+    >>> subset[0]()
+    SourceItem({'a': 1, 'b': 10}, 1 callback(s))
+
     >>> subset.a(), subset.b()
     (1, 10)
 
-    >>> subset.set_index(1)
+    >>> source.a(), source.b()
+    (1, 10)
+
+    Activate the second subset item. The corresponding parent item is also
+    activated.
+    >>> subset[1]()
+    SourceItem({'a': 3, 'b': 30}, 1 callback(s))
+
     >>> subset.a(), subset.b()
+    (3, 30)
+
+    >>> source.a(), source.b()
     (3, 30)
 
     """
@@ -1521,6 +1538,7 @@ class Subset(Source):
             If any index is out of range for the source.
 
         """
+        
         self.source = source
         self.indices = list(indices)
 
@@ -1529,6 +1547,22 @@ class Subset(Source):
         }
 
         super().__init__(**sliced)
+
+        # Backward-compatible behavior:
+        # activating a subset item also activates the corresponding parent item.
+        def activate_parent(item: SourceItem) -> None:
+            for local_index in range(len(self)):
+                is_match = all(
+                    np.array_equal(item[key], self._dict[key][local_index])
+                    for key in self._dict
+                )
+
+                if is_match:
+                    parent_index = self.indices[local_index]
+                    self.source[parent_index]()
+                    return
+
+        self.on_activate(activate_parent)
 
 
 class Sources:
@@ -1679,7 +1713,9 @@ class Sources:
         such attributes resolve to `SourceDeepTrackNode` instances.
 
         It is not expected to be reached at runtime for valid field names.
+
         """
+        
         raise AttributeError(name)
 
 
