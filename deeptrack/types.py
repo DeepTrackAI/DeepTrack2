@@ -95,7 +95,12 @@ It works for:
 
 from __future__ import annotations
 
-from typing import Any, Callable, TypeAlias, TypeVar, TYPE_CHECKING, Union
+from typing import Any, Callable, TypeVar, TYPE_CHECKING, Union
+try:
+    from typing import TypeAlias
+except ImportError:
+    from typing_extensions import TypeAlias
+
 
 from numpy.typing import NDArray
 
