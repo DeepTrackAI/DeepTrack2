@@ -63,7 +63,7 @@ Applying Gaussian Apodization
 >>>     wavelength=530e-9,
 >>>     output_region=(0, 0, 64, 48),
 >>>     padding=(64, 64, 64, 64),
->>>     aberration=aberrations.GaussianApodization(sigma=0.9),
+>>>     pupil=dt.GaussianApodization(sigma=0.9),
 >>>     z = -1.0 * dt.units.micrometer,
 >>> )
 >>> aberrated_particle = aberrated_optics(particle)
@@ -71,15 +71,24 @@ Applying Gaussian Apodization
 
 """
 
+
 from __future__ import annotations
-from typing import Any
+
+import math
+from typing import Any, TYPE_CHECKING
 
 import numpy as np
-import math
 
+from deeptrack.backend import TORCH_AVAILABLE, xp
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
 from deeptrack.utils import as_list
+
+if TORCH_AVAILABLE:
+    import torch
+
+if TYPE_CHECKING:
+    import torch
 
 
 class Aberration(Feature):
@@ -103,19 +112,20 @@ class Aberration(Feature):
 
     Methods
     -------
-    `_process_and_get(image_list: list[np.ndarray], **kwargs: dict) -> list[np.ndarray]`
+    `_process_and_get(image_list, **kwargs) -> list[np.ndarray | torch.Tensor]`
         Processes a list of input images to compute pupil coordinates (rho and
         theta) and passes them, along with the original images, to the 
         superclass method for further processing.
 
     """
+
     __distributed__: bool = True
 
     def _process_and_get(
-        self: Feature,
-        image_list: list[np.ndarray],
-        **kwargs: dict[str, np.ndarray]
-    ) -> list[np.ndarray]:
+        self: Aberration,
+        image_list: list[np.ndarray | torch.Tensor],
+        **kwargs: Any,
+    ) -> list[np.ndarray | torch.Tensor]:
         """Computes pupil coordinates.
         
         Computes pupil coordinates (rho and theta) for each input image and 
@@ -123,27 +133,29 @@ class Aberration(Feature):
 
         Parameters
         ----------
-        image_list: list[np.ndarray]
+        image_list: list[np.ndarray | torch.Tensor]
             A list of 2D input images to be processed.
-        **kwargs: dict[str, np.ndarray]
+        **kwargs: Any
             Additional parameters to be passed to the superclass's 
             `_process_and_get` method.
 
         Returns
         -------
-        list: list[np.ndarray]
+        list[np.ndarray | torch.Tensor]
             A list of processed images with added pupil coordinates.
 
         """
 
         new_list = []
         for image in image_list:
-            x = np.arange(image.shape[0]) - image.shape[0] / 2
-            y = np.arange(image.shape[1]) - image.shape[1] / 2
-            X, Y = np.meshgrid(y, x)
-            rho = np.sqrt(X ** 2 + Y ** 2)
-            rho /= np.max(rho[image != 0])
-            theta = np.arctan2(Y, X)
+            x = xp.arange(image.shape[0]) - image.shape[0] / 2
+            y = xp.arange(image.shape[1]) - image.shape[1] / 2
+            X, Y = xp.meshgrid(y, x, indexing="xy")
+            rho = xp.sqrt(X ** 2 + Y ** 2)
+            mask = image != 0
+            if bool(xp.any(mask)):
+                rho /= xp.max(rho[mask])
+            theta = xp.arctan2(Y, X)
 
             new_list += super()._process_and_get(
                 [image], rho=rho, theta=theta, **kwargs
@@ -171,7 +183,7 @@ class GaussianApodization(Aberration):
 
     Methods
     -------
-    `get(pupil: np.ndarray, offset: tuple[float, float], sigma: float, rho: np.ndarray, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(pupil, offset, sigma, rho, **kwargs) -> np.ndarray | torch.Tensor`
         Applies Gaussian apodization to the input pupil function.
 
     Examples
@@ -192,8 +204,8 @@ class GaussianApodization(Aberration):
     def __init__(
         self: GaussianApodization,
         sigma: PropertyLike[float] = 1,
-        offset: PropertyLike[tuple[int, int]] = (0, 0),
-        **kwargs: dict[str, Any]
+        offset: PropertyLike[tuple[float, float]] = (0, 0),
+        **kwargs: Any,
     ) -> None:
         """Initializes the GaussianApodization class.
  
@@ -206,9 +218,8 @@ class GaussianApodization(Aberration):
             The standard deviation of the Gaussian apodization. A smaller
             value results in more rapid attenuation at the edges. Default is 1.
         offset: tuple of float, optional
-            The (x, y) coordinates of the Gaussian center's offset relative
-            to the geometric center of the pupil. Default is (0, 0).
-        **kwargs: dict, optional
+            Offset of the Gaussian center relative to the pupil center.
+        **kwargs: Any, optional
             Additional parameters passed to the parent class `Aberration`.
 
         """
@@ -217,12 +228,12 @@ class GaussianApodization(Aberration):
 
     def get(
         self: GaussianApodization, 
-        pupil: np.ndarray, 
+        pupil: np.ndarray | torch.Tensor, 
         offset: tuple[float, float], 
         sigma: float, 
-        rho: np.ndarray, 
-        **kwargs: dict[str, Any]
-    ) -> np.ndarray:
+        rho: np.ndarray | torch.Tensor, 
+        **kwargs: Any,
+    ) -> np.ndarray | torch.Tensor:
         """Applies Gaussian apodization to the input pupil function.
 
         This method attenuates the amplitude of the pupil function based 
@@ -231,17 +242,17 @@ class GaussianApodization(Aberration):
         
         Parameters
         ----------
-        pupil: np.ndarray
+        pupil: np.ndarray or torch.Tensor
             A 2D array representing the input pupil function.
         offset: tuple of float
             Specifies the (x, y) offset of the Gaussian center relative 
             to the pupil's center.
         sigma: float
             The standard deviation of the Gaussian apodization.
-        rho: np.ndarray
+        rho: np.ndarray or torch.Tensor
             A 2D array of radial coordinates normalized to the pupil 
             aperture.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters for compatibility with other features 
             or inherited methods. These are typically passed by the 
             parent class and may include:
@@ -250,7 +261,7 @@ class GaussianApodization(Aberration):
 
         Returns
         -------
-        np.ndarray
+        np.ndarray or torch.Tensor
             The modified pupil function after applying Gaussian apodization.
 
         Examples
@@ -285,15 +296,18 @@ class GaussianApodization(Aberration):
         """
 
         if offset != (0, 0):
-            x = np.arange(pupil.shape[0]) - pupil.shape[0] / 2 - offset[0]
-            y = np.arange(pupil.shape[1]) - pupil.shape[1] / 2 - offset[1]
-            X, Y = np.meshgrid(x, y)
-            rho = np.sqrt(X ** 2 + Y ** 2)
-            rho /= np.max(rho[pupil != 0])
-            rho[rho > 1] = np.inf
+            x = xp.arange(pupil.shape[0]) - pupil.shape[0] / 2 - offset[0]
+            y = xp.arange(pupil.shape[1]) - pupil.shape[1] / 2 - offset[1]
+            X, Y = xp.meshgrid(y, x)
+            rho = xp.sqrt(X ** 2 + Y ** 2)
+            mask = pupil != 0
+            if bool(xp.any(mask)):
+                rho /= xp.max(rho[mask])
+            rho[rho > 1] = xp.inf
 
-        pupil = pupil * np.exp(-((rho / sigma) ** 2))
+        pupil = pupil * xp.exp(-((rho / sigma) ** 2))
         return pupil
+
 
 class Zernike(Aberration):
     """Introduces a Zernike phase aberration.
@@ -328,7 +342,7 @@ class Zernike(Aberration):
 
     Methods
     -------
-    `get(pupil: np.ndarray, rho: np.ndarray, theta: np.ndarray, n: int | list[int], m: int | list[int], coefficient: float | list[float], **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(pupil, rho, theta, n, m, coefficient, **kwargs) -> np.ndarray | torch.Tensor`
         Applies the Zernike phase aberration to the input pupil function.
     
     Notes
@@ -346,8 +360,8 @@ class Zernike(Aberration):
     >>> particle = dt.PointParticle(z = 1 * dt.units.micrometer)
     >>> aberrated_optics = dt.Fluorescence(
     >>>     pupil=dt.Zernike(
-    >>>         n=[0, 1], 
-    >>>         m = [1, 2], 
+    >>>         n = [2, 3], 
+    >>>         m = [0, 1], 
     >>>        coefficient=[1, 1]
     >>>     )
     >>> )
@@ -361,7 +375,7 @@ class Zernike(Aberration):
         n: PropertyLike[int | list[int]],
         m: PropertyLike[int | list[int]],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any]
+        **kwargs: Any,
     ) -> None:
         """ Initializes the Zernike class. 
         
@@ -377,7 +391,7 @@ class Zernike(Aberration):
         coefficient: float or list of floats, optional
             The coefficients for the Zernike polynomials. These determine the 
             relative contribution of each polynomial. Default is 1.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent class `Aberration`.
 
         Notes
@@ -391,14 +405,14 @@ class Zernike(Aberration):
 
     def get(
         self: Zernike,
-        pupil: np.ndarray,
-        rho: np.ndarray,
-        theta: np.ndarray,
+        pupil: np.ndarray | torch.Tensor,
+        rho: np.ndarray | torch.Tensor,
+        theta: np.ndarray | torch.Tensor,
         n: int | list[int],
         m: int | list[int],
         coefficient: float | list[float],
-        **kwargs: dict[str, Any],
-    ) -> np.ndarray:
+        **kwargs: Any,
+    ) -> np.ndarray | torch.Tensor:
         """Applies the Zernike phase aberration to the input pupil function.
 
         The method calculates Zernike polynomials for the specified indices `n`
@@ -408,13 +422,13 @@ class Zernike(Aberration):
 
         Parameters
         ----------
-        pupil: np.ndarray
+        pupil: np.ndarray or torch.Tensor
             A 2D array representing the input pupil function. The values should 
             represent the amplitude and phase across the aperture.
-        rho: np.ndarray
+        rho: np.ndarray or torch.Tensor
             A 2D array of radial coordinates normalized to the pupil aperture. 
             The values should range from 0 to 1 within the aperture.
-        theta: np.ndarray
+        theta: np.ndarray or torch.Tensor
             A 2D array of angular coordinates in radians. These define the 
             azimuthal positions for the pupil.
         n: int or list of ints
@@ -424,20 +438,21 @@ class Zernike(Aberration):
         coefficient: float or list of floats
             The coefficients for the Zernike polynomials, controlling their 
             relative contributions to the phase.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters for compatibility with other features or 
             inherited methods.
 
         Returns
         -------
-        np.ndarray
+        np.ndarray or torch.Tensor
             The modified pupil function with the applied Zernike phase 
             aberration.
 
         Raises
         ------
-        AssertionError
-            If the lengths of `n`, `m`, and `coefficient` lists do not match.
+        ValueError
+            If `n`, `m`, and `coefficient` do not have matching lengths when
+            provided as lists.
 
         Notes
         -----
@@ -456,7 +471,7 @@ class Zernike(Aberration):
         >>> pupil = np.ones((128, 128), dtype=complex)
         >>> x = np.linspace(-1, 1, 128)
         >>> y = np.linspace(-1, 1, 128)
-        >>> X, Y = np.meshgrid(x, y)
+        >>> X, Y = np.meshgrid(y, x)
         >>> rho = np.sqrt(X**2 + Y**2)  
         >>> theta = np.arctan2(Y, X) 
         >>> pupil[rho > 1] = 0 
@@ -478,61 +493,64 @@ class Zernike(Aberration):
         n_list = as_list(n)
         coefficients = as_list(coefficient)
 
-        assert len(m_list) == len(n_list), "The number of indices need to match"
-        assert len(m_list) == len(
-            coefficients
-        ), "The number of indices need to match the number of coefficients"
+        if len(m_list) != len(n_list):
+            raise ValueError("`n` and `m` must have the same length.")
+        if len(m_list) != len(coefficients):
+            raise ValueError("`n`, `m`, and `coefficient` must have the same length.")
 
         pupil_bool = pupil != 0
 
         rho = rho[pupil_bool]
         theta = theta[pupil_bool]
 
-        Z = 0
+        Z = 0 * rho
 
         for n, m, coefficient in zip(n_list, m_list, coefficients):
-            if (n - m) % 2 or coefficient == 0:
+            if (n - abs(m)) % 2 or coefficient == 0:
                 continue
 
-            R = 0
-            for k in range((n - np.abs(m)) // 2 + 1):
+            R = 0 * rho
+            for k in range((n - abs(m)) // 2 + 1):
                 R += (
                     (-1) ** k
                     * math.factorial(n - k)
                     / (
                         math.factorial(k)
-                        * math.factorial((n - m) // 2 - k)
-                        * math.factorial((n + m) // 2 - k)
+                        * math.factorial((n - abs(m)) // 2 - k)
+                        * math.factorial((n + abs(m)) // 2 - k)
                     )
                     * rho ** (n - 2 * k)
                 )
 
             if m > 0:
-                R = R * np.cos(m * theta) * (np.sqrt(2 * n + 2) * coefficient)
+                R = R * xp.cos(m * theta) * (math.sqrt(2 * n + 2) * coefficient)
             elif m < 0:
-                R = R * np.sin(-m * theta) * (np.sqrt(2 * n + 2) * coefficient)
+                R = R * xp.sin(-m * theta) * (math.sqrt(2 * n + 2) * coefficient)
             else:
-                R = R * (np.sqrt(n + 1) * coefficient)
+                R = R * (math.sqrt(n + 1) * coefficient)
 
             Z += R
 
-        phase = np.exp(1j * Z)
+        phase = xp.exp(1j * Z)
 
-        pupil[pupil_bool] *= phase
+        pupil[pupil_bool] = pupil[pupil_bool] * phase
 
         return pupil
+
 
 class Piston(Zernike):
     """Zernike polynomial with n=0, m=0.
 
-    This class represents the simplest Zernike polynomial, often referred to as the piston term, 
-    which has no radial or azimuthal variations (n=0, m=0). It adds a uniform phase contribution 
-    to the pupil function.
+    This class represents the simplest Zernike polynomial, often referred to as
+    the piston term, which has no radial or azimuthal variations (n=0, m=0). It 
+    adds a uniform phase contribution to the pupil function.
 
     Parameters
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -561,10 +579,9 @@ class Piston(Zernike):
     """
 
     def __init__(
-        self: "Piston", 
-        *args: tuple[Any, ...], 
+        self: Piston, 
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Piston class.
 
@@ -572,14 +589,12 @@ class Piston(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the piston term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
         
         """
         
-        super().__init__(*args, n=0, m=0, coefficient=coefficient, **kwargs)
+        super().__init__(n=0, m=0, coefficient=coefficient, **kwargs)
 
 
 class VerticalTilt(Zernike):
@@ -593,6 +608,8 @@ class VerticalTilt(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -617,13 +634,13 @@ class VerticalTilt(Zernike):
     >>> )
     >>> aberrated_particle = aberrated_optics(particle)
     >>> aberrated_particle.plot(cmap="gray")
+
     """
 
     def __init__(
         self: VerticalTilt, 
-        *args: tuple[Any, ...], 
         coefficient: PropertyLike[float | list[float]] = 1, 
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the VerticalTilt class.
 
@@ -631,12 +648,12 @@ class VerticalTilt(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the vertical tilt term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
+
         """
-        super().__init__(*args, n=1, m=-1, coefficient=coefficient, **kwargs)
+
+        super().__init__(n=1, m=-1, coefficient=coefficient, **kwargs)
 
 
 class HorizontalTilt(Zernike):
@@ -650,6 +667,8 @@ class HorizontalTilt(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -676,13 +695,13 @@ class HorizontalTilt(Zernike):
     >>> )
     >>> aberrated_particle = aberrated_optics(particle)
     >>> aberrated_particle.plot(cmap="gray")
+
     """
 
     def __init__(
         self: HorizontalTilt,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the HorizontalTilt class.
 
@@ -690,13 +709,12 @@ class HorizontalTilt(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the horizontal tilt term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
-        """
-        super().__init__(*args, n=1, m=1, coefficient=coefficient, **kwargs)
 
+        """
+
+        super().__init__(n=1, m=1, coefficient=coefficient, **kwargs)
 
 
 class ObliqueAstigmatism(Zernike):
@@ -711,6 +729,8 @@ class ObliqueAstigmatism(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -737,13 +757,13 @@ class ObliqueAstigmatism(Zernike):
     >>> )
     >>> aberrated_particle = aberrated_optics(particle)
     >>> aberrated_particle.plot(cmap="gray")
+
     """
 
     def __init__(
         self: ObliqueAstigmatism,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the ObliqueAstigmatism class.
 
@@ -751,13 +771,12 @@ class ObliqueAstigmatism(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the oblique astigmatism term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
-        """
-        super().__init__(*args, n=2, m=-2, coefficient=coefficient, **kwargs)
 
+        """
+
+        super().__init__(n=2, m=-2, coefficient=coefficient, **kwargs)
 
 
 class Defocus(Zernike):
@@ -772,6 +791,8 @@ class Defocus(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -800,9 +821,8 @@ class Defocus(Zernike):
 
     def __init__(
         self: Defocus,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Defocus class.
 
@@ -810,13 +830,12 @@ class Defocus(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the defocus term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
-        """
-        super().__init__(*args, n=2, m=0, coefficient=coefficient, **kwargs)
 
+        """
+
+        super().__init__(n=2, m=0, coefficient=coefficient, **kwargs)
 
 
 class Astigmatism(Zernike):
@@ -831,6 +850,8 @@ class Astigmatism(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Attributes
     ----------
@@ -855,13 +876,13 @@ class Astigmatism(Zernike):
     >>> )
     >>> aberrated_particle = aberrated_optics(particle)
     >>> aberrated_particle.plot(cmap="gray")
+
     """
 
     def __init__(
         self: Astigmatism,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
         """Initializes the Astigmatism class.
 
@@ -869,12 +890,12 @@ class Astigmatism(Zernike):
         ----------
         coefficient: float or list of floats, optional
             The coefficient for the astigmatism term. Default is 1.
-        *args: tuple, optional
-            Additional arguments passed to the parent Zernike class.
-        **kwargs: dict, optional
+        **kwargs: Any, optional
             Additional parameters passed to the parent Zernike class.
+        
         """
-        super().__init__(*args, n=2, m=2, coefficient=coefficient, **kwargs)
+        
+        super().__init__(n=2, m=2, coefficient=coefficient, **kwargs)
 
 
 class ObliqueTrefoil(Zernike):
@@ -888,6 +909,8 @@ class ObliqueTrefoil(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
 
     Examples
     --------
@@ -903,15 +926,27 @@ class ObliqueTrefoil(Zernike):
     >>> )
     >>> aberrated_particle = aberrated_optics(particle)
     >>> aberrated_particle.plot(cmap="gray")
+
     """
 
     def __init__(
         self: ObliqueTrefoil,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, n=3, m=-3, coefficient=coefficient, **kwargs)
+        """Initializes the ObliqueTrefoil class.
+
+        Parameters
+        ----------
+        coefficient: float or list of floats, optional
+            The coefficient for the oblique trefoil term. Default is 1.
+        **kwargs: Any, optional
+            Additional parameters passed to the parent Zernike class.
+
+        
+        """
+        
+        super().__init__(n=3, m=-3, coefficient=coefficient, **kwargs)
 
 
 class VerticalComa(Zernike):
@@ -924,15 +959,28 @@ class VerticalComa(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
+
     """
 
     def __init__(
         self: VerticalComa,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, n=3, m=-1, coefficient=coefficient, **kwargs)
+        """Initializes the VerticalComa class.
+        
+        Parameters
+        ----------
+        coefficient: float or list of floats, optional
+            The coefficient for the vertical coma term. Default is 1.
+        **kwargs: Any, optional
+            Additional parameters passed to the parent Zernike class.
+            
+        """
+        
+        super().__init__(n=3, m=-1, coefficient=coefficient, **kwargs)
 
 
 class HorizontalComa(Zernike):
@@ -945,15 +993,28 @@ class HorizontalComa(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
+
     """
 
     def __init__(
         self: HorizontalComa,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, n=3, m=1, coefficient=coefficient, **kwargs)
+        """Initializes the HorizontalComa class.
+
+        Parameters
+        ----------
+        coefficient: float or list of floats, optional
+            The coefficient for the horizontal coma term. Default is 1.
+        **kwargs: Any, optional
+            Additional parameters passed to the parent Zernike class.
+
+        """
+
+        super().__init__(n=3, m=1, coefficient=coefficient, **kwargs)
 
 
 class Trefoil(Zernike):
@@ -966,15 +1027,27 @@ class Trefoil(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
+
     """
 
     def __init__(
         self: Trefoil,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, n=3, m=3, coefficient=coefficient, **kwargs)
+        """Initializes the Trefoil class.
+        Parameters
+        ----------
+        coefficient: float or list of floats, optional
+            The coefficient for the trefoil term. Default is 1.
+        **kwargs: Any, optional
+            Additional parameters passed to the parent Zernike class.
+
+        """
+        
+        super().__init__(n=3, m=3, coefficient=coefficient, **kwargs)
 
 
 class SphericalAberration(Zernike):
@@ -987,12 +1060,25 @@ class SphericalAberration(Zernike):
     ----------
     coefficient: PropertyLike[float or list of floats], optional
         The coefficient of the polynomial. Default is 1.
+    kwargs: Any, optional
+        Additional parameters passed to the parent Zernike class.
+            
     """
 
     def __init__(
         self: SphericalAberration,
-        *args: tuple[Any, ...],
         coefficient: PropertyLike[float | list[float]] = 1,
-        **kwargs: dict[str, Any],
+        **kwargs: Any,
     ) -> None:
-        super().__init__(*args, n=4, m=0, coefficient=coefficient, **kwargs)
+        """Initializes the SphericalAberration class.
+        
+        Parameters
+        ----------
+        coefficient: float or list of floats, optional
+            The coefficient for the spherical aberration term. Default is 1.
+        **kwargs: Any, optional
+            Additional parameters passed to the parent Zernike class.
+
+        """
+        
+        super().__init__(n=4, m=0, coefficient=coefficient, **kwargs)

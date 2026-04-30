@@ -1,4 +1,10 @@
 
 import torch
-from .data import Dataset
-from .features import ToTensor
+from deeptrack.pytorch.data import Dataset
+from deeptrack.pytorch.features import ToTensor
+
+__all__ = [
+    "torch",
+    "Dataset",
+    "ToTensor",
+]

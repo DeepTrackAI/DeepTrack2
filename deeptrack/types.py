@@ -1,9 +1,9 @@
 """Type declarations for internal use.
 
-This module defines type aliases and utility types to standardize the type 
-annotations used throughout the codebase. It enhances code readability, 
-maintainability, and reduces redundancy in type annotations. These types are 
-particularly useful for properties and array-like structures used within the 
+This module defines type aliases and utility types to standardize the type
+annotations used throughout the codebase. It enhances code readability,
+maintainability, and reduces redundancy in type annotations. These types are
+particularly useful for properties and array-like structures used within the
 library.
 
 Defined Types
@@ -11,74 +11,134 @@ Defined Types
 - `PropertyLike`
     A type alias representing a value of type `T` or a callable returning `T`.
 - `ArrayLike`
-    A type alias for array-like structures (e.g., tuples, lists, numpy arrays).
+    A type alias for array-like structures, namely, tuples, lists, NumPy
+    arrays, and PyTorch tensors.
 - `NumberLike`
-    A type alias for numeric types, including scalars and arrays (e.g., numpy 
-    arrays, GPU tensors).
+    A type alias for numeric types, including scalars and arrays, namely, NumPy
+    arrays, PyTorch tensors, bool, int, float, and complex.
 
 Examples
 --------
-Using `PropertyLike`:
+>>> import deeptrack as dt
+
+**Using `PropertyLike`**
 
 >>> def scale(value: PropertyLike[float]) -> float:
 ...     if callable(value):
 ...         return value()
 ...     return value
->>> scale(3.14)  # 3.14
->>> scale(lambda: 2.71)  # 2.71
 
-Using `ArrayLike`:
+It works for a given type (in this case, a `float`):
+
+>>> scale(3.14)
+
+It also works for function returning the same type (in this case, a function
+returning a `float`):
+
+>>> scale(lambda: 2.71)
+
+`PropertyLike[Type]` is generally used for typing arguments passed to a feature
+that are then passed to the constructor of the feature parent, because these
+can be intrinsically either `Type` or `Callable[..., Type]`.
+
+**Using `ArrayLike`**
+
+>>> def print_arraylike(array: dt.types.ArrayLike[float]) -> None:
+...     print(array)
+
+It works for:
+
+- Lists:
+
+>>> print_arraylike([1.0, 2.0, 3.0])
+
+- Tuples:
+
+>>> print_arraylike((4.0, 5.0, 6.0))
+
+- NumPy arrays:
 
 >>> import numpy as np
->>> def compute_mean(array: ArrayLike[float]) -> float:
-...     return np.mean(array)
->>> compute_mean([1.0, 2.0, 3.0])  # 2.0
->>> compute_mean((4.0, 5.0, 6.0))  # 5.0
->>> compute_mean(np.array([7.0, 8.0, 9.0]))  # 8.0
+>>>
+>>> print_arraylike(np.array([7.0, 8.0, 9.0]))
 
-Using `NumberLike`:
+- PyTorch tensors:
+
+>>> import torch
+>>>
+>>> print_arraylike(torch.tensor([1.0, 2.0, 3.0]))
+
+**Using `NumberLike`**
 
 >>> def add_numbers(a: NumberLike, b: NumberLike) -> NumberLike:
 ...     return a + b
->>> add_numbers(5, 3.2)  # 8.2
->>> add_numbers(np.array([1, 2, 3]), 4)  # array([5, 6, 7])
+
+It works for:
+
+- Scalars (bool, int, float, complex):
+
+>>> add_numbers(5, 3.2)
+
+- NumPy arrays:
+
+>>> import numpy as np
+>>>
+>>> add_numbers(np.array([1, 2, 3]), 4)
+
+- PyTorch tensors:
+
+>>> import torch
+>>>
+>>> add_numbers(torch.tensor([1, 2, 3]), 4)
 
 """
 
-from typing import Callable, List, Tuple, TypeVar, Union
+from __future__ import annotations
 
-import numpy as np
-
-# Try importing optional libraries for GPU arrays and tensors.
+from typing import Any, Callable, TypeVar, TYPE_CHECKING, Union
 try:
-    import cupy
-    _CUPY_AVAILABLE = True
+    from typing import TypeAlias
 except ImportError:
-    _CUPY_AVAILABLE = False
+    from typing_extensions import TypeAlias
 
-try:
+
+from numpy.typing import NDArray
+
+
+__all__ = [
+    "PropertyLike",
+    "ArrayLike",
+    "NumberLike",
+]
+
+
+if TYPE_CHECKING:
     import torch
-    _TORCH_AVAILABLE = True
-except ImportError:
-    _TORCH_AVAILABLE = False
 
 
 # T is a generic type variable defining generic types for reusability.
-_T = TypeVar("T")
+_T = TypeVar("_T")
 
-# PropertyLike is a type alias representing a value of type T 
+# PropertyLike is a type alias representing a value of type T
 # or a callable returning type T.
-PropertyLike = Union[_T, Callable[..., _T]]
+PropertyLike: TypeAlias = Union[_T, Callable[..., _T]]
 
 # ArrayLike is a type alias representing any array-like structure.
-# It supports tuples, lists, and numpy arrays containing elements of type T.
-ArrayLike = Union[Tuple[_T, ...], List[_T], np.ndarray]
+# It supports tuples and lists containing elements of type T as well as NumPy
+# arrays and PyTorch tensors.
+ArrayLike: TypeAlias = Union[
+    NDArray[Any],
+    "torch.Tensor",
+    list[_T],
+    tuple[_T, ...],
+]
 
 # NumberLike is a type alias representing any numeric type including arrays.
-NumberLike = Union[np.ndarray, int, float, bool, complex]
-
-if _CUPY_AVAILABLE:
-    NumberLike = Union[NumberLike, cupy.ndarray]
-
-if _TORCH_AVAILABLE:
-    NumberLike = Union[NumberLike, torch.Tensor]
+NumberLike: TypeAlias = Union[
+    NDArray[Any],
+    "torch.Tensor",
+    bool,
+    int,
+    float,
+    complex,
+]

@@ -23,13 +23,6 @@ data/
 examples/**/*/models/
 **/node_modules/
 
-*.tif
-*.png 
-*.jpg
-*.jpeg
-*.npy
-*.db
-
 *_dataset/
 
 .DS_Store

@@ -41,7 +41,7 @@ The following quick start guide is intended for complete beginners to understand
 
 # Installation
 
-DeepTrack2 2.0 requires at least python 3.9.
+DeepTrack2 requires at least python 3.9.
 
 To install DeepTrack2, open a terminal or command prompt and run:
 ```bash
@@ -59,7 +59,11 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Overview of how to use DeepTrack 2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
+  Overview of how to use DeepTrack2. Creating images combining DeepTrack2 features, extracting properties, and using them to train a neural network.
+
+- DTGS106 **[Simulating Different Image Modalities](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS106_particle_image_modalities.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a spherical particle with different image modalities and generating a movie where this particle diffuses with passive Brownian motion.
 
 - DTGS111 **[Loading Image Files Using Sources](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS111_datafiles.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -67,7 +71,15 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS121 **[Tracking a Point Particle with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS121_tracking_particle_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Tracking a point particle with a convolutional neural network (CNN) using simulated images in the training process.
+  Tracking a point particle with a convolutional neural network (CNN) using simulated particles resolved through a microscope with aberrations.
+  
+- DTGS126 **[Characterizing Aberrations with a CNN](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS126_characterizing_aberrations_cnn.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Characterizing spherical aberrations of an optical device with a convolutional neural network (CNN) using simulated images in the training process.
+
+- DTGS127 **[Characterizing Aberrations with Optuna](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS127_characterizing_aberrations_optuna.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Characterizing aberrations of an optical device with the optimization framework [`Optuna`](https://optuna.org/).
 
 - DTGS131 **[Tracking Multiple Particles with a U-Net](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS131_tracking_multiple_particles_unet.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -79,67 +91,63 @@ Here you find a series of notebooks that give you an overview of the core featur
 
 - DTGS151 **[Unsupervised Object Detection](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS151_unsupervised_object_detection_with_lodestar.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Single-shot unsupervised object detection a using LodeSTAR.
+  Single-shot unsupervised object detection using LodeSTAR.
+
+- DTGS161 **[Fitting Using PyTorch Gradients](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS161_torch_fitting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS161_torch_fitting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Using PyTorch gradients to fit a Gaussian generated by a DeepTrack2 pipeline.
+
+- DTGS171A  **[Creating Custom Scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171A_custom_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171A_custom_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Creating custom scatterers of arbitrary shapes.
+
+- DTGS171B  **[Creating Custom Scatterers: Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Creating custom scatterers in the shape of bacteria.
 
 # Examples
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
-- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx201_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx212 **Single Particle Tracking**
+- DTEx212 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-  Tracks experimental videos of a single particle. (Requires opencv-python compiled with ffmpeg)
+  Tracks experimental videos of a single particle.
 
   <!-- GH_ONLY_START -->
   <p align="left">
     <img width="300" src=/assets/SPT-ideal.gif?raw=true>
     <img width="300" src=/assets/SPT-noisy.gif?raw=true>
     <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx202_single_particle_tracking.ipynb">
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
     <a href="https://doi.org/10.1364/OPTICA.6.000506" alt="DeepTrack article">
       <img src="https://img.shields.io/badge/article-10.1364/OPTICA.6.000506-blue">
     </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231B_LodeSTAR_tracking_particles_of_various_shapes.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
+    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
+      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
     </a> 
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx213 **Multi-Particle tracking**
-- 
+- DTEx213 **[Multi-Particle tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+  
   Detecting quantum dots in a low SNR image.
 
-  <!-- GH_ONLY_START -->
+    <!-- GH_ONLY_START -->
   <p align="left">
-    <img width="600" src=/assets/MPT-packed.gif?raw=true>
+    <img width="300" src=/assets/MPT-qdots_1.png?raw=true>
     <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx203_particle_sizing.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1063/5.0034891" alt="LodeSTAR article">
-      <img src="https://img.shields.io/badge/article-10.1063/5.0034891-blue">
-    </a> 
-    <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
-      <img src="https://colab.research.google.com/assets/colab-badge.svg">
-    </a>
-    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
-      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
-    </a>
+
   </p>
   <!-- GH_ONLY_END -->
 
 - DTEx214 **Particle Feature Extraction**
-- 
+ 
   Extracting the radius and refractive index of particles.
 
 - DTEx215 **Cell Counting**
@@ -156,19 +164,32 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
-- DTEx231A **LodeSTAR Autotracker Template**
+- DTEx231A **[LodeSTAR autotracker template](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  <!-- GH_ONLY_START -->
+  <p align="left">
+    <img width="600" src=/assets/MPT-packed.gif?raw=true>
+    <br/>
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg">
+    </a>
+    <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
+      <img src="https://img.shields.io/badge/article-10.1038%2Fs41467--022--35004--y-blue">
+    </a>
+  </p>
+  <!-- GH_ONLY_END -->
 
 - DTEx231B **LodeSTAR Detecting Particles of Various Shapes**
 
 - DTEx231C **LodeSTAR Measuring the Mass of Particles in Holography**
 
-- DTEx231D **LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset**
+- DTEx231D **[LodeSTAR Detecting the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTEx231E **LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset**
+- DTEx231E **[LodeSTAR Detecting the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
-- DTEx231F **LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset**
+- DTEx231F **[LodeSTAR Detecting the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
-- DTEx231G **LodeSTAR Detecting Plankton**
+- DTEx231G **[LodeSTAR Detecting Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
   
 - DTEx231H **LodeSTAR Detecting in 3D Holography**
 
@@ -233,8 +254,6 @@ This section provides a list of advanced topic tutorials. The primary focus of t
 
 - DTAT391B **[deeptrack.sources.folder](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391B_sources.folder.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391B_sources.folder.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
-- DTAT391C **[deeptrack.sources.rng](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391C_sources.rng.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT391C_sources.rng.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
 - DTAT393A **[deeptrack.pytorch.data](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393A_pytorch.features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393A_pytorch.features.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
 
 - DTAT393B **[deeptrack.pytorch.features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393B_pytorch.data.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT393B_pytorch.data.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
@@ -255,18 +274,20 @@ This section provides a list of advanced topic tutorials. The primary focus of t
 
 # Developer Tutorials
 
-Here you find a series of notebooks tailored for DeepTrack2's developers:
+Here you will find a series of notebooks tailored for DeepTrack2's developers:
 
 - DTDV401 **[Overview of Code Base](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV401_overview.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV401_overview.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 - DTDV411 **[Style Guide](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV411_style.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV411_style.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTDV421 **[Using Different Computational Backends](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV421_backends.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/4-developers/DTDV421_backends.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 # Documentation
 
 The detailed documentation of DeepTrack2 is available at the following link: [https://deeptrackai.github.io/DeepTrack2](https://deeptrackai.github.io/DeepTrack2)
 
 # Cite us!
-If you use DeepTrack 2.1 in your project, please cite us:
+If you use DeepTrack2 in your project, please cite us:
 
 <https://pubs.aip.org/aip/apr/article/8/1/011310/238663>
 ```

@@ -9,3 +9,5 @@ tqdm
 lazy_import
 rich
 gdown
+array_api_compat
+array_api_strict
