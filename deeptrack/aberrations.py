@@ -150,7 +150,7 @@ class Aberration(Feature):
         for image in image_list:
             x = xp.arange(image.shape[0]) - image.shape[0] / 2
             y = xp.arange(image.shape[1]) - image.shape[1] / 2
-            X, Y = xp.meshgrid(y, x)
+            X, Y = xp.meshgrid(y, x, indexing="xy")
             rho = xp.sqrt(X ** 2 + Y ** 2)
             mask = image != 0
             if bool(xp.any(mask)):
