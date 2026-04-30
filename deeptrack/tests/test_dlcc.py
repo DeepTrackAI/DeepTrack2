@@ -1,12 +1,7 @@
-# pylint: disable=C0115:missing-class-docstring
-# pylint: disable=C0116:missing-function-docstring
-# pylint: disable=C0103:invalid-name
- 
-# Use this only when running the test locally.
-# import sys
-# sys.path.append(".")  # Adds the module to path.
-
 import unittest
+
+import warnings
+from contextlib import contextmanager
 
 import glob
 import platform
@@ -19,13 +14,34 @@ from numpy.random import Generator, PCG64
 from PIL import Image
 
 import deeptrack as dt
-from deeptrack import TORCH_AVAILABLE
+from deeptrack import config, TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
 
 
 class TestDLCC(unittest.TestCase):
+
+    def setUp(self):
+        config.set_backend("numpy")
+
+    _EXPECTED_OPTICS_WARNING_PATTERNS = (
+        r"Brightfield imaging from ScatteredVolume assumes a weak-phase / projection approximation.*",
+        r"Darkfield imaging from ScatteredVolume is a very rough approximation.*",
+        r"Approximating darkfield contrast from refractive index.*",
+        r"Fluorescence scatterer has no 'intensity'.*",
+    )
+
+    @contextmanager
+    def _suppress_expected_optics_warnings(self):
+        with warnings.catch_warnings():
+            for pattern in self._EXPECTED_OPTICS_WARNING_PATTERNS:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=pattern,
+                    category=UserWarning,
+                )
+            yield
 
     def test_3_B(self):
         ## PART 1
@@ -60,7 +76,9 @@ class TestDLCC(unittest.TestCase):
             [[0.80131109], [0.79478238], [0.80499449]],
             [[0.76094944], [0.75431347], [0.76469805]]]
         )
-        actual_first = imaged_particle()
+
+        with self._suppress_expected_optics_warnings():
+            actual_first = imaged_particle()
         np.testing.assert_allclose(actual_first, expected_first,
                                    rtol=1e-7, atol=1e-7)
 
@@ -74,7 +92,9 @@ class TestDLCC(unittest.TestCase):
             [[0.98707199], [0.94484236], [0.90718955]],
             [[0.94221739], [0.89565235], [0.85521306]]]
         )
-        actual_second = imaged_particle.update()()
+        
+        with self._suppress_expected_optics_warnings():
+            actual_second = imaged_particle.update()()
         np.testing.assert_allclose(actual_second, expected_second,
                                    rtol=1e-7, atol=1e-7)
 
@@ -96,14 +116,16 @@ class TestDLCC(unittest.TestCase):
         image_pipeline = noisy_imaged_particle >> normalization
 
         # First resolve
-        actual_first = image_pipeline()
+        with self._suppress_expected_optics_warnings():
+            actual_first = image_pipeline()
 
         # No change when resolving again
         np.testing.assert_allclose(image_pipeline(), actual_first,
                                 rtol=1e-7, atol=1e-7)
 
         # Change after update
-        actual_second = image_pipeline.update()()
+        with self._suppress_expected_optics_warnings():
+            actual_second = image_pipeline.update()()
         assert float(np.max(np.abs(actual_first - actual_second))) > 1e-6
 
         ## PART 3
@@ -113,7 +135,8 @@ class TestDLCC(unittest.TestCase):
         pipeline = image_pipeline & particle.position
 
         # First resolve
-        _, actual_position_first = pipeline.update()()
+        with self._suppress_expected_optics_warnings():
+            _, actual_position_first = pipeline.update()()
 
         expected_position_first = np.array([4.23956049, 0.8887844 ])
         np.testing.assert_allclose(actual_position_first,
@@ -121,14 +144,17 @@ class TestDLCC(unittest.TestCase):
                                    rtol=1e-7, atol=1e-7)
 
         # No change when resolving again
-        _, actual_position_first_2 = pipeline()
+        with self._suppress_expected_optics_warnings():
+            _, actual_position_first_2 = pipeline()
         np.testing.assert_allclose(actual_position_first_2,
                                    expected_position_first,
                                    rtol=1e-7, atol=1e-7)
 
         # Change after update
         expected_position_second = np.array([-2.21886367,  1.00385938])
-        _, actual_position_second = pipeline.update()()
+        
+        with self._suppress_expected_optics_warnings():
+            _, actual_position_second = pipeline.update()()
         np.testing.assert_allclose(actual_position_second,
                                    expected_position_second,
                                    rtol=1e-7, atol=1e-7)
@@ -162,18 +188,22 @@ class TestDLCC(unittest.TestCase):
             [[0.54341977], [0.43907532], [0.37978135], [0.43907532]],
             [[0.55944587], [0.48773999], [0.43907532], [0.48773999]]]
         )
-        actual_first = illuminated_sample()
+
+        with self._suppress_expected_optics_warnings():
+            actual_first = illuminated_sample()
         np.testing.assert_allclose(actual_first, expected_first,
                                    rtol=1e-7, atol=1e-7)
 
         # No change when resolving again
-        np.testing.assert_allclose(illuminated_sample(), expected_first,
-                                   rtol=1e-7, atol=1e-7)
+        with self._suppress_expected_optics_warnings():
+            np.testing.assert_allclose(illuminated_sample(), expected_first,
+                                        rtol=1e-7, atol=1e-7)
 
         # No change also after update (deterministic pipeline)
-        np.testing.assert_allclose(illuminated_sample.update()(),
-                                   expected_first,
-                                   rtol=1e-7, atol=1e-7)
+        with self._suppress_expected_optics_warnings():
+            np.testing.assert_allclose(illuminated_sample.update()(),
+                                        expected_first,
+                                        rtol=1e-7, atol=1e-7)
 
         ## PART 2
         # Non-reproducible randomness for noisy_particle.
@@ -197,7 +227,8 @@ class TestDLCC(unittest.TestCase):
             pip = noisy_particle & clean_particle
 
             # First resolve
-            actual_noisy_first, actual_clean_first = pip()
+            with self._suppress_expected_optics_warnings():
+                actual_noisy_first, actual_clean_first = pip()
             expected_clean_first = torch.tensor(
                 [[[0.9687, 1.0000, 0.9108, 1.0000],
                 [1.0000, 0.6009, 0.3300, 0.6009],
@@ -210,7 +241,8 @@ class TestDLCC(unittest.TestCase):
                                        rtol=1e-7, atol=1e-4)
 
             # No change after resolving again
-            actual_noisy_first_2, actual_clean_first_2 = pip()
+            with self._suppress_expected_optics_warnings():
+                actual_noisy_first_2, actual_clean_first_2 = pip()
             torch.testing.assert_close(actual_clean_first_2,
                                        expected_clean_first,
                                        rtol=1e-7, atol=1e-4)
@@ -220,7 +252,8 @@ class TestDLCC(unittest.TestCase):
 
             # No change for clean also after update (deterministic pipeline),
             # but change for noisy
-            actual_noisy_second, actual_clean_second = pip.update().resolve()
+            with self._suppress_expected_optics_warnings():
+                actual_noisy_second, actual_clean_second = pip.update().resolve()
             torch.testing.assert_close(actual_clean_second,
                                        expected_clean_first,
                                        rtol=1e-7, atol=1e-4)
@@ -244,8 +277,9 @@ class TestDLCC(unittest.TestCase):
                 [1., 1., 1., 1.],
                 [1., 1., 1., 1.]]]
             )
-            torch.testing.assert_close(blank_pip(), expected,
-                                       rtol=1e-7, atol=1e-4)
+            with self._suppress_expected_optics_warnings():
+                torch.testing.assert_close(blank_pip(), expected,
+                                        rtol=1e-7, atol=1e-4)
 
         ## PART 4
         # Check diverse particle pipeline.
@@ -257,6 +291,7 @@ class TestDLCC(unittest.TestCase):
                 position_unit="pixel",
                 refractive_index=1.45 + 0.02j,
             )
+            
             diverse_illuminated_sample = \
                 brightfield_microscope(diverse_particle)
             diverse_clean_particle = (
@@ -275,10 +310,12 @@ class TestDLCC(unittest.TestCase):
             diverse_pip = diverse_noisy_particle & diverse_clean_particle
 
             # First resolve
-            diverse_noisy_first, diverse_clean_first = diverse_pip()
+            with self._suppress_expected_optics_warnings():
+                diverse_noisy_first, diverse_clean_first = diverse_pip()
 
             # Idempotent without update()
-            diverse_noisy_first_2, diverse_clean_first_2 = diverse_pip()
+            with self._suppress_expected_optics_warnings():
+                diverse_noisy_first_2, diverse_clean_first_2 = diverse_pip()
             torch.testing.assert_close(diverse_clean_first_2,
                                        diverse_clean_first,
                                        rtol=1e-7, atol=1e-4)
@@ -287,8 +324,9 @@ class TestDLCC(unittest.TestCase):
                                        rtol=1e-7, atol=1e-4)
 
             # After update(), BOTH should change (geometry + noise)
-            diverse_noisy_second, diverse_clean_second = \
-                diverse_pip.update().resolve()
+            with self._suppress_expected_optics_warnings():
+                diverse_noisy_second, diverse_clean_second = \
+                    diverse_pip.update().resolve()
             self.assertFalse(torch.allclose(
                 diverse_clean_second, diverse_clean_first, rtol=1e-7, atol=1e-4
             ))
@@ -452,6 +490,30 @@ class TestDLCC(unittest.TestCase):
             assert len(train_sources) == 8
             assert len(test_sources) == 2
 
+            # Regression check: activating items from split/filter subsets
+            # must update the original source used by the pipeline.
+            assert len(normal_sources) >= 2
+
+            normal_sources[0]()
+            np.testing.assert_array_equal(
+                sources.ecg(),
+                normal_sources[0]["ecg"],
+            )
+            assert sources.is_normal() == normal_sources[0]["is_normal"]
+
+            normal_sources[1]()
+            np.testing.assert_array_equal(
+                sources.ecg(),
+                normal_sources[1]["ecg"],
+            )
+            assert sources.is_normal() == normal_sources[1]["is_normal"]
+
+            # Ensure activation actually changes the parent source.
+            assert not np.array_equal(
+                normal_sources[0]["ecg"],
+                normal_sources[1]["ecg"],
+            )
+
             ## PART 2
             # Instantiate and use pipeline.
             min_normal = np.min([source["ecg"] for source in normal_sources])
@@ -467,8 +529,19 @@ class TestDLCC(unittest.TestCase):
             # All normalized values should be between 0 and 1
             for i in range(len(normal_sources)):
                 ecg = ecg_pip(normal_sources[i])
+                expected = (
+                    normal_sources[i]["ecg"] - min_normal
+                ) / (max_normal - min_normal)
                 assert isinstance(ecg, torch.Tensor)
                 assert 0 <= ecg.min() <= 1
+                assert ecg.max() <= 1
+
+                np.testing.assert_allclose(
+                    ecg.squeeze().detach().cpu().numpy(),
+                    expected,
+                    rtol=1e-6,
+                    atol=1e-6,
+                )
 
             # All labels should be bool
             for i in range(len(sources)):
@@ -628,10 +701,12 @@ class TestDLCC(unittest.TestCase):
              [[16.36273566], [32.64875852], [40.41116424]],
              [[21.04978789], [40.41116424], [49.51533565]]]
         ) + 30 + 82
-        np.testing.assert_allclose(sim_im_pip(), expected,
-                                   rtol=1e-7, atol=1e-7)
-        np.testing.assert_allclose(sim_im_pip.update()(), expected,
-                                   rtol=1e-7, atol=1e-7)
+
+        with self._suppress_expected_optics_warnings():
+            np.testing.assert_allclose(sim_im_pip(), expected,
+                                    rtol=1e-7, atol=1e-7)
+            np.testing.assert_allclose(sim_im_pip.update()(), expected,
+                                    rtol=1e-7, atol=1e-7)
 
         np.random.seed(123)  # Note that this seeding is not warratied
                              # to give reproducible results across platforms
@@ -687,46 +762,34 @@ class TestDLCC(unittest.TestCase):
         )
 
         expected_1 = np.array(
-            [[[-0.04551237], [ 0.03848763], [ 0.11448763], [ 0.17048763],
-              [ 0.23448763], [ 0.23448763], [ 0.11048763], [ 0.11848763]],
-             [[ 0.02248763], [ 0.06648763], [ 0.14648763], [ 0.29448763],
-              [ 0.29448763], [ 0.35048763], [ 0.36648763], [ 0.24248763]],
-             [[ 0.00248763], [ 0.04648763], [ 0.19048763], [ 0.26248763],
-              [ 0.45848763], [ 0.50648763], [ 0.45848763], [ 0.29448763]],
-             [[-0.02151237], [ 0.00648763], [ 0.08248763], [ 0.19048763],
-              [ 0.30248763], [ 0.58648763], [ 0.50648763], [ 0.43048763]],
-             [[-0.01751237], [ 0.04248763], [ 0.04248763], [ 0.26248763],
-              [ 0.37048763], [ 0.50248763], [ 0.46648763], [ 0.41848763]],
-             [[-0.01751237], [ 0.09848763], [ 0.18248763], [ 0.31448763],
-              [ 0.23848763], [ 0.35048763], [ 0.29448763], [ 0.25048763]],
-             [[ 0.01048763], [ 0.05448763], [ 0.19448763], [ 0.27848763],
-              [ 0.30648763], [ 0.22648763], [ 0.10248763], [ 0.07448763]],
-             [[ 0.01848763], [-0.01351237], [ 0.12648763], [ 0.18648763],
-              [ 0.17848763], [ 0.16648763], [ 0.03448763], [ 0.02248763]]]
+            [[[-0.00362469], [ 0.11237531], [ 0.23637531], [ 0.32037531], [ 0.38037531], [ 0.34437531], [ 0.17637531], [ 0.16837531]],
+             [[ 0.07237531], [ 0.15237531], [ 0.28837531], [ 0.48837531], [ 0.46837531], [ 0.48437531], [ 0.46037531], [ 0.30837531]],
+             [[ 0.04837531], [ 0.12437531], [ 0.32837531], [ 0.43237531], [ 0.63637531], [ 0.65237531], [ 0.56437531], [ 0.37237531]], 
+             [[ 0.02037531], [ 0.07637531], [ 0.16437531], [ 0.26837531], [ 0.57237531], [ 0.60837531], [ 0.67637531], [ 0.45237531]], 
+             [[ 0.04437531], [ 0.02437531], [ 0.20437531], [ 0.30437531], [ 0.47237531], [ 0.54037531], [ 0.63237531], [ 0.40037531]],
+             [[ 0.07237531], [ 0.12437531], [ 0.24837531], [ 0.22037531], [ 0.38037531], [ 0.39237531], [ 0.42037531], [ 0.31237531]],
+             [[ 0.02837531], [ 0.12037531], [ 0.22837531], [ 0.33237531], [ 0.31637531], [ 0.22037531], [ 0.19637531], [ 0.19237531]],
+             [[-0.01962469], [ 0.08037531], [ 0.16037531], [ 0.22437531], [ 0.27237531], [ 0.14037531], [ 0.10437531], [ 0.03637531]]]
         )
-        np.testing.assert_allclose(sim_im_pip(), expected_1,
+
+        with self._suppress_expected_optics_warnings():
+            np.testing.assert_allclose(sim_im_pip(), expected_1,
                                    rtol=1e-7, atol=1e-7)
 
         expected_2 = np.array(
-            [[[0.05257224], [0.05257224], [0.08457224], [0.05657224],
-              [0.12057224], [0.12057224], [0.10857224], [0.12057224]],
-             [[0.13257224], [0.13657224], [0.12857224], [0.12857224],
-              [0.06457224], [0.06057224], [0.15657224], [0.19657224]],
-             [[0.19257224], [0.23657224], [0.18057224], [0.12057224],
-              [0.08857224], [0.09657224], [0.20057224], [0.16057224]],
-             [[0.26857224], [0.25257224], [0.30457224], [0.17657224],
-              [0.13257224], [0.14057224], [0.25257224], [0.26057224]],
-             [[0.46457224], [0.57657224], [0.36857224], [0.20857224],
-              [0.11657224], [0.12057224], [0.20457224], [0.20457224]],
-             [[0.51257224], [0.50857224], [0.40457224], [0.28457224],
-              [0.18457224], [0.20457224], [0.18457224], [0.20457224]],
-             [[0.53657224], [0.52457224], [0.37257224], [0.23657224],
-              [0.08057224], [0.16057224], [0.12457224], [0.08457224]],
-             [[0.29657224], [0.28457224], [0.29657224], [0.21657224],
-              [0.11657224], [0.11657224], [0.08457224], [0.08857224]]]
+            [[[ 0.05024189], [ 0.03024189], [ 0.05824189], [ 0.13024189], [ 0.07824189], [ 0.12224189], [ 0.13424189], [ 0.11824189]],
+             [[ 0.08224189], [ 0.02624189], [ 0.08624189], [ 0.11024189], [ 0.11024189], [ 0.13824189], [ 0.11824189], [ 0.16224189]],
+             [[ 0.09024189], [ 0.05424189], [ 0.04224189], [ 0.04224189], [ 0.06624189], [ 0.15824189], [ 0.11424189], [ 0.04224189]],
+             [[ 0.09024189], [ 0.00624189], [ 0.05424189], [ 0.05424189], [ 0.05424189], [ 0.05024189], [ 0.01424189], [ 0.02624189]],
+             [[-0.00575811], [ 0.02224189], [ 0.03424189], [ 0.04224189], [ 0.07424189], [ 0.00624189], [ 0.03424189], [ 0.01824189]],
+             [[-0.02175811], [-0.00575811], [ 0.01024189], [ 0.03024189], [ 0.05024189], [ 0.05424189], [ 0.08224189], [ 0.07024189]],
+             [[ 0.04624189], [-0.04575811], [-0.00175811], [ 0.02624189], [ 0.05424189], [ 0.12224189], [ 0.15024189], [ 0.11424189]],
+             [[-0.02175811], [-0.01775811], [-0.01375811], [-0.02175811], [ 0.04624189], [ 0.18624189], [ 0.22624189], [ 0.19024189]]]
         )
-        np.testing.assert_allclose(sim_im_pip.update()(), expected_2,
-                                   rtol=1e-7, atol=1e-7)
+
+        with self._suppress_expected_optics_warnings():
+            np.testing.assert_allclose(sim_im_pip.update()(), expected_2,
+                                       rtol=1e-7, atol=1e-7)
 
         ## PART 3
         # Complete pipeline.
@@ -914,28 +977,25 @@ class TestDLCC(unittest.TestCase):
 
         # Checks
         expected_image = np.array(
-            [[[0.62670365], [0.95904265], [1.15064654],
-              [1.17296235], [1.13969792], [0.9095519 ]],
-             [[1.21126057], [1.51766064], [1.7455454 ],
-              [1.76889047], [1.72424965], [1.43000316]],
-             [[1.72652512], [1.83151886], [1.8833134 ],
-              [1.88750391], [1.85299175], [1.74551291]],
-             [[1.77112966], [1.86331109], [1.89386948],
-              [1.88816495], [1.83622286], [1.73540255]],
-             [[1.53751879], [1.75932587], [1.7955828 ],
-              [1.77051135], [1.5555698 ], [1.31219839]],
-             [[1.03047638], [1.27223149], [1.30437236],
-              [1.27309201], [1.00711876], [0.66359776]]]
+                    [[[0.60265415], [0.94844141], [1.14489087], [1.16483931], [1.13598992], [0.90247759]],
+                     [[1.199768  ], [1.51251191], [1.74839492], [1.77029627], [1.72956925], [1.42921194]],
+                     [[1.73096144], [1.825617  ], [1.87179117], [1.87245093], [1.84518863], [1.74890568]],
+                     [[1.77330325], [1.85308512], [1.87854141], [1.87606849], [1.82860277], [1.74103692]],
+                     [[1.53892305], [1.76151488], [1.79291875], [1.77124261], [1.55013829], [1.30663407]],
+                     [[1.02576262], [1.2719972 ], [1.3016064 ], [1.27185945], [0.99481222], [0.63890969]]]
         )
-        image = sim_im_pip()
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
         try:  # Occasional error in Ubuntu system
             assert np.allclose(image, expected_image, atol=1e-6)
         except AssertionError:
             if platform.system() != "Linux":
                 raise
-        image = sim_im_pip()
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
         assert np.allclose(image, expected_image, atol=1e-6)
-        image = sim_im_pip.update()()
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip.update()()
         assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.2
@@ -969,31 +1029,32 @@ class TestDLCC(unittest.TestCase):
 
         # Checks
         expected_image = np.array(
-            [[[4.43875833], [5.61812011], [6.83467141],
-              [7.40197432], [7.15789432], [6.20212177]],
-             [[5.51601744], [6.96215298], [8.16738992],
-              [8.58847899], [8.18056869], [7.01360971]],
-             [[6.42507353], [8.20975942], [9.19766098],
-              [9.33420367], [8.80069871], [7.65615641]],
-             [[6.83698176], [8.57520423], [9.37970662],
-              [9.53241571], [8.91761343], [7.31147681]],
-             [[6.36655984], [8.14023641], [8.99595646],
-              [9.09135127], [8.37544931], [6.49717015]],
-             [[5.39208396], [7.11757634], [7.86945558],
-              [7.70038503], [6.95412321], [5.66020874]]])
-        image = sim_im_pip()
+            [[[2.40686748], [3.57908632], [4.82880076], [5.75153091], [6.06963462], [5.57287094]],
+             [[3.3805992 ], [4.90299411], [6.20417148], [6.90634308], [6.83577577], [6.16933536]],
+             [[4.18260712], [5.97708425], [7.23448674], [7.48806701], [6.93908065], [5.96343732]],
+             [[4.27119652], [6.1665758 ], [7.29078817], [7.50901958], [6.86948897], [5.63460567]],
+             [[3.87612061], [5.88381024],  [6.76433577], [7.00694866], [6.62352318], [5.28112149]],
+             [[3.07807345], [5.21008639], [6.18438896], [6.43448107], [6.07102741], [4.76105099]]]
+            )
+        
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
         try:  # Occasional error in Ubuntu system
             assert np.allclose(image, expected_image, atol=1e-6)
         except AssertionError:
             if platform.system() != "Linux":
                 raise
-        image = sim_im_pip()
+
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
         try:  # Occasional error in Ubuntu system
             assert np.allclose(image, expected_image, atol=1e-6)
         except AssertionError:
             if platform.system() != "Linux":
                 raise
-        image = sim_im_pip.update()()
+            
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip.update()()
         assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.3
@@ -1046,25 +1107,21 @@ class TestDLCC(unittest.TestCase):
 
         # Checks
         expected_image = np.array(
-            [[[2.70782737], [3.72377004], [4.7502782 ],
-              [5.21564371], [5.0711578 ], [4.39744194]],
-             [[3.74048155], [5.03468761], [5.86563705],
-              [5.95210827], [5.4688792 ], [4.64597443]],
-             [[4.3493022 ], [5.54970338], [6.28803747],
-              [6.30392203], [5.74445854], [4.7577248 ]],
-             [[4.44427776], [5.76434851], [6.54332137],
-              [6.65343518], [6.08066042], [4.8567884 ]],
-             [[4.24868926], [5.43328388], [6.21579624],
-              [6.50448421], [6.06196237], [4.61607002]],
-             [[3.82922766], [4.86706357], [5.50472639],
-              [5.59237713], [5.03817596], [3.71460963]]]
+            [[[1.93167944], [2.69410402], [3.66954369], [4.37636897], [4.48323595], [4.12289828]],
+             [[2.53519759], [3.60325565], [4.58956314], [5.15477629], [5.08360439], [4.53870126]],
+             [[3.21864851], [4.44624058], [5.32791401], [5.62321336], [5.41770116], [4.70481539]],
+             [[3.46683641], [4.70335513], [5.51074196], [5.77536735], [5.50595722], [4.68637212]],
+             [[3.34183827], [4.5430821 ], [5.33049864], [5.58676063], [5.30614662], [4.38580553]],
+             [[2.96852351], [4.1349709 ], [4.83801129], [4.96868391], [4.6222409 ], [3.84192146]]]
         )
-        image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-6)
-        image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-6)
-        image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-6)
+
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
+            assert np.allclose(image, expected_image, atol=1e-6)
+            image = sim_im_pip()
+            assert np.allclose(image, expected_image, atol=1e-6)
+            image = sim_im_pip.update()()
+            assert not np.allclose(image, expected_image, atol=1e-6)
 
         ## PART 2.4
         np.random.seed(123)  # Note that this seeding is not warratied
@@ -1116,29 +1173,22 @@ class TestDLCC(unittest.TestCase):
             >> dt.Clip(0, 1) >> dt.AsType("float")
         )
 
-        sim_im_pip()
-
         # Checks
         expected_image = np.array(
-            [[[0.12398151], [0.14209154], [0.15910754],
-              [0.15518798], [0.14829296], [0.12743581]],
-             [[0.15065696], [0.1624304 ], [0.18212656],
-              [0.18492249], [0.17675485], [0.14808888]],
-             [[0.16032724], [0.17263786], [0.19540503],
-              [0.19553262], [0.17960588], [0.15236758]],
-             [[0.16342678], [0.17271644], [0.18141046],
-              [0.17859922], [0.16860212], [0.14591775]],
-             [[0.14388377], [0.16010432], [0.16078891],
-              [0.15686093], [0.13163569], [0.11720937]],
-             [[0.12653167], [0.1265491 ], [0.12649258],
-              [0.12450134], [0.11387853], [0.10064209]]]
+            [[[0.13199702], [0.1420024 ], [0.15640373], [0.15710884], [0.15771862], [0.15338107]],
+            [[0.16063779], [0.1707068 ], [0.18537119], [0.19869939], [0.1960437 ], [0.18760834]],
+            [[0.18653255], [0.2071835 ], [0.21618341], [0.22117799], [0.21667417], [0.20882602]],
+            [[0.20211888], [0.22039408], [0.22713002], [0.2263781 ], [0.2210908 ], [0.21466281]],
+            [[0.19227835], [0.21184996], [0.22195321], [0.22250827], [0.21844318], [0.20950961]],
+            [[0.16802898], [0.18852521], [0.19970309], [0.19951212], [0.19412736], [0.18247772]]]
         )
-        image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-6)
-        image = sim_im_pip()
-        assert np.allclose(image, expected_image, atol=1e-6)
-        image = sim_im_pip.update()()
-        assert not np.allclose(image, expected_image, atol=1e-6)
+        with self._suppress_expected_optics_warnings():
+            image = sim_im_pip()
+            assert np.allclose(image, expected_image, atol=1e-6)
+            image = sim_im_pip()
+            assert np.allclose(image, expected_image, atol=1e-6)
+            image = sim_im_pip.update()()
+            assert not np.allclose(image, expected_image, atol=1e-6)
 
         if TORCH_AVAILABLE:
             ## PART 2.5
@@ -1173,16 +1223,15 @@ class TestDLCC(unittest.TestCase):
 
             # Checks
             expected_mask = np.array(
-                [[[1.], [1.], [1.], [1.], [0.], [0.]],
-                [[1.], [1.], [1.], [1.], [1.], [0.]],
+                [[[0.], [0.], [0.], [0.], [0.], [0.]],
+                [[0.], [1.], [1.], [0.], [0.], [0.]],
+                [[1.], [1.], [1.], [1.], [0.], [0.]],
                 [[1.], [1.], [1.], [1.], [1.], [1.]],
-                [[0.], [1.], [1.], [1.], [1.], [1.]],
-                [[0.], [1.], [1.], [1.], [1.], [1.]],
-                [[0.], [0.], [1.], [1.], [1.], [0.]]]
+                [[1.], [1.], [1.], [1.], [1.], [1.]],
+                [[1.], [1.], [1.], [1.], [1.], [1.]]]
             )
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
-
                 mask = sim_mask_pip()
                 assert np.allclose(mask, expected_mask, atol=1e-6)
                 mask = sim_mask_pip()
@@ -1208,20 +1257,20 @@ class TestDLCC(unittest.TestCase):
 
             image, mask = train_dataset[639]
             expected_image = torch.tensor(
-                [[[0.1240, 0.1421, 0.1591, 0.1552, 0.1483, 0.1274],
-                [0.1507, 0.1624, 0.1821, 0.1849, 0.1768, 0.1481],
-                [0.1603, 0.1726, 0.1954, 0.1955, 0.1796, 0.1524],
-                [0.1634, 0.1727, 0.1814, 0.1786, 0.1686, 0.1459],
-                [0.1439, 0.1601, 0.1608, 0.1569, 0.1316, 0.1172],
-                [0.1265, 0.1265, 0.1265, 0.1245, 0.1139, 0.1006]]]
+               [[[0.1320, 0.1420, 0.1564, 0.1571, 0.1577, 0.1534],
+                [0.1606, 0.1707, 0.1854, 0.1987, 0.1960, 0.1876],
+                [0.1865, 0.2072, 0.2162, 0.2212, 0.2167, 0.2088],
+                [0.2021, 0.2204, 0.2271, 0.2264, 0.2211, 0.2147],
+                [0.1923, 0.2118, 0.2220, 0.2225, 0.2184, 0.2095],
+                [0.1680, 0.1885, 0.1997, 0.1995, 0.1941, 0.1825]]]
             )
             expected_mask = torch.tensor(
-                [[[1., 1., 1., 1., 1., 1.],
+                [[[0., 0., 0., 0., 0., 0.],
                 [1., 1., 1., 1., 1., 1.],
                 [1., 1., 1., 1., 1., 1.],
                 [1., 1., 1., 1., 1., 1.],
-                [1., 1., 1., 1., 1., 0.],
-                [1., 1., 1., 1., 0., 0.]]]
+                [1., 1., 1., 1., 1., 1.],
+                [1., 1., 1., 1., 1., 1.]]]
             )
             assert torch.allclose(image, expected_image, rtol=1e-7, atol=1e-4)
             assert torch.allclose(mask, expected_mask, rtol=1e-7, atol=1e-4)
@@ -1253,55 +1302,61 @@ class TestDLCC(unittest.TestCase):
                 >> dt.MoveAxis(-1, 0)
                 >> dt.pytorch.ToTensor(dtype=torch.float32)
             )
-
+            
             train_dataset = dt.pytorch.Dataset(simulation, length=2)
             test_dataset = dt.pytorch.Dataset(simulation & particle.position,
-                                              length=10)
+                                                length=10)
 
             # Test train dataset
             expected_image = torch.tensor(
-                [[[ 0.0283,  0.0107,  0.1774,  0.3429, -0.2191],
-                [ 0.2039,  0.6161,  0.5111,  0.4461,  0.2739],
-                [ 0.6096,  0.7009,  0.8545,  0.7519,  0.7275],
-                [ 0.7522,  0.9581,  1.0386,  0.9639,  0.7323],
-                [ 0.3325,  0.8383,  0.7252,  0.6865,  0.5617]]],
-                dtype=torch.float32
+                [[[ 0.0283, -0.0033,  0.1577,  0.3276, -0.2213],
+                [ 0.1929,  0.6013,  0.4957,  0.4310,  0.2619],
+                [ 0.5937,  0.6918,  0.8498,  0.7436,  0.7122],
+                [ 0.7354,  0.9519,  1.0386,  0.9589,  0.7165],
+                [ 0.3173,  0.8281,  0.7187,  0.6770,  0.5468]]],
+                dtype=torch.float32,
             )
-            image = train_dataset[0]
+            
+            with self._suppress_expected_optics_warnings():
+               image = train_dataset[0]
             assert torch.allclose(image[0], expected_image,
                                   rtol=1e-4, atol=1e-4)
 
             assert len(train_dataset) == 2
-            for image in train_dataset:
-                image = image[0]
-                assert isinstance(image, torch.Tensor)
-                assert image.dtype == torch.float32
-                assert image.shape == torch.Size([1, image_size, image_size])
+
+            with self._suppress_expected_optics_warnings():
+                for image in train_dataset:
+                    image = image[0]
+                    assert isinstance(image, torch.Tensor)
+                    assert image.dtype == torch.float32
+                    assert image.shape == torch.Size([1, image_size, image_size])
 
             # Test test dataset
             expected_image = torch.tensor(
-                [[[0.0891, 0.3012, 0.3664, 0.3260, 0.0537],
-                [0.2549, 0.4170, 0.3974, 0.6752, 0.4747],
-                [0.3636, 0.6197, 0.7136, 0.8578, 0.7010],
-                [0.3770, 0.8978, 0.8853, 0.7877, 0.8980],
-                [0.3827, 0.7186, 0.8527, 0.7807, 0.8687]]],
-                dtype=torch.float32
+                [[[0.0891, 0.2869, 0.3431, 0.3024, 0.0388],
+                [0.2430, 0.3986, 0.3769, 0.6547, 0.4562],
+                [0.3438, 0.6046, 0.7049, 0.8493, 0.6863],
+                [0.3541, 0.8862, 0.8850, 0.7877, 0.8871],
+                [0.3608, 0.7055, 0.8491, 0.7773, 0.8561]]],
+                dtype=torch.float32,
             )
             expected_position = torch.tensor([3.2509, 2.5208])
-            image, position = test_dataset[0]
+            with self._suppress_expected_optics_warnings():
+                image, position = test_dataset[0]
             assert torch.allclose(image, expected_image,
                                   rtol=1e-4, atol=1e-4)
             assert torch.allclose(position, expected_position,
                                   rtol=1e-4, atol=1e-4)
 
             assert len(test_dataset) == 10
-            for image, position in test_dataset:
-                assert isinstance(image, torch.Tensor)
-                assert image.shape == torch.Size([1, image_size, image_size])
-                assert image.dtype == torch.float32
+            with self._suppress_expected_optics_warnings():
+                for image, position in test_dataset:
+                    assert isinstance(image, torch.Tensor)
+                    assert image.shape == torch.Size([1, image_size, image_size])
+                    assert image.dtype == torch.float32
 
-                assert isinstance(position, torch.Tensor)
-                assert position.shape == (2,)  # (x, y) particle position
+                    assert isinstance(position, torch.Tensor)
+                    assert position.shape == (2,)  # (x, y) particle position
 
     def test_6_A(self):
         # Temporary root (deleted in finally)

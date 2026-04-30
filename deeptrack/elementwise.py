@@ -224,22 +224,22 @@ __all__ = [
     "Arcsinh",
     "Arccosh",
     "Arctanh",
-    "Round",
-    "Floor",
-    "Ceil",
-    "Exp",
-    "Log",
-    "Log10",
-    "Log2",
-    "Angle",
-    "Real",
-    "Imag",
-    "Abs",
-    "Conj",
-    "Conjugate",
-    "Sqrt",
-    "Square",
-    "Sign",
+    # "Round",
+    # "Floor",
+    # "Ceil",
+    # "Exp",
+    # "Log",
+    # "Log10",
+    # "Log2",
+    # "Angle",
+    # "Real",
+    # "Imag",
+    # "Abs",
+    # "Conj",
+    # "Conjugate",
+    # "Sqrt",
+    # "Square",
+    # "Sign",
 ]
 
 
@@ -290,6 +290,7 @@ class ElementwiseFeature(Feature):
         self: ElementwiseFeature,
         function: Callable[[Any], Any],
         feature: Feature | None = None,
+        function_name: str | None = None,
         **kwargs: Any,
     ):
         """Initialize ElementwiseFeature.
@@ -305,6 +306,8 @@ class ElementwiseFeature(Feature):
         feature: Feature | None, optional
             The feature whose output will be transformed. If `None`, the
             function is applied to the direct input.
+        function_name: str | None, optional
+            The name of the function, used for error messages.
         **kwargs: Any
             Additional keyword arguments passed to the `Feature` base class.
 
@@ -314,6 +317,7 @@ class ElementwiseFeature(Feature):
 
         # Store the function to be applied elementwise
         self.function = function
+        self.function_name = function_name
 
         # Add the feature dependency if provided
         self.feature = (
@@ -368,6 +372,9 @@ class ElementwiseFeature(Feature):
         if self.feature is not None:
             data = self.feature(**kwargs)
 
+        if self.function_name is not None:
+            return getattr(xp, self.function_name)(data)
+
         # Apply the function elementwise
         return self.function(data)
 
@@ -376,6 +383,7 @@ def create_elementwise_class(
     name: str,
     function: Callable[[Any], Any],
     docstring: str = "",
+    function_name: str | None = None,
 ) -> type[ElementwiseFeature]:
     """Factory function to create subclasses of ElementwiseFeature.
 
@@ -395,6 +403,8 @@ def create_elementwise_class(
     docstring: str, optional
         The docstring for the generated class. This string will be visible
         in IDE tooltips and Sphinx documentation.
+    function_name: str | None, optional
+        The name of the function, used for error messages.
 
     Returns
     -------
@@ -464,16 +474,22 @@ def create_elementwise_class(
 
     """
 
+
     class _GeneratedElementwise(ElementwiseFeature):
         """Dynamically generated subclass of ElementwiseFeature."""
 
         def __init__(
-            self: _GeneratedElementwise,
-            feature: Feature | None = None,
+            self: _GeneratedElementwise, 
+            feature: Feature | None = None, 
             **kwargs: Any,
         ) -> None:
-            # Initialize the ElementwiseFeature with the fixed function
-            super().__init__(function=function, feature=feature, **kwargs)
+            """Initialize the ElementwiseFeature with the fixed function."""
+            super().__init__(
+                function=function,
+                function_name=function_name,
+                feature=feature,
+                **kwargs,
+            )
 
     # Set the class name to match the intended name
     _GeneratedElementwise.__name__ = name
@@ -483,7 +499,7 @@ def create_elementwise_class(
 
     # Attach the user-specified docstring to enable documentation
     _GeneratedElementwise.__doc__ = docstring
-
+    
     # Set correct module to ensure proper Sphinx indexing and import tracing
     _GeneratedElementwise.__module__ = __name__
 
@@ -493,6 +509,7 @@ def create_elementwise_class(
 Sin = create_elementwise_class(
     name="Sin",
     function=xp.sin,
+    function_name="sin",
     docstring="""
     Apply the sine function elementwise.
 
@@ -553,6 +570,7 @@ Sin = create_elementwise_class(
 Cos = create_elementwise_class(
     name="Cos",
     function=xp.cos,
+    function_name="cos",
     docstring="""
     Apply the cosine function elementwise.
 
@@ -613,6 +631,7 @@ Cos = create_elementwise_class(
 Tan = create_elementwise_class(
     name="Tan",
     function=xp.tan,
+    function_name="tan",
     docstring="""
     Apply the tangent function elementwise.
 
@@ -673,6 +692,7 @@ Tan = create_elementwise_class(
 Arcsin = create_elementwise_class(
     name="Arcsin",
     function=xp.arcsin,
+    function_name="arcsin",
     docstring="""
     Apply the arcsine function elementwise.
 
@@ -736,6 +756,7 @@ Arcsin = create_elementwise_class(
 Arctan = create_elementwise_class(
     name="Arctan",
     function=xp.arctan,
+    function_name="arctan",
     docstring="""
     Apply the arctangent function elementwise.
 
@@ -796,6 +817,7 @@ Arctan = create_elementwise_class(
 Sinh = create_elementwise_class(
     name="Sinh",
     function=xp.sinh,
+    function_name="sinh",
     docstring="""
     Apply the hyperbolic sine function elementwise.
 
@@ -857,6 +879,7 @@ Sinh = create_elementwise_class(
 Cosh = create_elementwise_class(
     name="Cosh",
     function=xp.cosh,
+    function_name="cosh",
     docstring="""
     Apply the hyperbolic cosine function elementwise.
 
@@ -918,6 +941,7 @@ Cosh = create_elementwise_class(
 Tanh = create_elementwise_class(
     name="Tanh",
     function=xp.tanh,
+    function_name="tanh",
     docstring="""
     Apply the hyperbolic tangent function elementwise.
 
@@ -979,6 +1003,7 @@ Tanh = create_elementwise_class(
 Arcsinh = create_elementwise_class(
     name="Arcsinh",
     function=xp.arcsinh,
+    function_name="arcsinh",
     docstring="""
     Apply the inverse hyperbolic sine function elementwise.
 
@@ -1040,6 +1065,7 @@ Arcsinh = create_elementwise_class(
 Arccosh = create_elementwise_class(
     name="Arccosh",
     function=xp.arccosh,
+    function_name="arccosh",
     docstring="""
     Apply the inverse hyperbolic cosine function elementwise.
 
@@ -1104,6 +1130,7 @@ Arccosh = create_elementwise_class(
 Arctanh = create_elementwise_class(
     name="Arctanh",
     function=xp.arctanh,
+    function_name="arctanh",
     docstring="""
     Apply the inverse hyperbolic tangent function elementwise.
 
@@ -1168,6 +1195,7 @@ Arctanh = create_elementwise_class(
 Round = create_elementwise_class(
     name="Round",
     function=xp.round,
+    function_name="round",
     docstring="""
     Apply the rounding function elementwise.
 
@@ -1464,6 +1492,7 @@ class Ceil(ElementwiseFeature):
 Exp = create_elementwise_class(
     name="Exp",
     function=xp.exp,
+    function_name="exp",
     docstring="""
     Apply the exponential function elementwise.
 
@@ -1524,6 +1553,7 @@ Exp = create_elementwise_class(
 Log = create_elementwise_class(
     name="Log",
     function=xp.log,
+    function_name="log",
     docstring="""
     Apply the natural logarithm function elementwise.
 
@@ -1589,6 +1619,7 @@ Log = create_elementwise_class(
 Log10 = create_elementwise_class(
     name="Log10",
     function=xp.log10,
+    function_name="log10",
     docstring="""
     Apply the base-10 logarithm function elementwise.
 
@@ -1652,6 +1683,7 @@ Log10 = create_elementwise_class(
 Log2 = create_elementwise_class(
     name="Log2",
     function=xp.log2,
+    function_name="log2",
     docstring="""
     Apply the base-2 logarithm function elementwise.
 
@@ -1825,6 +1857,7 @@ class Angle(ElementwiseFeature):
 Real = create_elementwise_class(
     name="Real",
     function=xp.real,
+    function_name="real",
     docstring="""
     Apply the real-part function elementwise.
 
@@ -2000,6 +2033,7 @@ class Imag(ElementwiseFeature):
 Abs = create_elementwise_class(
     name="Abs",
     function=xp.abs,
+    function_name="abs",
     docstring="""
     Apply the absolute value function elementwise.
 
@@ -2055,6 +2089,7 @@ Abs = create_elementwise_class(
 Conj = create_elementwise_class(
     name="Conj",
     function=xp.conj,
+    function_name="conj",
     docstring="""
     Apply the complex conjugate function elementwise.
 
@@ -2119,6 +2154,7 @@ Conjugate = Conj
 Sqrt = create_elementwise_class(
     name="Sqrt",
     function=xp.sqrt,
+    function_name="sqrt",
     docstring="""
     Apply the square root function elementwise.
 
@@ -2182,6 +2218,7 @@ Sqrt = create_elementwise_class(
 Square = create_elementwise_class(
     name="Square",
     function=xp.square,
+    function_name="square",
     docstring="""
     Apply the square function elementwise.
 

@@ -501,14 +501,22 @@ class NormalizeMinMax(Feature):
             img_max = xp.max(image)
 
         ptp = img_max - img_min
-        eps = xp.asarray(1e-8, dtype=image.dtype)
-        ptp = xp.maximum(ptp, eps)
 
-        out = (image - img_min) / ptp
-        out = out * (max - min) + min
-        out = xp.where(xp.isnan(out), xp.zeros_like(out), out)
+        if TORCH_AVAILABLE and isinstance(image, torch.Tensor):
+            zero_ptp = ptp == 0
+            safe_ptp = torch.where(zero_ptp, torch.ones_like(ptp), ptp)
+        else:
+            zero_ptp = ptp == 0
+            safe_ptp = np.where(zero_ptp, np.ones_like(ptp), ptp)
 
-        return out
+        image = (image - img_min) / safe_ptp
+        image = image * (max - min) + min
+
+        # Preserve old behavior: constant images/features become 0.
+        image = xp.where(zero_ptp, xp.zeros_like(image), image)
+        image = xp.where(xp.isnan(image), xp.zeros_like(image), image)
+
+        return image
 
 
 class NormalizeStandard(Feature):
@@ -703,8 +711,11 @@ class NormalizeStandard(Feature):
             mean = np.mean(image_moved, axis=axis, keepdims=True)
             std = np.std(image_moved, axis=axis, keepdims=True)
 
-            std = np.maximum(std, np.asarray(1e-8, dtype=image.dtype))
-            out = (image_moved - mean) / std
+            zero_std = std == 0
+            safe_std = np.where(zero_std, np.ones_like(std), std)
+
+            out = (image_moved - mean) / safe_std
+            out = np.where(zero_std, np.zeros_like(out), out)
 
             out = np.moveaxis(out, -1, channel_axis)
 
@@ -712,8 +723,12 @@ class NormalizeStandard(Feature):
             mean = np.mean(image)
             std = np.std(image)
 
-            std = np.maximum(std, np.asarray(1e-8, dtype=image.dtype))
-            out = (image - mean) / std
+            zero_std = std == 0
+            safe_std = 1.0 if zero_std else std
+
+            out = (image - mean) / safe_std
+            out = np.zeros_like(out) if zero_std else out
+
 
         out = np.where(np.isnan(out), 0.0, out)
         return out
@@ -756,8 +771,11 @@ class NormalizeStandard(Feature):
             mean = image_moved.mean(dim=axis, keepdim=True)
             std = image_moved.std(dim=axis, keepdim=True, unbiased=False)
 
-            std = torch.clamp(std, min=1e-8)
-            out = (image_moved - mean) / std
+            zero_std = std == 0
+            safe_std = torch.where(zero_std, torch.ones_like(std), std)
+
+            out = (image_moved - mean) / safe_std
+            out = torch.where(zero_std, torch.zeros_like(out), out)
 
             out = out.movedim(-1, channel_axis)
 
@@ -765,8 +783,11 @@ class NormalizeStandard(Feature):
             mean = image.mean()
             std = image.std(unbiased=False)
 
-            std = torch.clamp(std, min=1e-8)
-            out = (image - mean) / std
+            zero_std = std == 0
+            safe_std = torch.where(zero_std, torch.ones_like(std), std)
+
+            out = (image - mean) / safe_std
+            out = torch.where(zero_std, torch.zeros_like(out), out)
 
         out = torch.nan_to_num(out, nan=0.0)
         return out
