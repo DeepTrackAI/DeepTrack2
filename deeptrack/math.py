@@ -105,7 +105,6 @@ import skimage.measure
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
 from deeptrack.backend import xp
 from deeptrack.features import Feature
-from deeptrack.scatterers import ScatteredField, ScatteredVolume
 from deeptrack.types import PropertyLike
 
 if TORCH_AVAILABLE:
@@ -141,6 +140,7 @@ __all__ = [
 
 if TYPE_CHECKING:
     import torch
+    from deeptrack.scatterers import ScatteredField, ScatteredVolume
 
 
 class Average(Feature):
