@@ -224,22 +224,22 @@ __all__ = [
     "Arcsinh",
     "Arccosh",
     "Arctanh",
-    # "Round",
-    # "Floor",
-    # "Ceil",
-    # "Exp",
-    # "Log",
-    # "Log10",
-    # "Log2",
-    # "Angle",
-    # "Real",
-    # "Imag",
-    # "Abs",
-    # "Conj",
-    # "Conjugate",
-    # "Sqrt",
-    # "Square",
-    # "Sign",
+    "Round",
+    "Floor",
+    "Ceil",
+    "Exp",
+    "Log",
+    "Log10",
+    "Log2",
+    "Angle",
+    "Real",
+    "Imag",
+    "Abs",
+    "Conj",
+    "Conjugate",
+    "Sqrt",
+    "Square",
+    "Sign",
 ]
 
 
@@ -474,13 +474,12 @@ def create_elementwise_class(
 
     """
 
-
     class _GeneratedElementwise(ElementwiseFeature):
         """Dynamically generated subclass of ElementwiseFeature."""
 
         def __init__(
-            self: _GeneratedElementwise, 
-            feature: Feature | None = None, 
+            self: _GeneratedElementwise,
+            feature: Feature | None = None,
             **kwargs: Any,
         ) -> None:
             """Initialize the ElementwiseFeature with the fixed function."""
@@ -499,7 +498,7 @@ def create_elementwise_class(
 
     # Attach the user-specified docstring to enable documentation
     _GeneratedElementwise.__doc__ = docstring
-    
+
     # Set correct module to ensure proper Sphinx indexing and import tracing
     _GeneratedElementwise.__module__ = __name__
 

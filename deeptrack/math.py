@@ -729,7 +729,6 @@ class NormalizeStandard(Feature):
             out = (image - mean) / safe_std
             out = np.zeros_like(out) if zero_std else out
 
-
         out = np.where(np.isnan(out), 0.0, out)
         return out
 
@@ -1153,7 +1152,9 @@ class Blur(Feature):
 
     def get(
         self: Blur,
-        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
+        image: (
+            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
+        ),
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Apply the blur filter to the input image using the selected backend.
@@ -1931,7 +1932,9 @@ class Pool(Feature):
 
     def get(
         self: Pool,
-        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
+        image: (
+            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
+        ),
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Apply the pooling operation to the input image.
@@ -2941,7 +2944,9 @@ class Resize(Feature):
 
     def get(
         self: Resize,
-        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
+        image: (
+            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
+        ),
         dsize: tuple[int, int],
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
