@@ -1111,6 +1111,7 @@ class TestMath_Numpy(BackendTestBase):
 
         self.assertTrue(xp.allclose(out, expected))
 
+    @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_Resize(self):
         # --- ksize = 1 (identity) ---
         image = xp.asarray(
