@@ -7620,10 +7620,8 @@ class LoadImage(Feature):
         # Try to load the image using various readers.
         try:
             import imageio
-            import gc
 
             image = [imageio.v3.imread(file).copy() for file in path]
-            gc.collect()  # Clean up memory after loading with ImageIO.
         except (ImportError, AttributeError, KeyError, OSError, ValueError):
             try:
                 image = [np.load(file, **load_options).copy() for file in path]
