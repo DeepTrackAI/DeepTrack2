@@ -1091,7 +1091,7 @@ class Ellipsoid(VolumeScatterer):
         x = xp.arange(-rad_ceil, rad_ceil) * voxel_size[0]
         y = xp.arange(-rad_ceil, rad_ceil) * voxel_size[1]
         z = xp.arange(-rad_ceil, rad_ceil) * voxel_size[2]
-        Y, X, Z = xp.meshgrid(y, x, z)
+        Y, X, Z = xp.meshgrid(y, x, z, indexing="xy")
 
         # Rotate the grid.
         cos = xp.cos(rotation)

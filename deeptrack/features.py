@@ -7620,11 +7620,13 @@ class LoadImage(Feature):
         # Try to load the image using various readers.
         try:
             import imageio
+            import gc
 
-            image = [imageio.v3.imread(file) for file in path]
+            image = [imageio.v3.imread(file).copy() for file in path]
+            gc.collect()  # Clean up memory after loading with ImageIO.
         except (ImportError, AttributeError, KeyError, OSError, ValueError):
             try:
-                image = [np.load(file, **load_options) for file in path]
+                image = [np.load(file, **load_options).copy() for file in path]
             except (OSError, ValueError):
                 try:
                     from PIL import Image
@@ -7632,7 +7634,7 @@ class LoadImage(Feature):
                     image = []
                     for file in path:
                         with Image.open(file, **load_options) as img:
-                            image.append(np.asarray(img))
+                            image.append(np.asarray(img).copy())
                 except (IOError, ImportError):
                     try:
                         import cv2
@@ -7657,9 +7659,9 @@ class LoadImage(Feature):
                     image = []
                     for img in raw:
                         if img.ndim == 3 and img.shape[-1] >= 3:
-                            image.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+                            image.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB).copy())
                         else:
-                            image.append(img)
+                            image.append(np.asarray(img).copy())
 
         # Convert to list or stack as needed.
         if as_list:
@@ -7711,7 +7713,7 @@ class LoadImage(Feature):
             if isinstance(image, list):
                 image = np.stack(image, axis=0)
 
-            image = torch.from_numpy(image)
+            image = torch.from_numpy(np.asarray(image).copy())
 
         return image
 
