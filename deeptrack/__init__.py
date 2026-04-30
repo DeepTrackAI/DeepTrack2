@@ -62,5 +62,3 @@ from deeptrack import (
     # Fake imports for IDE autocomplete
     # Does not actually import anything
 )
-
-from deeptrack import tests  # TODO: Eliminate once tests is moved out.
