@@ -589,22 +589,26 @@ class Feature(DeepTrackNode):
     @property
     def float_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the float numbers."""
-        return xp.get_float_dtype(self._float_dtype)
+        with config.with_backend(self._backend):
+            return xp.get_float_dtype(self._float_dtype)
 
     @property
     def int_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the integer numbers."""
-        return xp.get_int_dtype(self._int_dtype)
+        with config.with_backend(self._backend):
+            return xp.get_int_dtype(self._int_dtype)
 
     @property
     def complex_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the complex numbers."""
-        return xp.get_complex_dtype(self._complex_dtype)
+        with config.with_backend(self._backend):
+            return xp.get_complex_dtype(self._complex_dtype)
 
     @property
     def bool_dtype(self) -> np.dtype | torch.dtype:
         """The dtype of the boolean numbers."""
-        return xp.get_bool_dtype(self._bool_dtype)
+        with config.with_backend(self._backend):
+            return xp.get_bool_dtype(self._bool_dtype)
 
     @property
     def device(self) -> str | torch.device:
@@ -1417,9 +1421,11 @@ class Feature(DeepTrackNode):
         components = list(zip(*normalized))
 
         # Stack each component along a new leading batch axis.
-        batched = [xp.stack(component) for component in components]
-
-        return tuple(batched)
+        with config.with_backend(self._backend):    
+            return tuple(
+            xp.stack([xp.asarray(x) for x in component])
+            for component in components
+        )
 
     def _action(
         self: Feature,
@@ -1958,7 +1964,8 @@ class Feature(DeepTrackNode):
 
         # Single image, if not a list
         if not isinstance(output_image, (list, tuple)):
-            output_image = xp.squeeze(output_image)
+            with config.with_backend(self._backend):
+                output_image = xp.squeeze(output_image)
             plt.imshow(output_image, **kwargs)
             return plt.gca()
 
@@ -1967,7 +1974,8 @@ class Feature(DeepTrackNode):
         images = []
         ax.axis("off")
         for image in output_image:
-            image = xp.squeeze(image)
+            with config.with_backend(self._backend):
+                image = xp.squeeze(image)
             images.append([ax.imshow(image, **kwargs)])
 
         if interval is None:
@@ -1998,7 +2006,8 @@ class Feature(DeepTrackNode):
             import ipywidgets as widgets
 
             def plotter(frame=0):
-                image = xp.squeeze(output_image[frame])
+                with config.with_backend(self._backend):
+                    image = xp.squeeze(output_image[frame])
                 plt.imshow(image, **kwargs)
                 plt.show()
 
@@ -7963,7 +7972,8 @@ class ChannelFirst2d(Feature):  # DEPRECATED
                 dims = [axis] + [i for i in range(ndim) if i != axis]
                 array = array.permute(*dims)
             else:
-                array = xp.moveaxis(array, axis, 0)
+                with config.with_backend(self._backend):
+                    array = xp.moveaxis(array, axis, 0)
 
         return array
 
@@ -8209,7 +8219,8 @@ class Squeeze(Feature):
                 inputs = inputs.squeeze(ax)
             return inputs
 
-        return xp.squeeze(inputs, axis=axis)
+        with config.with_backend(self._backend):
+            return xp.squeeze(inputs, axis=axis)
 
 
 class Unsqueeze(Feature):
@@ -8315,7 +8326,8 @@ class Unsqueeze(Feature):
                 inputs = inputs.unsqueeze(ax)
             return inputs
 
-        return xp.expand_dims(inputs, axis=axis)
+        with config.with_backend(self._backend):
+            return xp.expand_dims(inputs, axis=axis)
 
 
 ExpandDims = Unsqueeze
@@ -8420,7 +8432,8 @@ class MoveAxis(Feature):
             axes.insert(destination, axis)
             return inputs.permute(*axes)
 
-        return xp.moveaxis(inputs, source, destination)
+        with config.with_backend(self._backend):
+            return xp.moveaxis(inputs, source, destination)
 
 
 class Transpose(Feature):
@@ -8517,8 +8530,14 @@ class Transpose(Feature):
             NumPy array or a PyTorch tensor.
 
         """
+        
+        if TORCH_AVAILABLE and isinstance(inputs, torch.Tensor):
+            if axes is None:
+                axes = tuple(range(inputs.ndim - 1, -1, -1))
+            return inputs.permute(*axes)
 
-        return xp.transpose(inputs, axes)
+        arr = np.asarray(inputs)
+        return np.transpose(arr, axes)
 
 
 Permute = Transpose
@@ -8622,7 +8641,8 @@ class OneHot(Feature):
             ).to(dtype=torch.float32)
 
         # Create the one-hot encoded array.
-        return xp.eye(num_classes, dtype=np.float32)[image]
+        with config.with_backend(self._backend):
+            return xp.eye(num_classes, dtype=np.float32)[image]
 
 
 class TakeProperties(Feature):

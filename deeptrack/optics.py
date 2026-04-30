@@ -262,7 +262,8 @@ class Microscope(StructuralFeature):
         ux, uy, uz = upscale
         ux, uy, uz = int(ux), int(uy), int(uz)
 
-        image = xp.roll(image, shift=(ux // 2, uy // 2), axis=(0, 1))
+        with config.with_backend(self._backend):
+            image = xp.roll(image, shift=(ux // 2, uy // 2), axis=(0, 1))
 
         # Detector integration
         return AveragePooling((ux, uy))(image)
@@ -1081,64 +1082,65 @@ class Optics(Feature):
 
         """
 
-        if limits is None:
-            limits = xp.zeros((3, 2), dtype=xp.int32)
-        else:
-            limits = xp.asarray(limits)
+        with config.with_backend(self.get_backend()):
+            if limits is None:
+                limits = xp.zeros((3, 2), dtype=xp.int32)
+            else:
+                limits = xp.asarray(limits)
 
-        if padding is None:
-            padding = (0, 0, 0, 0)
+            if padding is None:
+                padding = (0, 0, 0, 0)
 
-        if output_region is None:
-            output_region = (None, None, None, None)
+            if output_region is None:
+                output_region = (None, None, None, None)
 
-        padding = xp.asarray(padding)
+            padding = xp.asarray(padding)
 
-        if TORCH_AVAILABLE and isinstance(limits, torch.Tensor):
-            new_limits = limits.clone()
-        else:
-            new_limits = limits.copy()
+            if TORCH_AVAILABLE and isinstance(limits, torch.Tensor):
+                new_limits = limits.clone()
+            else:
+                new_limits = limits.copy()
 
-        x0, y0, x1, y1 = output_region
+            x0, y0, x1, y1 = output_region
 
-        x0 = new_limits[0, 0] if x0 is None else x0
-        y0 = new_limits[1, 0] if y0 is None else y0
-        x1 = new_limits[0, 1] if x1 is None else x1
-        y1 = new_limits[1, 1] if y1 is None else y1
+            x0 = new_limits[0, 0] if x0 is None else x0
+            y0 = new_limits[1, 0] if y0 is None else y0
+            x1 = new_limits[0, 1] if x1 is None else x1
+            y1 = new_limits[1, 1] if y1 is None else y1
 
-        output_region = xp.asarray((x0, y0, x1, y1))
+            output_region = xp.asarray((x0, y0, x1, y1))
 
-        for i in range(2):
-            new_limits[i, 0] = xp.minimum(
-                new_limits[i, 0], output_region[i] - padding[i]
+            for i in range(2):
+                new_limits[i, 0] = xp.minimum(
+                    new_limits[i, 0], output_region[i] - padding[i]
+                )
+                new_limits[i, 1] = xp.maximum(
+                    new_limits[i, 1], output_region[i + 2] + padding[i + 2]
+                )
+
+            shape = new_limits[:, 1] - new_limits[:, 0]
+            if TORCH_AVAILABLE and isinstance(shape, torch.Tensor):
+                shape = shape.to(dtype=torch.int)
+            else:
+                shape = shape.astype(int)
+
+            new_volume = xp.zeros(
+                shape.tolist(), dtype=volume.dtype, device=volume.device
             )
-            new_limits[i, 1] = xp.maximum(
-                new_limits[i, 1], output_region[i + 2] + padding[i + 2]
-            )
 
-        shape = new_limits[:, 1] - new_limits[:, 0]
-        if TORCH_AVAILABLE and isinstance(shape, torch.Tensor):
-            shape = shape.to(dtype=torch.int)
-        else:
-            shape = shape.astype(int)
+            old_region = limits - new_limits
+            if TORCH_AVAILABLE and isinstance(old_region, torch.Tensor):
+                old_region = old_region.to(dtype=torch.int)
+            else:
+                old_region = old_region.astype(int)
 
-        new_volume = xp.zeros(
-            shape.tolist(), dtype=volume.dtype, device=volume.device
-        )
+            new_volume[
+                old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
+                old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
+                old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
+            ] = volume
 
-        old_region = limits - new_limits
-        if TORCH_AVAILABLE and isinstance(old_region, torch.Tensor):
-            old_region = old_region.to(dtype=torch.int)
-        else:
-            old_region = old_region.astype(int)
-
-        new_volume[
-            old_region[0, 0] : old_region[0, 0] + limits[0, 1] - limits[0, 0],
-            old_region[1, 0] : old_region[1, 0] + limits[1, 1] - limits[1, 0],
-            old_region[2, 0] : old_region[2, 0] + limits[2, 1] - limits[2, 0],
-        ] = volume
-
-        return new_volume, new_limits
+            return new_volume, new_limits
 
     def __call__(
         self: Optics,
@@ -1349,7 +1351,8 @@ class Fluorescence(Optics):
         ux, uy, uz = int(ux), int(uy), int(uz)
 
         norm = ux * uy * uz  # We sum over z in this case
-        image = xp.roll(image, shift=(ux // 2, uy // 2), axis=(0, 1))
+        with config.with_backend(self._backend):
+            image = xp.roll(image, shift=(ux // 2, uy // 2), axis=(0, 1))
 
         # Detector integration
         return SumPooling((ux, uy))(image) / norm
@@ -1860,153 +1863,154 @@ class Brightfield(Optics):
 
         """
 
-        # Pad volume
-        padded_volume, limits = self._pad_volume(
-            illuminated_volume, limits=limits, **kwargs
-        )
+        with config.with_backend(self.get_backend()):
+            # Pad volume
+            padded_volume, limits = self._pad_volume(
+                illuminated_volume, limits=limits, **kwargs
+            )
 
-        # Extract indexes of the output region
-        pad = kwargs.get("padding", (0, 0, 0, 0))
-        output_region = np.array(
-            kwargs.get("output_region", (None, None, None, None))
-        )
-        output_region[0] = (
-            None
-            if output_region[0] is None
-            else int(output_region[0] - limits[0, 0] - pad[0])
-        )
-        output_region[1] = (
-            None
-            if output_region[1] is None
-            else int(output_region[1] - limits[1, 0] - pad[1])
-        )
-        output_region[2] = (
-            None
-            if output_region[2] is None
-            else int(output_region[2] - limits[0, 0] + pad[2])
-        )
-        output_region[3] = (
-            None
-            if output_region[3] is None
-            else int(output_region[3] - limits[1, 0] + pad[3])
-        )
+            # Extract indexes of the output region
+            pad = kwargs.get("padding", (0, 0, 0, 0))
+            output_region = np.array(
+                kwargs.get("output_region", (None, None, None, None))
+            )
+            output_region[0] = (
+                None
+                if output_region[0] is None
+                else int(output_region[0] - limits[0, 0] - pad[0])
+            )
+            output_region[1] = (
+                None
+                if output_region[1] is None
+                else int(output_region[1] - limits[1, 0] - pad[1])
+            )
+            output_region[2] = (
+                None
+                if output_region[2] is None
+                else int(output_region[2] - limits[0, 0] + pad[2])
+            )
+            output_region[3] = (
+                None
+                if output_region[3] is None
+                else int(output_region[3] - limits[1, 0] + pad[3])
+            )
 
-        padded_volume = padded_volume[
-            output_region[0] : output_region[2],
-            output_region[1] : output_region[3],
-            :,
-        ]
-        z_limits = limits[2, :]
+            padded_volume = padded_volume[
+                output_region[0] : output_region[2],
+                output_region[1] : output_region[3],
+                :,
+            ]
+            z_limits = limits[2, :]
 
-        output_image = xp.zeros(
-            (*padded_volume.shape[0:2], 1),
-            dtype=xp.float32 if self.get_backend() == "torch" else float,
-        )
+            output_image = xp.zeros(
+                (*padded_volume.shape[0:2], 1),
+                dtype=xp.float32 if self.get_backend() == "torch" else float,
+            )
 
-        index_iterator = range(padded_volume.shape[2])
-        z_iterator = np.linspace(
-            z_limits[0],
-            z_limits[1],
-            num=padded_volume.shape[2],
-            endpoint=False,
-        )
+            index_iterator = range(padded_volume.shape[2])
+            z_iterator = xp.linspace(
+                z_limits[0],
+                z_limits[1],
+                num=padded_volume.shape[2],
+                endpoint=False,
+            )
 
-        zero_plane = xp.all(padded_volume == 0, axis=(0, 1), keepdims=False)
-        # z_values = z_iterator[~zero_plane]
+            zero_plane = xp.all(padded_volume == 0, axis=(0, 1), keepdims=False)
+            # z_values = z_iterator[~zero_plane]
 
-        volume = pad_image_to_fft(padded_volume, axes=(0, 1))
+            volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
-        voxel_size = get_active_voxel_size()
+            voxel_size = get_active_voxel_size()
 
-        pupils = [
-            self._pupil(
+            pupils = [
+                self._pupil(
+                    volume.shape[:2],
+                    defocus=[1],
+                    include_aberration=False,
+                    **kwargs,
+                )[0],
+                self._pupil(
+                    volume.shape[:2],
+                    defocus=[-z_limits[1]],
+                    include_aberration=True,
+                    **kwargs,
+                )[0],
+                self._pupil(
+                    volume.shape[:2],
+                    defocus=[0],
+                    include_aberration=True,
+                    **kwargs,
+                )[0],
+            ]
+
+            pupil_step = xp.fft.fftshift(pupils[0])
+
+            light_in = xp.ones(
                 volume.shape[:2],
-                defocus=[1],
-                include_aberration=False,
-                **kwargs,
-            )[0],
-            self._pupil(
-                volume.shape[:2],
-                defocus=[-z_limits[1]],
-                include_aberration=True,
-                **kwargs,
-            )[0],
-            self._pupil(
-                volume.shape[:2],
-                defocus=[0],
-                include_aberration=True,
-                **kwargs,
-            )[0],
-        ]
+                dtype=xp.complex64 if self.get_backend() == "torch" else complex,
+            )
+            light_in = self.illumination.resolve(light_in)
+            light_in = xp.fft.fft2(light_in)
 
-        pupil_step = xp.fft.fftshift(pupils[0])
+            K = (
+                2
+                * np.pi
+                / kwargs["wavelength"]
+                * kwargs["refractive_index_medium"]
+            )
 
-        light_in = xp.ones(
-            volume.shape[:2],
-            dtype=xp.complex64 if self.get_backend() == "torch" else complex,
-        )
-        light_in = self.illumination.resolve(light_in)
-        light_in = xp.fft.fft2(light_in)
+            z = z_limits[1]
+            for i, z in zip(index_iterator, z_iterator):
+                light_in = light_in * pupil_step
 
-        K = (
-            2
-            * np.pi
-            / kwargs["wavelength"]
-            * kwargs["refractive_index_medium"]
-        )
+                if zero_plane[i]:
+                    continue
 
-        z = z_limits[1]
-        for i, z in zip(index_iterator, z_iterator):
-            light_in = light_in * pupil_step
+                ri_slice = volume[:, :, i]
+                light = xp.fft.ifft2(light_in)
+                light_out = light * xp.exp(1j * ri_slice * voxel_size[-1] * K)
+                light_in = xp.fft.fft2(light_out)
 
-            if zero_plane[i]:
-                continue
+            shifted_pupil = xp.fft.fftshift(pupils[1])
+            light_in_focus = light_in * shifted_pupil
 
-            ri_slice = volume[:, :, i]
-            light = xp.fft.ifft2(light_in)
-            light_out = light * xp.exp(1j * ri_slice * voxel_size[-1] * K)
-            light_in = xp.fft.fft2(light_out)
+            if len(fields) > 0:
+                # field = np.sum(fields, axis=0)
+                field_arrays = []
 
-        shifted_pupil = xp.fft.fftshift(pupils[1])
-        light_in_focus = light_in * shifted_pupil
+                for fs in fields:
+                    # fs is a ScatteredField
+                    arr = fs.array
 
-        if len(fields) > 0:
-            # field = np.sum(fields, axis=0)
-            field_arrays = []
+                    # Enforce (H, W, 1) shape
+                    if arr.ndim == 2:
+                        arr = arr[..., None]
 
-            for fs in fields:
-                # fs is a ScatteredField
-                arr = fs.array
+                    if arr.ndim != 3 or arr.shape[-1] != 1:
+                        raise ValueError(
+                            f"Expected field of shape (H, W, 1), got {arr.shape}"
+                        )
 
-                # Enforce (H, W, 1) shape
-                if arr.ndim == 2:
-                    arr = arr[..., None]
+                    field_arrays.append(arr)
 
-                if arr.ndim != 3 or arr.shape[-1] != 1:
-                    raise ValueError(
-                        f"Expected field of shape (H, W, 1), got {arr.shape}"
-                    )
+                field = xp.sum(field_arrays, axis=0)
+                light_in_focus += field[..., 0]
+            shifted_pupil = xp.fft.fftshift(pupils[-1])
+            light_in_focus = light_in_focus * shifted_pupil
+            # Mask to remove light outside the pupil.
+            mask = xp.abs(shifted_pupil) > 0
+            light_in_focus = light_in_focus * mask
 
-                field_arrays.append(arr)
+            output_image = xp.fft.ifft2(light_in_focus)[
+                : padded_volume.shape[0], : padded_volume.shape[1]
+            ]
+            output_image = xp.expand_dims(output_image, axis=-1)
+            output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
-            field = xp.sum(field_arrays, axis=0)
-            light_in_focus += field[..., 0]
-        shifted_pupil = xp.fft.fftshift(pupils[-1])
-        light_in_focus = light_in_focus * shifted_pupil
-        # Mask to remove light outside the pupil.
-        mask = xp.abs(shifted_pupil) > 0
-        light_in_focus = light_in_focus * mask
+            if not kwargs.get("return_field", False):
+                output_image = xp.square(xp.abs(output_image))
 
-        output_image = xp.fft.ifft2(light_in_focus)[
-            : padded_volume.shape[0], : padded_volume.shape[1]
-        ]
-        output_image = xp.expand_dims(output_image, axis=-1)
-        output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-
-        if not kwargs.get("return_field", False):
-            output_image = xp.square(xp.abs(output_image))
-
-        return output_image
+            return output_image
 
 
 class Holography(Brightfield):
@@ -2295,7 +2299,8 @@ class Darkfield(Brightfield):
         field = super().get(
             illuminated_volume, limits, fields, return_field=True, **kwargs
         )
-        return xp.square(xp.abs(field - 1))
+        with config.with_backend(self._backend):
+            return xp.square(xp.abs(field - 1))
 
 
 class IlluminationGradient(Feature):
@@ -2426,21 +2431,22 @@ class IlluminationGradient(Feature):
 
         """
 
-        x = xp.arange(image.shape[0])
-        y = xp.arange(image.shape[1])
+        with config.with_backend(self._backend):
+            x = xp.arange(image.shape[0])
+            y = xp.arange(image.shape[1])
 
-        X, Y = xp.meshgrid(y, x)
+            X, Y = xp.meshgrid(y, x)
 
-        amplitude = X * gradient[0] + Y * gradient[1]
+            amplitude = X * gradient[0] + Y * gradient[1]
 
-        if image.ndim == 3:
-            amplitude = xp.expand_dims(amplitude, axis=-1)
-        amplitude = xp.clip(xp.abs(image) + amplitude + constant, vmin, vmax)
+            if image.ndim == 3:
+                amplitude = xp.expand_dims(amplitude, axis=-1)
+            amplitude = xp.clip(xp.abs(image) + amplitude + constant, vmin, vmax)
 
-        image = amplitude * image / xp.abs(image)
-        image[xp.isnan(image)] = 0
+            image = amplitude * image / xp.abs(image)
+            image[xp.isnan(image)] = 0
 
-        return image
+            return image
 
 
 class NonOverlapping(Feature):
@@ -3354,118 +3360,119 @@ class SampleToMasks(Feature):
 
         """
 
-        # Handle list of images.
-        # if isinstance(images, list) and len(images) != 1:
-        list_of_labels = super()._process_and_get(images, **kwargs)
+        with config.with_backend(self._backend):
+            # Handle list of images.
+            # if isinstance(images, list) and len(images) != 1:
+            list_of_labels = super()._process_and_get(images, **kwargs)
 
-        from deeptrack.scatterers import ScatteredVolume
+            from deeptrack.scatterers import ScatteredVolume
 
-        for idx, (label, image) in enumerate(zip(list_of_labels, images)):
-            list_of_labels[idx] = ScatteredVolume(
-                array=label, properties=image.properties.copy()
+            for idx, (label, image) in enumerate(zip(list_of_labels, images)):
+                list_of_labels[idx] = ScatteredVolume(
+                    array=label, properties=image.properties.copy()
+                )
+
+            # Create an empty output image.
+            output_region = kwargs["output_region"]
+            output = xp.zeros(
+                (
+                    output_region[2] - output_region[0],
+                    output_region[3] - output_region[1],
+                    kwargs["number_of_masks"],
+                ),
+                dtype=list_of_labels[0].array.dtype,
             )
 
-        # Create an empty output image.
-        output_region = kwargs["output_region"]
-        output = xp.zeros(
-            (
-                output_region[2] - output_region[0],
-                output_region[3] - output_region[1],
-                kwargs["number_of_masks"],
-            ),
-            dtype=list_of_labels[0].array.dtype,
-        )
+            # Merge masks into the output.
+            for volume in list_of_labels:
+                label = volume.array
+                position = _get_position(volume)
 
-        # Merge masks into the output.
-        for volume in list_of_labels:
-            label = volume.array
-            position = _get_position(volume)
+                p0 = xp.round(position - xp.asarray(output_region[0:2]))
+                p0 = p0.astype(xp.int64)
 
-            p0 = xp.round(position - xp.asarray(output_region[0:2]))
-            p0 = p0.astype(xp.int64)
+                if xp.any(p0 > xp.asarray(output.shape[:2])) or xp.any(
+                    p0 + xp.asarray(label.shape[:2]) < 0
+                ):
+                    continue
 
-            if xp.any(p0 > xp.asarray(output.shape[:2])) or xp.any(
-                p0 + xp.asarray(label.shape[:2]) < 0
-            ):
-                continue
+                crop_x = (-xp.minimum(p0[0], 0)).item()
+                crop_y = (-xp.minimum(p0[1], 0)).item()
 
-            crop_x = (-xp.minimum(p0[0], 0)).item()
-            crop_y = (-xp.minimum(p0[1], 0)).item()
+                crop_x_end = int(
+                    label.shape[0]
+                    - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
+                )
+                crop_y_end = int(
+                    label.shape[1]
+                    - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
+                )
 
-            crop_x_end = int(
-                label.shape[0]
-                - np.max([p0[0] + label.shape[0] - output.shape[0], 0])
-            )
-            crop_y_end = int(
-                label.shape[1]
-                - np.max([p0[1] + label.shape[1] - output.shape[1], 0])
-            )
+                labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
 
-            labelarg = label[crop_x:crop_x_end, crop_y:crop_y_end, :]
+                p0[0] = np.max([p0[0], 0])
+                p0[1] = np.max([p0[1], 0])
 
-            p0[0] = np.max([p0[0], 0])
-            p0[1] = np.max([p0[1], 0])
+                p0 = p0.astype(int)
 
-            p0 = p0.astype(int)
+                output_slice = output[
+                    p0[0] : p0[0] + labelarg.shape[0],
+                    p0[1] : p0[1] + labelarg.shape[1],
+                ]
 
-            output_slice = output[
-                p0[0] : p0[0] + labelarg.shape[0],
-                p0[1] : p0[1] + labelarg.shape[1],
-            ]
+                for label_index in range(kwargs["number_of_masks"]):
 
-            for label_index in range(kwargs["number_of_masks"]):
+                    if isinstance(kwargs["merge_method"], list):
+                        merge = kwargs["merge_method"][label_index]
+                    else:
+                        merge = kwargs["merge_method"]
 
-                if isinstance(kwargs["merge_method"], list):
-                    merge = kwargs["merge_method"][label_index]
-                else:
-                    merge = kwargs["merge_method"]
+                    if merge == "add":
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] += labelarg[..., label_index]
 
-                if merge == "add":
-                    output[
-                        p0[0] : p0[0] + labelarg.shape[0],
-                        p0[1] : p0[1] + labelarg.shape[1],
-                        label_index,
-                    ] += labelarg[..., label_index]
+                    elif merge == "overwrite":
+                        output_slice[
+                            labelarg[..., label_index] != 0, label_index
+                        ] = labelarg[labelarg[..., label_index] != 0, label_index]
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = output_slice[..., label_index]
 
-                elif merge == "overwrite":
-                    output_slice[
-                        labelarg[..., label_index] != 0, label_index
-                    ] = labelarg[labelarg[..., label_index] != 0, label_index]
-                    output[
-                        p0[0] : p0[0] + labelarg.shape[0],
-                        p0[1] : p0[1] + labelarg.shape[1],
-                        label_index,
-                    ] = output_slice[..., label_index]
+                    elif merge == "or":
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = xp.logical_or(
+                            output_slice[..., label_index] != 0,
+                            labelarg[..., label_index] != 0,
+                        )
 
-                elif merge == "or":
-                    output[
-                        p0[0] : p0[0] + labelarg.shape[0],
-                        p0[1] : p0[1] + labelarg.shape[1],
-                        label_index,
-                    ] = xp.logical_or(
-                        output_slice[..., label_index] != 0,
-                        labelarg[..., label_index] != 0,
-                    )
+                    elif merge == "mul":
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] *= labelarg[..., label_index]
 
-                elif merge == "mul":
-                    output[
-                        p0[0] : p0[0] + labelarg.shape[0],
-                        p0[1] : p0[1] + labelarg.shape[1],
-                        label_index,
-                    ] *= labelarg[..., label_index]
+                    else:
+                        # No match, assume function
+                        output[
+                            p0[0] : p0[0] + labelarg.shape[0],
+                            p0[1] : p0[1] + labelarg.shape[1],
+                            label_index,
+                        ] = merge(
+                            output_slice[..., label_index],
+                            labelarg[..., label_index],
+                        )
 
-                else:
-                    # No match, assume function
-                    output[
-                        p0[0] : p0[0] + labelarg.shape[0],
-                        p0[1] : p0[1] + labelarg.shape[1],
-                        label_index,
-                    ] = merge(
-                        output_slice[..., label_index],
-                        labelarg[..., label_index],
-                    )
-
-        return output
+            return output
 
 
 def _get_position(

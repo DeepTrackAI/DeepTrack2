@@ -14,13 +14,16 @@ from numpy.random import Generator, PCG64
 from PIL import Image
 
 import deeptrack as dt
-from deeptrack import TORCH_AVAILABLE
+from deeptrack import config, TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
 
 
 class TestDLCC(unittest.TestCase):
+
+    def setUp(self):
+        config.set_backend("numpy")
 
     _EXPECTED_OPTICS_WARNING_PATTERNS = (
         r"Brightfield imaging from ScatteredVolume assumes a weak-phase / projection approximation.*",

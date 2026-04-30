@@ -1,10 +1,8 @@
-# Use this only when running the test locally.
-# import sys
-# sys.path.append(".")  # Adds the module to path
-
 import unittest
 
 import numpy as np
+import warnings
+from contextlib import contextmanager
 
 from deeptrack import optics
 from deeptrack.scatterers import PointParticle, Sphere
@@ -19,6 +17,24 @@ if TORCH_AVAILABLE:
 
 class TestOptics_NumPy(BackendTestBase):
     BACKEND = "numpy"
+
+    _EXPECTED_OPTICS_WARNING_PATTERNS = (
+        r"Brightfield imaging from ScatteredVolume assumes a weak-phase / projection approximation.*",
+        r"Darkfield imaging from ScatteredVolume is a very rough approximation.*",
+        r"Approximating darkfield contrast from refractive index.*",
+        r"Fluorescence scatterer has no 'intensity'.*",
+    )
+
+    @contextmanager
+    def _suppress_expected_optics_warnings(self):
+        with warnings.catch_warnings():
+            for pattern in self._EXPECTED_OPTICS_WARNING_PATTERNS:
+                warnings.filterwarnings(
+                    "ignore",
+                    message=pattern,
+                    category=UserWarning,
+                )
+            yield
 
     @property
     def array_type(self):
@@ -90,7 +106,9 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+
+        with self._suppress_expected_optics_warnings():
+            output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
@@ -111,7 +129,8 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
@@ -143,8 +162,9 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
 
-        img_bf = bf(scatterer).resolve()
-        img_hg = hg(scatterer).resolve()
+        with self._suppress_expected_optics_warnings():
+            img_bf = bf(scatterer).resolve()
+            img_hg = hg(scatterer).resolve()
 
         err = float(xp.mean(xp.abs(img_bf - img_hg)))
         self.assertLess(err, 1e-10)
@@ -166,7 +186,10 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+
+        with self._suppress_expected_optics_warnings():
+            output_image = imaged_scatterer.resolve()
+    
         self.assertEqual(microscope.illumination_angle(), 3.141592653589793)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
@@ -189,7 +212,10 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+    
+        with self._suppress_expected_optics_warnings():
+            output_image = imaged_scatterer.resolve()
+    
         self.assertEqual(microscope.illumination_angle(), 1.5707963267948966)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
@@ -215,7 +241,8 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-        output_image = imaged_scatterer.resolve()
+        with self._suppress_expected_optics_warnings():
+            output_image = imaged_scatterer.resolve()
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
@@ -239,9 +266,10 @@ class TestOptics_NumPy(BackendTestBase):
         )
 
         imaged_scatterer = microscope(scatterer)
-        output_image_no_upscale = imaged_scatterer.update()(upscale=1)
 
-        output_image_2x_upscale = imaged_scatterer.update()(upscale=(2, 2, 1))
+        with self._suppress_expected_optics_warnings():
+            output_image_no_upscale = imaged_scatterer.update()(upscale=1)
+            output_image_2x_upscale = imaged_scatterer.update()(upscale=(2, 2, 1))
 
         self.assertEqual(output_image_no_upscale.shape, (64, 64, 1))
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))

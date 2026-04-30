@@ -13,7 +13,7 @@ from typing import Iterable
 import numpy as np
 from numpy.typing import NDArray
 
-from deeptrack import elementwise, features, TORCH_AVAILABLE
+from deeptrack import config, elementwise, features, TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
@@ -87,9 +87,14 @@ def grid_test_features(
                 if elementwise_class.__name__ in DISALLOW_COMPLEX_NUMPY:
                     continue
 
+        if TORCH_AVAILABLE and isinstance(feature_input, torch.Tensor):
+            config.set_backend_torch()
+        else:
+            config.set_backend_numpy()
+
         pip_a = elementwise_class(features.Value(feature_input))
         pip_b = features.Value(feature_input) >> elementwise_class()
-
+        
         for pip in [pip_a, pip_b]:
             # Silence expected domain warnings
             # (log, sqrt, arctanh, arccosh, ...)

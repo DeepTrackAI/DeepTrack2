@@ -11,6 +11,7 @@ import operator
 import unittest
 import warnings
 
+import deeptrack
 import numpy as np
 from pint import Quantity
 
@@ -29,7 +30,6 @@ from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
     import torch
-
 
 def grid_test_features(
     tester,
@@ -76,11 +76,11 @@ def grid_test_features(
 
         if isinstance(output, list) and isinstance(expected_output, list):
             for a, b in zip(output, expected_output):
-                np.testing.assert_almost_equal(np.array(a), np.array(b))
+                np.testing.assert_almost_equal(np.asarray(a), np.asarray(b))
         else:
             tester.assertTrue(
                 np.array_equal(
-                    np.array(output), np.array(expected_output), equal_nan=True
+                    np.asarray(output), np.asarray(expected_output), equal_nan=True
                 ),
                 "Output {output} different from expected {expected_result}.\n "
                 "Using arguments \n"
@@ -155,6 +155,9 @@ def test_operator(self, operator, emulated_operator=None):
 
 
 class TestFeatures(unittest.TestCase):
+
+    def setUp(self):
+        config.set_backend("numpy")
 
     def test___all__(self):
         from deeptrack import (
@@ -721,7 +724,7 @@ class TestFeatures(unittest.TestCase):
 
             # dtype resolution should now be torch dtypes
             feature.dtype(float="float64")
-            self.assertEqual(feature.float_dtype.name, "float64")
+            self.assertEqual(feature.float_dtype, torch.float64)
 
             # Calling to(torch.device("cpu")) under torch should not warn.
             with warnings.catch_warnings(record=True) as w:
@@ -858,7 +861,7 @@ class TestFeatures(unittest.TestCase):
             self.assertIsInstance(batch, tuple)
             self.assertEqual(len(batch), 1)
             self.assertEqual(tuple(batch[0].shape), (4,))
-            self.assertTrue(bool(xp.all(batch[0] == 1)))
+            self.assertTrue(bool(torch.all(batch[0] == 1)))
 
     def test_Feature___getattr__(self):
         feature = features.DummyFeature(value=42, prop="a")
