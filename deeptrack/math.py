@@ -103,9 +103,10 @@ import skimage
 import skimage.measure
 
 from deeptrack import utils, OPENCV_AVAILABLE, TORCH_AVAILABLE
-from deeptrack.features import Feature
-from deeptrack.types import PropertyLike
 from deeptrack.backend import xp
+from deeptrack.features import Feature
+from deeptrack.scatterers import ScatteredField, ScatteredVolume
+from deeptrack.types import PropertyLike
 
 if TORCH_AVAILABLE:
     import torch
@@ -1152,9 +1153,7 @@ class Blur(Feature):
 
     def get(
         self: Blur,
-        image: (
-            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
-        ),
+        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Apply the blur filter to the input image using the selected backend.
@@ -1932,9 +1931,7 @@ class Pool(Feature):
 
     def get(
         self: Pool,
-        image: (
-            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
-        ),
+        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
         """Apply the pooling operation to the input image.
@@ -2944,9 +2941,7 @@ class Resize(Feature):
 
     def get(
         self: Resize,
-        image: (
-            np.ndarray | torch.Tensor | "ScatteredVolume" | "ScatteredField"
-        ),
+        image: np.ndarray | torch.Tensor | ScatteredVolume | ScatteredField,
         dsize: tuple[int, int],
         **kwargs: Any,
     ) -> np.ndarray | torch.Tensor:
