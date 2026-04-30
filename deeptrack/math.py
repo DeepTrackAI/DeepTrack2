@@ -143,7 +143,6 @@ if TYPE_CHECKING:
     from deeptrack.scatterers import ScatteredField, ScatteredVolume
 
 
-
 class Average(Feature):
     """Average of input arrays.
 
