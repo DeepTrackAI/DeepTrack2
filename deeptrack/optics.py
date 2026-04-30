@@ -3634,6 +3634,10 @@ def _create_volume(
         arr = s.array
 
         if backend == "torch":
+            if not TORCH_AVAILABLE:
+                raise RuntimeError(
+                    "Torch backend requested but PyTorch is not available."
+                )
             if not isinstance(arr, torch.Tensor):
                 raise TypeError(
                     "Torch backend active "
@@ -3641,7 +3645,7 @@ def _create_volume(
                 )
 
         elif backend == "numpy":
-            if isinstance(arr, torch.Tensor):
+            if TORCH_AVAILABLE and isinstance(arr, torch.Tensor):
                 raise TypeError(
                     "NumPy backend active "
                     "but scatterer.array is a torch.Tensor"
