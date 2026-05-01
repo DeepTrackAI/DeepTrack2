@@ -9,7 +9,7 @@ import numpy as np
 
 from deeptrack import math
 from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
-from deeptrack.tests import BackendTestBase
+from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch

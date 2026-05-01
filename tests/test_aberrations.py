@@ -5,7 +5,7 @@ from deeptrack import aberrations
 from deeptrack.optics import Fluorescence
 from deeptrack.scatterers import PointParticle
 from deeptrack.backend import TORCH_AVAILABLE
-from deeptrack.tests import BackendTestBase
+from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch

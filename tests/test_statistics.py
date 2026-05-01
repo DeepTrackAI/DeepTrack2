@@ -6,8 +6,7 @@ import numpy as np
 
 from deeptrack import statistics, features
 from deeptrack.backend import TORCH_AVAILABLE
-
-from deeptrack.tests import BackendTestBase
+from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch
