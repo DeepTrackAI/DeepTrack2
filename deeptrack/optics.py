@@ -1124,9 +1124,17 @@ class Optics(Feature):
             else:
                 shape = shape.astype(int)
 
-            new_volume = xp.zeros(
-                shape.tolist(), dtype=volume.dtype, device=volume.device
-            )
+            if TORCH_AVAILABLE and isinstance(volume, torch.Tensor):
+                new_volume = torch.zeros(
+                    shape.tolist(),
+                    dtype=volume.dtype,
+                    device=volume.device,
+                )
+            else:
+                new_volume = np.zeros(
+                    shape.tolist(),
+                    dtype=volume.dtype,
+                )
 
             old_region = limits - new_limits
             if TORCH_AVAILABLE and isinstance(old_region, torch.Tensor):
@@ -3780,4 +3788,6 @@ def _create_volume(
         if device is None:
             device = torch.device("cpu")
         volume = torch.from_numpy(volume).to(device=device)
+        if limits is not None:
+            limits = torch.as_tensor(limits, dtype=torch.int32, device=device)
     return volume, limits
