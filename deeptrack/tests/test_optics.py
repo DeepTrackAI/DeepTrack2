@@ -189,7 +189,7 @@ class TestOptics_NumPy(BackendTestBase):
 
         with self._suppress_expected_optics_warnings():
             output_image = imaged_scatterer.resolve()
-    
+
         self.assertEqual(microscope.illumination_angle(), 3.141592653589793)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
@@ -212,10 +212,10 @@ class TestOptics_NumPy(BackendTestBase):
             position=(32, 32),
         )
         imaged_scatterer = microscope(scatterer)
-    
+
         with self._suppress_expected_optics_warnings():
             output_image = imaged_scatterer.resolve()
-    
+
         self.assertEqual(microscope.illumination_angle(), 1.5707963267948966)
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
@@ -269,7 +269,9 @@ class TestOptics_NumPy(BackendTestBase):
 
         with self._suppress_expected_optics_warnings():
             output_image_no_upscale = imaged_scatterer.update()(upscale=1)
-            output_image_2x_upscale = imaged_scatterer.update()(upscale=(2, 2, 1))
+            output_image_2x_upscale = imaged_scatterer.update()(
+                upscale=(2, 2, 1)
+            )
 
         self.assertEqual(output_image_no_upscale.shape, (64, 64, 1))
         self.assertEqual(output_image_2x_upscale.shape, (64, 64, 1))
