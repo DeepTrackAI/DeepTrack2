@@ -125,7 +125,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
  
   Extracting the radius and refractive index of particles.
 
-- DTEx215 **Cell Counting**
+- DTEx215 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Counting the number of cells in fluorescence images.
 
