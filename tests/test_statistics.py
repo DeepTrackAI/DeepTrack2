@@ -149,14 +149,16 @@ class TestStatistics_NumPy(BackendTestBase):
             statistics.Median,
         ]
 
-        for case in edge_cases:
-            if case is np.inf:
-                selected_statistics = specific_statistics_for_inf
-            else:
-                selected_statistics = all_statistics
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", RuntimeWarning)
+            for case in edge_cases:
+                if case is np.inf:
+                    selected_statistics = specific_statistics_for_inf
+                else:
+                    selected_statistics = all_statistics
 
-            for stat in selected_statistics:
-                self._test_single_case(case, stat)
+                for stat in selected_statistics:
+                    self._test_single_case(case, stat)
 
     def _test_single_case(self, case, feature_class):
         feature = feature_class(axis=0, distributed=False)
