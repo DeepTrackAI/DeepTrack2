@@ -31,6 +31,7 @@ from deeptrack import units_registry as u
 if TORCH_AVAILABLE:
     import torch
 
+
 def grid_test_features(
     tester,
     feature_a,
@@ -80,7 +81,9 @@ def grid_test_features(
         else:
             tester.assertTrue(
                 np.array_equal(
-                    np.asarray(output), np.asarray(expected_output), equal_nan=True
+                    np.asarray(output),
+                    np.asarray(expected_output),
+                    equal_nan=True,
                 ),
                 "Output {output} different from expected {expected_result}.\n "
                 "Using arguments \n"
