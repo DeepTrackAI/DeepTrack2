@@ -35,14 +35,14 @@ from deeptrack.sequences import *
 from deeptrack.wrappers import *
 from deeptrack.elementwise import *
 
-from deeptrack.aberrations import *
+from deeptrack.optical.aberrations import *
 from deeptrack.optical.augmentations import *
-from deeptrack.math import *
-from deeptrack.noises import *
-from deeptrack.optics import *
-from deeptrack.scatterers import *
+from deeptrack.optical.math import *
+from deeptrack.optical.noises import *
+from deeptrack.optical.optics import *
+from deeptrack.optical.scatterers import *
 from deeptrack.statistics import *
-from deeptrack.holography import *
+from deeptrack.optical.holography import *
 
 if TORCH_AVAILABLE:
     import deeptrack.pytorch
