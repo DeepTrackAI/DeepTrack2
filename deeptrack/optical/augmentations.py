@@ -97,7 +97,7 @@ import numpy as np
 from deeptrack import utils, TORCH_AVAILABLE
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
-from deeptrack.scatterers import ScatteredVolume, ScatteredField
+from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 from deeptrack.backend import xp, config
 
 if TORCH_AVAILABLE:
