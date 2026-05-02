@@ -8,10 +8,10 @@
 
 import unittest
 
+from deeptrack.optical import augmentations
 import numpy as np
 
 from deeptrack import (
-    augmentations,
     config,
     features,
     scatterers,

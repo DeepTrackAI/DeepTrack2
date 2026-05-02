@@ -36,7 +36,7 @@ from deeptrack.wrappers import *
 from deeptrack.elementwise import *
 
 from deeptrack.aberrations import *
-from deeptrack.augmentations import *
+from deeptrack.optical.augmentations import *
 from deeptrack.math import *
 from deeptrack.noises import *
 from deeptrack.optics import *
