@@ -5,10 +5,9 @@
 import unittest
 
 import array_api_compat as apc
-from deeptrack.optical import math
 import numpy as np
 
-from deeptrack import math as dt_math
+import deeptrack.optical.math as dt_math
 from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
 from tests import BackendTestBase
 
