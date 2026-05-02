@@ -146,7 +146,7 @@ class Noise(Feature):
 
         # Lazy import avoids circular dependency
         try:
-            from deeptrack.scatterers import ScatteredVolume, ScatteredField
+            from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
             scattered_types = (ScatteredVolume, ScatteredField)
         except Exception:

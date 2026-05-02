@@ -125,7 +125,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.math import AveragePooling, SumPooling, pad_image_to_fft
+from deeptrack.optical.math import AveragePooling, SumPooling, pad_image_to_fft
 from deeptrack.features import (
     DummyFeature,
     Feature,
@@ -138,7 +138,7 @@ from deeptrack import units_registry as u
 
 from deeptrack import TORCH_AVAILABLE
 from deeptrack.backend import xp, config
-from deeptrack.scatterers import ScatteredVolume, ScatteredField
+from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
 if TORCH_AVAILABLE:
     import torch
@@ -2768,13 +2768,13 @@ class NonOverlapping(Feature):
         - If bounding cubes overlap, voxel-level checks are performed.
 
         """
-        from deeptrack.scatterers import ScatteredVolume
+        from deeptrack.optical.scatterers import ScatteredVolume
 
-        from deeptrack.augmentations import (
+        from deeptrack.optical.augmentations import (
             CropTight,
             Pad,
         )  # these are not compatibles with torch backend
-        from deeptrack.math import isotropic_erosion, isotropic_dilation
+        from deeptrack.optical.math import isotropic_erosion, isotropic_dilation
 
         min_distance = self.min_distance()
         crop = CropTight()
@@ -3373,7 +3373,7 @@ class SampleToMasks(Feature):
             # if isinstance(images, list) and len(images) != 1:
             list_of_labels = super()._process_and_get(images, **kwargs)
 
-            from deeptrack.scatterers import ScatteredVolume
+            from deeptrack.optical.scatterers import ScatteredVolume
 
             for idx, (label, image) in enumerate(zip(list_of_labels, images)):
                 list_of_labels[idx] = ScatteredVolume(

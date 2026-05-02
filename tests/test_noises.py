@@ -10,7 +10,7 @@ import unittest
 
 import numpy as np
 
-from deeptrack import noises
+from deeptrack.optical import noises
 
 from deeptrack.backend import TORCH_AVAILABLE, xp
 from tests import BackendTestBase

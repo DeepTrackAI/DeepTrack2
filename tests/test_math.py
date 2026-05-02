@@ -587,7 +587,7 @@ class TestMath_Numpy(BackendTestBase):
 
     def test_AveragePooling(self):
         # `ScatteredVolume` handling (non-array input) ---
-        from deeptrack.scatterers import ScatteredVolume
+        from deeptrack.optical.scatterers import ScatteredVolume
 
         image = xp.ones((4, 4))
         scattered = ScatteredVolume(image)

@@ -140,7 +140,7 @@ __all__ = [
 
 if TYPE_CHECKING:
     import torch
-    from deeptrack.scatterers import ScatteredField, ScatteredVolume
+    from deeptrack.optical.scatterers import ScatteredField, ScatteredVolume
 
 
 class Average(Feature):
@@ -1180,7 +1180,7 @@ class Blur(Feature):
         """
 
         backend = self.get_backend()
-        from deeptrack.scatterers import ScatteredVolume, ScatteredField
+        from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
         is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
         if is_scattered:
@@ -1958,7 +1958,7 @@ class Pool(Feature):
         """
 
         backend = self.get_backend()
-        from deeptrack.scatterers import ScatteredVolume, ScatteredField
+        from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
         is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
         if is_scattered:
@@ -2975,7 +2975,7 @@ class Resize(Feature):
 
         backend = self.get_backend()
 
-        from deeptrack.scatterers import ScatteredVolume, ScatteredField
+        from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
         is_scattered = isinstance(image, (ScatteredVolume, ScatteredField))
         if is_scattered:

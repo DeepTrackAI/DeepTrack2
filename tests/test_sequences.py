@@ -11,8 +11,8 @@ import unittest
 import numpy as np
 
 from deeptrack import features, sequences, TORCH_AVAILABLE
-from deeptrack.optics import Fluorescence
-from deeptrack.scatterers import Ellipse
+from deeptrack.optical.optics import Fluorescence
+from deeptrack.optical.scatterers import Ellipse
 
 
 if TORCH_AVAILABLE:

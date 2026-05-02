@@ -3,7 +3,7 @@ import numpy as np
 
 from deeptrack.optical import aberrations
 from deeptrack.optical.optics import Fluorescence
-from deeptrack.scatterers import PointParticle
+from deeptrack.optical.scatterers import PointParticle
 from deeptrack.backend import TORCH_AVAILABLE
 from tests import BackendTestBase
 

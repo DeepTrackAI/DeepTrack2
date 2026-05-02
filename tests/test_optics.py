@@ -4,8 +4,8 @@ import numpy as np
 import warnings
 from contextlib import contextmanager
 
-from deeptrack import optics
-from deeptrack.scatterers import PointParticle, Sphere
+from deeptrack.optical import optics
+from deeptrack.optical.scatterers import PointParticle, Sphere
 from deeptrack import units_registry as u
 
 from deeptrack.backend import TORCH_AVAILABLE, xp

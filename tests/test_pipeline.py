@@ -6,8 +6,8 @@ from contextlib import contextmanager
 import numpy as np
 
 from deeptrack.backend import TORCH_AVAILABLE
-from deeptrack.optics import Fluorescence, Brightfield, Darkfield
-from deeptrack import scatterers
+from deeptrack.optical.optics import Fluorescence, Brightfield, Darkfield
+from deeptrack.optical import scatterers
 from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
