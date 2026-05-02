@@ -45,7 +45,9 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from deeptrack import Feature, PropertyLike, TORCH_AVAILABLE
+from deeptrack.features import Feature
+from deeptrack.types import PropertyLike
+from deeptrack.backend import TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
