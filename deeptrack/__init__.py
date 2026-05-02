@@ -62,3 +62,11 @@ from deeptrack import (
     # Fake imports for IDE autocomplete
     # Does not actually import anything
 )
+
+from deeptrack.optical import (
+    optics as optics,
+    scatterers as scatterers,
+    aberrations as aberrations,
+    holography as holography,
+    augmentations as augmentations,
+)
