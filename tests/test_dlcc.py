@@ -359,15 +359,15 @@ class TestDLCC(unittest.TestCase):
                 )
 
                 # Save 2 grayscale images in train/
-                Image.fromarray(grad, mode="L") \
+                Image.fromarray(grad) \
                     .save(train_dir / "0_train.png")
-                Image.fromarray(checker, mode="L") \
+                Image.fromarray(checker) \
                     .save(train_dir / "1_train.png")
 
                 # Save 2 grayscale images in test/
-                Image.fromarray(grad_inv, mode="L") \
+                Image.fromarray(grad_inv) \
                     .save(test_dir / "0_test.png")
-                Image.fromarray(stripes, mode="L") \
+                Image.fromarray(stripes) \
                     .save(test_dir / "1_test.png")
 
                 ## PART 1
@@ -595,7 +595,7 @@ class TestDLCC(unittest.TestCase):
                     g = np.tile(np.linspace(255, 0, W, dtype=np.uint8), (H, 1))
                     b = np.full((H, W), i * 50, dtype=np.uint8)
                     img_rgb = np.stack([r, g, b], axis=-1)
-                    Image.fromarray(img_rgb, mode="RGB") \
+                    Image.fromarray(img_rgb) \
                         .save(raw_dir / f"rgb_{i}.png")
 
                 # Save 5 grayscale images in raw/
@@ -604,7 +604,7 @@ class TestDLCC(unittest.TestCase):
                     arr = np.tile(values, H * W // len(values) + 1)[: H * W]
                     arr = np.roll(arr, i)  # shift pattern
                     arr = arr.reshape(H, W)
-                    Image.fromarray(arr, mode="L") \
+                    Image.fromarray(arr) \
                         .save(labels_dir / f"gray_{i}.png")
 
                 raw_path = str(raw_dir)
@@ -877,16 +877,16 @@ class TestDLCC(unittest.TestCase):
             )
 
             # Save images
-            Image.fromarray(image, mode="L").save(images_dir / "image_0.png")
+            Image.fromarray(image).save(images_dir / "image_0.png")
             for i in range(1, 5):
-                Image.fromarray(np.zeros_like(image), mode="L") \
+                Image.fromarray(np.zeros_like(image)) \
                     .save(images_dir / f"image_{i}.png")
 
             # Save labels
-            Image.fromarray(mask_rgb, mode="RGB") \
+            Image.fromarray(mask_rgb) \
                 .save(masks_dir / "mask_0.png")
             for i in range(1, 5):
-                Image.fromarray(np.zeros_like(mask_rgb), mode="RGB") \
+                Image.fromarray(np.zeros_like(mask_rgb)) \
                     .save(masks_dir / f"mask_{i}.png")
 
             ## PART 1.1
@@ -1382,15 +1382,15 @@ class TestDLCC(unittest.TestCase):
             label[6:8, 4:6] = 3
 
             # Save images
-            Image.fromarray(image, mode="L").save(image_dir / "image_0.png")
+            Image.fromarray(image).save(image_dir / "image_0.png")
             for i in range(1, 5):
-                Image.fromarray(np.zeros_like(image), mode="L") \
+                Image.fromarray(np.zeros_like(image)) \
                     .save(image_dir / f"image_{i}.png")
 
             # Save labels
-            Image.fromarray(label, mode="L").save(label_dir / "label_0.png")
+            Image.fromarray(label).save(label_dir / "label_0.png")
             for i in range(1, 5):
-                Image.fromarray(np.zeros_like(label), mode="L") \
+                Image.fromarray(np.zeros_like(label)) \
                     .save(label_dir / f"label_{i}.png")
 
             ## PART 1

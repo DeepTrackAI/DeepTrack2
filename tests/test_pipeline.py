@@ -8,8 +8,7 @@ import numpy as np
 from deeptrack.backend import TORCH_AVAILABLE
 from deeptrack.optics import Fluorescence, Brightfield, Darkfield
 from deeptrack import scatterers
-
-from deeptrack.tests import BackendTestBase
+from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch

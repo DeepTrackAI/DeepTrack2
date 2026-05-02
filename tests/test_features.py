@@ -1775,13 +1775,19 @@ class TestFeatures(unittest.TestCase):
         test_operator(self, operator.sub)
 
     def test_Multiply(self):
-        test_operator(self, operator.add)
+        test_operator(self, operator.mul)
 
     def test_Divide(self):
         test_operator(self, operator.truediv)
 
     def test_FloorDivide(self):
-        test_operator(self, operator.floordiv)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message="invalid value encountered in floor_divide",
+                category=RuntimeWarning,
+            )
+            test_operator(self, operator.floordiv)
 
     def test_Power(self):
         test_operator(self, operator.pow)

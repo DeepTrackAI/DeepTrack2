@@ -9,7 +9,7 @@ from deeptrack.scatterers import PointParticle, Sphere
 from deeptrack import units_registry as u
 
 from deeptrack.backend import TORCH_AVAILABLE, xp
-from deeptrack.tests import BackendTestBase
+from tests import BackendTestBase
 
 if TORCH_AVAILABLE:
     import torch
