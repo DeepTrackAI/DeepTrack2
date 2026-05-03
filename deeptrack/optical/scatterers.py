@@ -181,14 +181,14 @@ import numpy as np
 from pint import Quantity
 from dataclasses import dataclass
 
-from deeptrack.holography import get_propagation_matrix
+from deeptrack.optical.holography import get_propagation_matrix
 from deeptrack.backend.units import (
     ConversionTable,
     get_active_scale,
     get_active_voxel_size,
 )
 from deeptrack.backend import mie, TORCH_AVAILABLE, xp
-from deeptrack.math import AveragePooling, pad_image_to_fft
+from deeptrack.optical.math import AveragePooling, pad_image_to_fft
 from deeptrack.features import (
     Feature,
     StructuralFeature,

@@ -7,7 +7,7 @@ import unittest
 import array_api_compat as apc
 import numpy as np
 
-from deeptrack import math
+import deeptrack.optical.math as dt_math
 from deeptrack.backend import OPENCV_AVAILABLE, TORCH_AVAILABLE, xp
 from tests import BackendTestBase
 
@@ -55,7 +55,7 @@ class TestMath_Numpy(BackendTestBase):
     def test_Average(self):
         input_image0 = xp.ones((10, 30, 20)) * 2
         input_image1 = xp.ones((10, 30, 20)) * 4
-        feature = math.Average(axis=0)
+        feature = dt_math.Average(axis=0)
         average = feature.resolve([input_image0, input_image1])
 
         self.assertIsInstance(average, self.array_type)
@@ -64,7 +64,7 @@ class TestMath_Numpy(BackendTestBase):
 
     def test_Clip(self):
         input_image = xp.asarray([[10, 4], [4, -10]])
-        feature = math.Clip(min=-5, max=5)
+        feature = dt_math.Clip(min=-5, max=5)
         clipped_feature = feature.resolve(input_image)
 
         self.assertIsInstance(clipped_feature, self.array_type)
@@ -73,7 +73,7 @@ class TestMath_Numpy(BackendTestBase):
         )
 
         input_image = xp.asarray(np.array([[5, 6], [7, 8]]))
-        feature = math.Clip(min=0, max=10)
+        feature = dt_math.Clip(min=0, max=10)
         clipped_feature = feature.resolve(input_image)
 
         self.assertIsInstance(clipped_feature, self.array_type)
@@ -83,7 +83,7 @@ class TestMath_Numpy(BackendTestBase):
 
     def test_NormalizeMinMax(self):
         input_image = xp.asarray([[10, 4], [4, -10]])
-        feature = math.NormalizeMinMax(min=-5, max=5)
+        feature = dt_math.NormalizeMinMax(min=-5, max=5)
         normalized_image = feature.resolve(input_image, featurewise=False)
         self.assertIsInstance(normalized_image, self.array_type)
         self.assertTrue(
@@ -96,7 +96,7 @@ class TestMath_Numpy(BackendTestBase):
                 [[10.0, 30.0], [20.0, 40.0]],
             ]
         )
-        out_featurewise = math.NormalizeMinMax(
+        out_featurewise = dt_math.NormalizeMinMax(
             min=0,
             max=1,
             featurewise=True,
@@ -112,7 +112,7 @@ class TestMath_Numpy(BackendTestBase):
         self.assertTrue(xp.allclose(xp.min(out_featurewise[..., 1]), zero))
         self.assertTrue(xp.allclose(xp.max(out_featurewise[..., 1]), one))
 
-        out_global = math.NormalizeMinMax(
+        out_global = dt_math.NormalizeMinMax(
             min=0,
             max=1,
             featurewise=False,
@@ -131,7 +131,7 @@ class TestMath_Numpy(BackendTestBase):
         )  # shape (2,2,2)
         # move channels to axis 0
         x = xp.moveaxis(x, -1, 0)  # shape (2,2,2)
-        out = math.NormalizeMinMax(
+        out = dt_math.NormalizeMinMax(
             featurewise=True,
             channel_axis=0,
         ).resolve(x)
@@ -145,7 +145,7 @@ class TestMath_Numpy(BackendTestBase):
     def test_NormalizeStandard(self):
         # --- basic correctness ---
         x = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.NormalizeStandard().resolve(x)
+        out = dt_math.NormalizeStandard().resolve(x)
 
         self.assertIsInstance(out, self.array_type)
         self.assertTrue(
@@ -167,7 +167,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- constant input (numerical stability) ---
         x = xp.ones((4, 4))
-        out = math.NormalizeStandard().resolve(x)
+        out = dt_math.NormalizeStandard().resolve(x)
         self.assertTrue(xp.all(xp.isfinite(out)))
 
         # --- featurewise with channel axis ---
@@ -179,7 +179,7 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )  # shape (2,2,2)
 
-        out = math.NormalizeStandard(
+        out = dt_math.NormalizeStandard(
             featurewise=True,
             channel_axis=-1,
         ).resolve(x)
@@ -202,7 +202,7 @@ class TestMath_Numpy(BackendTestBase):
             self.assertTrue(xp.allclose(xp.std(out[..., 1]), one))
 
         # --- global vs featurewise difference ---
-        out_global = math.NormalizeStandard(
+        out_global = dt_math.NormalizeStandard(
             featurewise=False,
         ).resolve(x)
 
@@ -211,7 +211,7 @@ class TestMath_Numpy(BackendTestBase):
     def test_NormalizeQuantile(self):
         # --- basic correctness ---
         x = xp.asarray([[1, 2], [3, 100]], dtype=float)
-        out = math.NormalizeQuantile(quantiles=(0.25, 0.75)).resolve(x)
+        out = dt_math.NormalizeQuantile(quantiles=(0.25, 0.75)).resolve(x)
 
         self.assertIsInstance(out, self.array_type)
 
@@ -234,7 +234,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- constant input (numerical stability) ---
         x = xp.ones((4, 4))
-        out = math.NormalizeQuantile().resolve(x)
+        out = dt_math.NormalizeQuantile().resolve(x)
         self.assertTrue(xp.all(xp.isfinite(out)))
 
         # --- featurewise behavior ---
@@ -246,7 +246,7 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )
 
-        out = math.NormalizeQuantile(
+        out = dt_math.NormalizeQuantile(
             featurewise=True,
             channel_axis=-1,
         ).resolve(x)
@@ -267,18 +267,18 @@ class TestMath_Numpy(BackendTestBase):
         )
 
         # --- global vs featurewise difference ---
-        out_global = math.NormalizeQuantile(
+        out_global = dt_math.NormalizeQuantile(
             featurewise=False,
         ).resolve(x)
 
         self.assertFalse(xp.allclose(out, out_global))
 
     def test_Blur(self):
-        blur = math.Blur()
+        blur = dt_math.Blur()
         with self.assertRaises(NotImplementedError):
             blur.resolve(xp.zeros((2, 2)))
 
-        class DummyBlur(math.Blur):
+        class DummyBlur(dt_math.Blur):
             def _get_numpy(self, image, **kwargs):
                 return image + 1
 
@@ -294,7 +294,7 @@ class TestMath_Numpy(BackendTestBase):
         # --- impulse response ---
         impulse = xp.zeros((7, 7))
         impulse[3, 3] = 1
-        out = math.AverageBlur(ksize=3).resolve(impulse)
+        out = dt_math.AverageBlur(ksize=3).resolve(impulse)
 
         # symmetry
         self.assertTrue(xp.allclose(out, xp.flip(out, axis=0)))
@@ -313,7 +313,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- constant image invariance ---
         const = xp.ones((9, 9)) * 5.0
-        out_const = math.AverageBlur(ksize=5).resolve(const)
+        out_const = dt_math.AverageBlur(ksize=5).resolve(const)
         self.assertTrue(xp.allclose(out_const, const))
 
         # --- channel handling (last axis) ---
@@ -322,7 +322,7 @@ class TestMath_Numpy(BackendTestBase):
         img[3, 3, 1] = 2.0
         img[3, 3, 2] = 3.0
 
-        out = math.AverageBlur(ksize=3, channel_axis=-1).resolve(img)
+        out = dt_math.AverageBlur(ksize=3, channel_axis=-1).resolve(img)
 
         # channels independent
         self.assertTrue(xp.allclose(out[..., 1], 2 * out[..., 0]))
@@ -342,7 +342,7 @@ class TestMath_Numpy(BackendTestBase):
         img_cf[1, 3, 3] = 2.0
         img_cf[2, 3, 3] = 3.0
 
-        out_cf = math.AverageBlur(ksize=3, channel_axis=0).resolve(img_cf)
+        out_cf = dt_math.AverageBlur(ksize=3, channel_axis=0).resolve(img_cf)
 
         self.assertTrue(xp.allclose(out_cf[1], 2 * out_cf[0]))
         self.assertTrue(xp.allclose(out_cf[2], 3 * out_cf[0]))
@@ -350,19 +350,19 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- small kernel (identity-ish) ---
         img = xp.random.rand(5, 5)
-        out = math.AverageBlur(ksize=1).resolve(img)
+        out = dt_math.AverageBlur(ksize=1).resolve(img)
         self.assertTrue(xp.allclose(out, img))
 
         # --- dtype preservation ---
         img = xp.ones((5, 5), dtype=xp.float32)
-        out = math.AverageBlur(ksize=3).resolve(img)
+        out = dt_math.AverageBlur(ksize=3).resolve(img)
         self.assertEqual(out.dtype, img.dtype)
 
     def test_GaussianBlur(self):
         # --- impulse response ---
         impulse = xp.zeros((7, 7))
         impulse[3, 3] = 1
-        out = math.GaussianBlur(sigma=1, channel_axis=None).resolve(impulse)
+        out = dt_math.GaussianBlur(sigma=1, channel_axis=None).resolve(impulse)
 
         # symmetry
         self.assertTrue(xp.allclose(out, xp.flip(out, axis=0)))
@@ -386,14 +386,14 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- sigma = 0 (identity) ---
         img = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.GaussianBlur(sigma=0, channel_axis=None).resolve(img)
+        out = dt_math.GaussianBlur(sigma=0, channel_axis=None).resolve(img)
 
         self.assertTrue(xp.allclose(out, img))
         self.assertIsInstance(out, self.array_type)
 
         # --- sigma → large (mean image) ---
         img = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.GaussianBlur(sigma=1000, channel_axis=None).resolve(img)
+        out = dt_math.GaussianBlur(sigma=1000, channel_axis=None).resolve(img)
 
         mean_val = xp.mean(img)
         self.assertTrue(
@@ -406,7 +406,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- moderate sigma (behavioral properties) ---
         img = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.GaussianBlur(sigma=1).resolve(img)
+        out = dt_math.GaussianBlur(sigma=1).resolve(img)
 
         # variance decreases
         self.assertTrue(xp.var(out) < xp.var(img))
@@ -436,7 +436,7 @@ class TestMath_Numpy(BackendTestBase):
         img[3, 3, 1] = 2.0
         img[3, 3, 2] = 3.0
 
-        out = math.GaussianBlur(sigma=1, channel_axis=-1).resolve(img)
+        out = dt_math.GaussianBlur(sigma=1, channel_axis=-1).resolve(img)
 
         self.assertTrue(xp.allclose(out[..., 1], 2 * out[..., 0], atol=1e-5))
         self.assertTrue(xp.allclose(out[..., 2], 3 * out[..., 0], atol=1e-5))
@@ -445,7 +445,7 @@ class TestMath_Numpy(BackendTestBase):
         img = xp.zeros((7, 7, 3))
         img[3, 3, 0] = 1.0
 
-        out = math.GaussianBlur(sigma=1, channel_axis=None).resolve(img)
+        out = dt_math.GaussianBlur(sigma=1, channel_axis=None).resolve(img)
 
         # local mixing: adjacent channel gets signal
         self.assertTrue(xp.any(out[..., 1] > 0))
@@ -454,7 +454,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- ksize = 1 (identity) ---
         image = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.MedianBlur(ksize=1, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=1, channel_axis=None).resolve(image)
         self.assertTrue(xp.allclose(out, image))
 
         # --- removes outliers ---
@@ -466,7 +466,7 @@ class TestMath_Numpy(BackendTestBase):
             ],
             dtype=float,
         )
-        out = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
         self.assertEqual(float(out[1, 1]), 1.0)
 
         # --- no new extrema ---
@@ -478,20 +478,20 @@ class TestMath_Numpy(BackendTestBase):
             ],
             dtype=float,
         )
-        out = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
         self.assertTrue(xp.min(out) >= xp.min(image))
         self.assertTrue(xp.max(out) <= xp.max(image))
 
         # --- impulse removal (strong check) ---
         image = xp.zeros((5, 5))
         image[2, 2] = 100
-        out = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
         self.assertEqual(float(out[2, 2]), 0.0)
 
         # --- edge preservation ---
         image = xp.zeros((7, 7))
         image[:, 3:] = 1  # sharp edge
-        out = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
         # edge should not blur across boundary
         self.assertTrue(out[3, 2] <= 0.5)
         self.assertTrue(out[3, 3] >= 0.5)
@@ -501,7 +501,7 @@ class TestMath_Numpy(BackendTestBase):
         image[3, 3, 0] = 1
         image[3, 3, 1] = 2
         image[3, 3, 2] = 3
-        out = math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
         # channels must not mix
         self.assertTrue(
             xp.all(out[..., 1] == 0)
@@ -513,7 +513,7 @@ class TestMath_Numpy(BackendTestBase):
         image[2, 2, 0] = 10
         image[2, 2, 1] = 20
         image[2, 2, 2] = 30
-        out = math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, image.shape)
         self.assertTrue(xp.all(out[..., 0] == 0))
         self.assertTrue(xp.all(out[..., 1] == 0))
@@ -527,30 +527,30 @@ class TestMath_Numpy(BackendTestBase):
         image[1, 1, 2] = 1
         # add competing spatial values
         image[0, 0, 0] = 10
-        out_mix = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
-        out_sep = math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
+        out_mix = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out_sep = dt_math.MedianBlur(ksize=3, channel_axis=-1).resolve(image)
         # center pixel differs depending on channel handling
         self.assertFalse(xp.allclose(out_mix, out_sep))
 
         # --- 3D ---
         image = xp.zeros((7, 7, 7))
         image[3, 3, 3] = 10
-        out = math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
+        out = dt_math.MedianBlur(ksize=3, channel_axis=None).resolve(image)
         self.assertEqual(out.shape, image.shape)
         self.assertEqual(float(out[3, 3, 3]), 0.0)
 
         # --- invalid kernel ---
         with self.assertRaises(ValueError):
-            math.MedianBlur(ksize=4).resolve(xp.zeros((5, 5)))
+            dt_math.MedianBlur(ksize=4).resolve(xp.zeros((5, 5)))
 
         # --- property-like ksize ---
-        feature = math.MedianBlur(ksize=lambda: 3, channel_axis=None)
+        feature = dt_math.MedianBlur(ksize=lambda: 3, channel_axis=None)
         image = xp.zeros((5, 5))
         out = feature.resolve(image)
         self.assertEqual(out.shape, image.shape)
 
     def test_Pool(self):
-        class Dummy_Pool(math.Pool):
+        class Dummy_Pool(dt_math.Pool):
             def _get_numpy(self, image, **kwargs):
                 return image
 
@@ -587,11 +587,11 @@ class TestMath_Numpy(BackendTestBase):
 
     def test_AveragePooling(self):
         # `ScatteredVolume` handling (non-array input) ---
-        from deeptrack.scatterers import ScatteredVolume
+        from deeptrack.optical.scatterers import ScatteredVolume
 
         image = xp.ones((4, 4))
         scattered = ScatteredVolume(image)
-        out = math.AveragePooling(ksize=2).resolve(scattered)
+        out = dt_math.AveragePooling(ksize=2).resolve(scattered)
         self.assertIsInstance(out, ScatteredVolume)
         self.assertEqual(out.array.shape, (2, 2))
         self.assertTrue(
@@ -606,35 +606,35 @@ class TestMath_Numpy(BackendTestBase):
             ],
             dtype=float,
         )
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         expected = xp.asarray([[3.5, 5.5]], dtype=image.dtype)
         self.assertTrue(xp.allclose(out, expected))
         self.assertEqual(out.shape, (1, 2))
 
         # --- shape reduction ---
         image = xp.zeros((8, 8))
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (4, 4))
 
         # --- cropping (non-divisible size) ---
         image = xp.ones((5, 5))
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (2, 2))  # cropped to 4x4 → pooled
 
         # --- channel handling: channel-aware vs channel-less ---
         image = xp.zeros((4, 4, 3))
         for i in range(3):
             image[..., i] = i
-        out_channels = math.AveragePooling(ksize=2, channel_axis=-1).resolve(
+        out_channels = dt_math.AveragePooling(ksize=2, channel_axis=-1).resolve(
             image
         )
-        out_spatial = math.AveragePooling(ksize=2, channel_axis=None).resolve(
+        out_spatial = dt_math.AveragePooling(ksize=2, channel_axis=None).resolve(
             image
         )
 
         # --- channel axis specification ---
         image = xp.ones((3, 4, 4))  # C, H, W
-        out = math.AveragePooling(ksize=2, channel_axis=0).resolve(image)
+        out = dt_math.AveragePooling(ksize=2, channel_axis=0).resolve(image)
         self.assertEqual(out.shape, (3, 2, 2))
 
         # channel-aware → preserves channels
@@ -654,7 +654,7 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.AveragePooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.AveragePooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
         self.assertTrue(xp.all(out[..., 0] == 1))
         self.assertTrue(xp.all(out[..., 1] == 2))
@@ -662,19 +662,19 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- 3D pooling (true volume) ---
         image = xp.ones((4, 4, 3))
-        out = math.AveragePooling(ksize=(2, 2, 2)).resolve(image)
+        out = dt_math.AveragePooling(ksize=(2, 2, 2)).resolve(image)
         self.assertEqual(out.shape, (2, 2, 1))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- channels (no z pooling) ---
         image = xp.ones((4, 4, 8))
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (2, 2, 4))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- z ignored when treated as channels ---
         image = xp.ones((4, 4, 3))
-        out = math.AveragePooling(ksize=(2, 2, 2), channel_axis=-1).resolve(
+        out = dt_math.AveragePooling(ksize=(2, 2, 2), channel_axis=-1).resolve(
             image
         )
         self.assertEqual(out.shape, (2, 2, 3))
@@ -688,29 +688,29 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )
 
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(1.0, dtype=out.dtype)))
 
         # --- dtype preserved ---
         image = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.AveragePooling(ksize=2).resolve(image)
+        out = dt_math.AveragePooling(ksize=2).resolve(image)
         self.assertEqual(out.dtype, image.dtype)
 
         # --- ksize = 1 (identity) ---
         image = xp.random.rand(4, 4)
-        out = math.AveragePooling(ksize=1).resolve(image)
+        out = dt_math.AveragePooling(ksize=1).resolve(image)
         self.assertTrue(xp.allclose(out, image))
         self.assertEqual(out.shape, image.shape)
 
         # --- singleton channel dimension ---
         image = xp.ones((4, 4, 1))
-        out = math.AveragePooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.AveragePooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 1))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- anisotropic pooling ---
         image = xp.arange(16, dtype=float).reshape(4, 4)
-        out = math.AveragePooling(ksize=(2, 1)).resolve(image)
+        out = dt_math.AveragePooling(ksize=(2, 1)).resolve(image)
         self.assertEqual(out.shape, (2, 4))
         expected = image.reshape(2, 2, 4).mean(axis=1)
         self.assertTrue(xp.allclose(out, expected))
@@ -718,7 +718,7 @@ class TestMath_Numpy(BackendTestBase):
         # --- random input vs reference ---
         image = xp.random.rand(10, 10)
         k = 2
-        out = math.AveragePooling(ksize=k).resolve(image)
+        out = dt_math.AveragePooling(ksize=k).resolve(image)
 
         # reference (numpy-style reshape)
         ref = image[: 10 - 10 % k, : 10 - 10 % k]
@@ -733,7 +733,7 @@ class TestMath_Numpy(BackendTestBase):
         for i in range(6):
             image[:, :, i] = float(i)
 
-        out = math.AveragePooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.AveragePooling(ksize=(2, 2, 3)).resolve(image)
 
         # if z is pooled:
         # blocks [0,1,2] → mean = 1.0
@@ -758,19 +758,19 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )
 
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         expected = xp.asarray([[6, 8]], dtype=image.dtype)
         self.assertTrue(xp.allclose(out, expected))
         self.assertEqual(out.shape, (1, 2))
 
         # --- shape reduction ---
         image = xp.zeros((8, 8))
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (4, 4))
 
         # --- cropping (non-divisible size) ---
         image = xp.ones((5, 5))
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (2, 2))
 
         # --- multi-channel (no mixing) ---
@@ -779,7 +779,7 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
         self.assertTrue(xp.all(out[..., 0] == 1))
         self.assertTrue(xp.all(out[..., 1] == 2))
@@ -787,19 +787,19 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- 3D pooling (true volume) ---
         image = xp.ones((4, 4, 8))
-        out = math.MaxPooling(ksize=(2, 2, 2)).resolve(image)
+        out = dt_math.MaxPooling(ksize=(2, 2, 2)).resolve(image)
         self.assertEqual(out.shape, (2, 2, 4))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- channels (no z pooling) ---
         image = xp.ones((4, 4, 3))
-        out = math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- z ignored when treated as channels ---
         image = xp.ones((4, 4, 3))
-        out = math.MaxPooling(ksize=(2, 2, 2), channel_axis=-1).resolve(image)
+        out = dt_math.MaxPooling(ksize=(2, 2, 2), channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
 
         # --- value correctness ---
@@ -811,7 +811,7 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )
 
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(4.0, dtype=out.dtype)))
 
         # --- distinct values (critical) ---
@@ -823,35 +823,35 @@ class TestMath_Numpy(BackendTestBase):
             dtype=float,
         )
 
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(100.0, dtype=out.dtype)))
 
         # --- dtype preserved ---
         image = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.MaxPooling(ksize=2).resolve(image)
+        out = dt_math.MaxPooling(ksize=2).resolve(image)
         self.assertEqual(out.dtype, image.dtype)
 
         # --- ksize = 1 (identity) ---
         image = xp.random.rand(4, 4)
-        out = math.MaxPooling(ksize=1).resolve(image)
+        out = dt_math.MaxPooling(ksize=1).resolve(image)
         self.assertTrue(xp.allclose(out, image))
         self.assertEqual(out.shape, image.shape)
 
         # --- singleton channel ---
         image = xp.ones((4, 4, 1))
-        out = math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MaxPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 1))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- anisotropic pooling ---
         image = xp.arange(16, dtype=float).reshape(4, 4)
-        out = math.MaxPooling(ksize=(2, 1)).resolve(image)
+        out = dt_math.MaxPooling(ksize=(2, 1)).resolve(image)
         self.assertEqual(out.shape, (2, 4))
 
         # --- random input vs reference ---
         image = xp.random.rand(10, 10)
         k = 2
-        out = math.MaxPooling(ksize=k).resolve(image)
+        out = dt_math.MaxPooling(ksize=k).resolve(image)
 
         ref_np = np.asarray(image)
         ref_np = ref_np[: 10 - 10 % k, : 10 - 10 % k]
@@ -866,7 +866,7 @@ class TestMath_Numpy(BackendTestBase):
         for i in range(6):
             image[:, :, i] = i  # variation ONLY along z
 
-        out = math.MaxPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.MaxPooling(ksize=(2, 2, 3)).resolve(image)
 
         # if z is pooled → values should change
         # if z is treated as channel → values preserved
@@ -882,7 +882,7 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- basic 2D pooling ---
         image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
-        out = math.MinPooling(ksize=2).resolve(image)
+        out = dt_math.MinPooling(ksize=2).resolve(image)
         expected = xp.asarray([[1, 3]], dtype=image.dtype)
         self.assertTrue(xp.allclose(out, expected))
 
@@ -892,25 +892,25 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.MinPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MinPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertTrue(xp.all(out[..., 0] == 1))
         self.assertTrue(xp.all(out[..., 1] == 2))
         self.assertTrue(xp.all(out[..., 2] == 3))
 
         # --- value correctness ---
         image = xp.asarray([[0, 0], [0, 4]], dtype=float)
-        out = math.MinPooling(ksize=2).resolve(image)
+        out = dt_math.MinPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(0.0, dtype=out.dtype)))
 
         # --- distinct values ---
         image = xp.asarray([[5, 2], [3, 100]], dtype=float)
-        out = math.MinPooling(ksize=2).resolve(image)
+        out = dt_math.MinPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(2.0, dtype=out.dtype)))
 
         # --- random vs reference ---
         image = xp.random.rand(10, 10)
         k = 2
-        out = math.MinPooling(ksize=k).resolve(image)
+        out = dt_math.MinPooling(ksize=k).resolve(image)
 
         ref_np = np.asarray(image)
         ref_np = ref_np[: 10 - 10 % k, : 10 - 10 % k]
@@ -923,7 +923,7 @@ class TestMath_Numpy(BackendTestBase):
         for i in range(6):
             image[:, :, i] = i
 
-        out = math.MinPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.MinPooling(ksize=(2, 2, 3)).resolve(image)
 
         expected = xp.asarray(
             [[[0, 3], [0, 3]], [[0, 3], [0, 3]]], dtype=out.dtype
@@ -935,19 +935,19 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- basic 2D pooling ---
         image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
-        out = math.SumPooling(ksize=2).resolve(image)
+        out = dt_math.SumPooling(ksize=2).resolve(image)
         expected = xp.asarray([[14, 22]], dtype=image.dtype)
         self.assertTrue(xp.allclose(out, expected))
         self.assertEqual(out.shape, (1, 2))
 
         # --- shape reduction ---
         image = xp.zeros((8, 8))
-        out = math.SumPooling(ksize=2).resolve(image)
+        out = dt_math.SumPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (4, 4))
 
         # --- cropping ---
         image = xp.ones((5, 5))
-        out = math.SumPooling(ksize=2).resolve(image)
+        out = dt_math.SumPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (2, 2))
 
         # --- multi-channel ---
@@ -956,47 +956,47 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.SumPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.SumPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertTrue(xp.all(out[..., 0] == 4))
         self.assertTrue(xp.all(out[..., 1] == 8))
         self.assertTrue(xp.all(out[..., 2] == 12))
 
         # --- 3D pooling ---
         image = xp.ones((4, 4, 6))
-        out = math.SumPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.SumPooling(ksize=(2, 2, 3)).resolve(image)
         self.assertEqual(out.shape, (2, 2, 2))
         self.assertTrue(xp.allclose(out, xp.asarray(12.0)))
 
         # --- channels ---
         image = xp.ones((4, 4, 3))
-        out = math.SumPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.SumPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
         self.assertTrue(xp.allclose(out, xp.asarray(4.0)))
 
         # --- value correctness ---
         image = xp.asarray([[0, 0], [0, 4]], dtype=float)
-        out = math.SumPooling(ksize=2).resolve(image)
+        out = dt_math.SumPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(4.0, dtype=out.dtype)))
 
         # --- dtype preserved ---
         image = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.SumPooling(ksize=2).resolve(image)
+        out = dt_math.SumPooling(ksize=2).resolve(image)
         self.assertEqual(out.dtype, image.dtype)
 
         # --- ksize = 1 ---
         image = xp.random.rand(4, 4)
-        out = math.SumPooling(ksize=1).resolve(image)
+        out = dt_math.SumPooling(ksize=1).resolve(image)
         self.assertTrue(xp.allclose(out, image))
 
         # --- anisotropic ---
         image = xp.arange(16, dtype=float).reshape(4, 4)
-        out = math.SumPooling(ksize=(2, 1)).resolve(image)
+        out = dt_math.SumPooling(ksize=(2, 1)).resolve(image)
         self.assertEqual(out.shape, (2, 4))
 
         # --- random vs reference ---
         image = xp.random.rand(10, 10)
         k = 2
-        out = math.SumPooling(ksize=k).resolve(image)
+        out = dt_math.SumPooling(ksize=k).resolve(image)
 
         ref_np = np.asarray(image)
         ref_np = ref_np[: 10 - 10 % k, : 10 - 10 % k]
@@ -1008,7 +1008,7 @@ class TestMath_Numpy(BackendTestBase):
         image = xp.zeros((4, 4, 6))
         for i in range(6):
             image[:, :, i] = i
-        out = math.SumPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.SumPooling(ksize=(2, 2, 3)).resolve(image)
         expected = xp.asarray(
             [[[12, 48], [12, 48]], [[12, 48], [12, 48]]], dtype=out.dtype
         )
@@ -1023,24 +1023,24 @@ class TestMath_Numpy(BackendTestBase):
             ],
             dtype=float,
         )
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(2.5, dtype=image.dtype)))
 
         # --- basic 2D pooling ---
         image = xp.asarray([[1, 2, 3, 4], [5, 6, 7, 8]], dtype=float)
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         expected = xp.asarray([[3.5, 5.5]], dtype=image.dtype)
         self.assertTrue(xp.allclose(out, expected))
         self.assertEqual(out.shape, (1, 2))
 
         # --- shape reduction ---
         image = xp.zeros((8, 8))
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (4, 4))
 
         # --- cropping ---
         image = xp.ones((5, 5))
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         self.assertEqual(out.shape, (2, 2))
 
         # --- multi-channel ---
@@ -1049,47 +1049,47 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.MedianPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MedianPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertTrue(xp.all(out[..., 0] == 1))
         self.assertTrue(xp.all(out[..., 1] == 2))
         self.assertTrue(xp.all(out[..., 2] == 3))
 
         # --- 3D pooling ---
         image = xp.ones((4, 4, 6))
-        out = math.MedianPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.MedianPooling(ksize=(2, 2, 3)).resolve(image)
         self.assertEqual(out.shape, (2, 2, 2))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- channels ---
         image = xp.ones((4, 4, 3))
-        out = math.MedianPooling(ksize=2, channel_axis=-1).resolve(image)
+        out = dt_math.MedianPooling(ksize=2, channel_axis=-1).resolve(image)
         self.assertEqual(out.shape, (2, 2, 3))
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- value correctness ---
         image = xp.asarray([[0, 0], [0, 4]], dtype=float)
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(0.0, dtype=out.dtype)))
 
         # --- odd kernel ---
         image = xp.asarray([[1, 2, 3], [4, 5, 6], [7, 8, 9]], dtype=float)
-        out = math.MedianPooling(ksize=3).resolve(image)
+        out = dt_math.MedianPooling(ksize=3).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(5.0, dtype=out.dtype)))
 
         # --- dtype preserved ---
         image = xp.asarray([[1, 2], [3, 4]], dtype=float)
-        out = math.MedianPooling(ksize=2).resolve(image)
+        out = dt_math.MedianPooling(ksize=2).resolve(image)
         self.assertEqual(out.dtype, image.dtype)
 
         # --- ksize = 1 ---
         image = xp.random.rand(4, 4)
-        out = math.MedianPooling(ksize=1).resolve(image)
+        out = dt_math.MedianPooling(ksize=1).resolve(image)
         self.assertTrue(xp.allclose(out, image))
 
         # --- random vs reference ---
         image = xp.random.rand(10, 10)
         k = 2
-        out = math.MedianPooling(ksize=k).resolve(image)
+        out = dt_math.MedianPooling(ksize=k).resolve(image)
         ref_np = np.asarray(image)
         ref_np = ref_np[: 10 - 10 % k, : 10 - 10 % k]
         ref_np = ref_np.reshape(10 // k, k, 10 // k, k)
@@ -1103,7 +1103,7 @@ class TestMath_Numpy(BackendTestBase):
         for i in range(6):
             image[:, :, i] = i
 
-        out = math.MedianPooling(ksize=(2, 2, 3)).resolve(image)
+        out = dt_math.MedianPooling(ksize=(2, 2, 3)).resolve(image)
 
         expected = xp.asarray(
             [[[1, 4], [1, 4]], [[1, 4], [1, 4]]], dtype=out.dtype
@@ -1121,14 +1121,14 @@ class TestMath_Numpy(BackendTestBase):
             ],
             dtype=float,
         )
-        out = math.Resize(dsize=(2, 2)).resolve(image)
+        out = dt_math.Resize(dsize=(2, 2)).resolve(image)
 
         # identity case must be exact
         self.assertTrue(xp.allclose(out, image))
 
         # --- basic 2D ---
         image = xp.random.rand(16, 8)
-        out = math.Resize(dsize=(4, 2)).resolve(image)
+        out = dt_math.Resize(dsize=(4, 2)).resolve(image)
         self.assertEqual(out.shape, (2, 4))
 
         # --- channels (H,W,C) ---
@@ -1137,7 +1137,7 @@ class TestMath_Numpy(BackendTestBase):
         image[..., 1] = 2
         image[..., 2] = 3
 
-        out = math.Resize(dsize=(4, 2)).resolve(image)
+        out = dt_math.Resize(dsize=(4, 2)).resolve(image)
 
         self.assertEqual(out.shape, (2, 4, 3))
         self.assertTrue(xp.allclose(out[..., 0], xp.asarray(1.0)))
@@ -1148,7 +1148,7 @@ class TestMath_Numpy(BackendTestBase):
         image = xp.zeros((16, 8, 5))
         for i in range(5):
             image[..., i] = i
-        out = math.Resize(dsize=(4, 2)).resolve(image)
+        out = dt_math.Resize(dsize=(4, 2)).resolve(image)
         self.assertEqual(out.shape, (2, 4, 5))
 
         # slices must remain constant → detects axis errors
@@ -1157,120 +1157,120 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- channels (H,C,W) ---
         image = xp.zeros((16, 16, 16))
-        out = math.Resize(dsize=(8, 4), channel_axis=1).resolve(image)
+        out = dt_math.Resize(dsize=(8, 4), channel_axis=1).resolve(image)
         self.assertEqual(out.shape, (4, 16, 8))
 
         # --- identity resize ---
         image = xp.random.rand(10, 12)
-        out = math.Resize(dsize=(12, 10)).resolve(image)
+        out = dt_math.Resize(dsize=(12, 10)).resolve(image)
         self.assertTupleEqual(out.shape, image.shape)
         self.assertTrue(xp.allclose(out, image, atol=1e-6))
 
         # --- constant image invariance ---
         image = xp.ones((16, 16))
-        out = math.Resize(dsize=(8, 8)).resolve(image)
+        out = dt_math.Resize(dsize=(8, 8)).resolve(image)
         self.assertTrue(xp.allclose(out, xp.asarray(1.0)))
 
         # --- axis correctness (critical) ---
         image = xp.zeros((6, 4))
         image[:3, :] = 1  # top half = 1, bottom = 0
-        out = math.Resize(dsize=(2, 6)).resolve(image)
+        out = dt_math.Resize(dsize=(2, 6)).resolve(image)
         # ensure vertical structure preserved
         self.assertTrue(xp.mean(out[:3]) > xp.mean(out[3:]))
 
         # --- dtype preserved ---
         image = xp.random.rand(8, 8)
         image = xp.asarray(image, dtype=xp.float32)
-        out = math.Resize(dsize=(4, 4)).resolve(image)
+        out = dt_math.Resize(dsize=(4, 4)).resolve(image)
         self.assertEqual(out.dtype, image.dtype)
 
     def test_isotropic_dilation(self):
         mask = xp.asarray([[0, 1], [0, 0]], dtype=bool)
-        out = math.isotropic_dilation(mask, radius=0, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=0, backend=self.BACKEND)
         self.assertTrue(xp.all(out == mask))
 
         mask = xp.zeros((5, 5), dtype=bool)
         mask[2, 2] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.sum(out) >= xp.sum(mask))
 
         mask = xp.random.rand(5, 5) > 0.5
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.all((out == 0) | (out == 1)))
 
         mask = xp.zeros((7, 7), dtype=bool)
         mask[3, 3] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(out[3, 3])
         self.assertTrue(xp.sum(out) > 1)
 
         mask = xp.ones((5, 5), dtype=bool)
-        out = math.isotropic_dilation(mask, radius=2, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=2, backend=self.BACKEND)
         self.assertTrue(xp.all(out))
 
         mask = xp.zeros((5, 5, 5), dtype=bool)
         mask[2, 2, 2] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(out[2, 2, 2])
         self.assertTrue(xp.sum(out) > 1)
 
         # activate one plane only
         mask = xp.zeros((5, 5, 5), dtype=bool)
         mask[2, :, :] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         # must expand along Z
         self.assertTrue(xp.sum(out[1]) > 0)
         self.assertTrue(xp.sum(out[3]) > 0)
 
         mask = xp.zeros((7, 7, 7))
         mask[3, 3, 3] = 1
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertEqual(out.ndim, mask.ndim)
         self.assertGreater(xp.sum(out), 1)
 
         mask = xp.zeros((7, 7, 1))
         mask[3, 3, 0] = 1
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertEqual(out.ndim, mask.ndim)
 
         mask = xp.zeros((5, 5), dtype=bool)
         mask[2, 2] = True
-        out = math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_dilation(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(out[2, 2])
         self.assertEqual(out.shape, mask.shape)
 
         mask = xp.zeros((5, 5, 2), dtype=bool)
         mask[2, 2, 0] = True
-        out = math.isotropic_dilation(
+        out = dt_math.isotropic_dilation(
             mask, radius=1, backend=self.BACKEND, channel_axis=-1
         )
         self.assertEqual(xp.sum(out[..., 1]).item(), 0)
 
     def test_isotropic_erosion(self):
         mask = xp.asarray([[0, 1], [1, 1]], dtype=bool)
-        out = math.isotropic_erosion(mask, radius=0, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=0, backend=self.BACKEND)
         self.assertTrue(xp.all(out == mask))
 
         mask = xp.ones((5, 5), dtype=bool)
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.sum(out) <= xp.sum(mask))
 
         mask = xp.random.rand(5, 5) > 0.5
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.all((out == 0) | (out == 1)))
 
         mask = xp.ones((7, 7), dtype=bool)
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.sum(out) < xp.sum(mask))
 
         mask = xp.ones((5, 5, 5), dtype=bool)
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertTrue(xp.sum(out) < xp.sum(mask))
 
         # thick slab (3 voxels in Z)
         mask = xp.zeros((5, 5, 5), dtype=bool)
         mask[1:4, :, :] = True
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         # should shrink but not disappear
         self.assertTrue(xp.sum(out) > 0)
         # still centered
@@ -1278,17 +1278,17 @@ class TestMath_Numpy(BackendTestBase):
 
         mask = xp.zeros((5, 5, 5), dtype=bool)
         mask[1:4, 1:4, 1:4] = True  # 3x3x3 cube
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         # should shrink to 1 voxel
         self.assertTrue(xp.sum(out) > 0)
 
         mask = xp.ones((7, 7, 7))
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         self.assertLess(xp.sum(out), xp.sum(mask))
 
         mask = xp.zeros((5, 5), dtype=bool)
         mask[2, 2] = True
-        out = math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
+        out = dt_math.isotropic_erosion(mask, radius=1, backend=self.BACKEND)
         # single pixel should disappear
         self.assertFalse(out[2, 2])
         self.assertEqual(xp.sum(out), 0)
@@ -1296,7 +1296,7 @@ class TestMath_Numpy(BackendTestBase):
 
         mask = xp.zeros((5, 5, 2), dtype=bool)
         mask[2, 2, 0] = True
-        out = math.isotropic_erosion(
+        out = dt_math.isotropic_erosion(
             mask,
             radius=1,
             backend=self.BACKEND,
@@ -1310,7 +1310,7 @@ class TestMath_Numpy(BackendTestBase):
     def test_pad_image_with_fft(self):
         # --- basic 2D case ---
         img = xp.zeros((5, 11))
-        out = math.pad_image_to_fft(img)
+        out = dt_math.pad_image_to_fft(img)
         if self.BACKEND == "torch":
             self.assertIsInstance(out, torch.Tensor)
         else:
@@ -1320,21 +1320,21 @@ class TestMath_Numpy(BackendTestBase):
 
         # --- 3D case with specific axes ---
         img = xp.zeros((5, 7, 9))
-        out = math.pad_image_to_fft(img, axes=(1,))
+        out = dt_math.pad_image_to_fft(img, axes=(1,))
         self.assertEqual(out.shape[0], 5)  # unchanged
         self.assertGreaterEqual(out.shape[1], 7)  # padded
         self.assertEqual(out.shape[2], 9)  # unchanged
 
         # --- 2D case with negative axis ---
         img = xp.zeros((5, 7))
-        out = math.pad_image_to_fft(img, axes=(-1,))
+        out = dt_math.pad_image_to_fft(img, axes=(-1,))
         self.assertEqual(out.shape[0], 5)
         self.assertGreaterEqual(out.shape[1], 7)
 
         # --- Idempotent ---
         img = np.zeros((5, 11))
-        out1 = math.pad_image_to_fft(img)
-        out2 = math.pad_image_to_fft(out1)
+        out1 = dt_math.pad_image_to_fft(img)
+        out2 = dt_math.pad_image_to_fft(out1)
         self.assertEqual(out1.shape, out2.shape)
 
 
@@ -1349,7 +1349,7 @@ class TestMath_NumpyOnly(unittest.TestCase):
     @unittest.skipUnless(OPENCV_AVAILABLE, "OpenCV is not installed.")
     def test_Resize(self):
         input_image = np.random.rand(16, 16)
-        feature = math.Resize(dsize=(8, 4))
+        feature = dt_math.Resize(dsize=(8, 4))
         resized = feature.resolve(input_image)
 
         self.assertIsInstance(resized, np.ndarray)
@@ -1364,7 +1364,7 @@ class TestMath_NumpyOnly(unittest.TestCase):
         expected_output = cv2.GaussianBlur(
             input_image, ksize=(5, 5), sigmaX=1, borderType=cv2.BORDER_REFLECT
         )
-        feature = math.BlurCV2(
+        feature = dt_math.BlurCV2(
             filter_function=cv2.GaussianBlur,
             ksize=(5, 5),
             sigmaX=1,
@@ -1394,7 +1394,7 @@ class TestMath_NumpyOnly(unittest.TestCase):
             sigmaSpace=75,
             borderType=cv2.BORDER_REFLECT,
         )
-        feature = math.BlurCV2(
+        feature = dt_math.BlurCV2(
             filter_function=cv2.bilateralFilter,
             d=9,
             sigmaColor=75,
@@ -1418,7 +1418,7 @@ class TestMath_NumpyOnly(unittest.TestCase):
             sigmaSpace=75,
             borderType=cv2.BORDER_REFLECT,
         )
-        feature = math.BilateralBlur(
+        feature = dt_math.BilateralBlur(
             d=9,
             sigma_color=75,
             sigma_space=75,
@@ -1430,14 +1430,14 @@ class TestMath_NumpyOnly(unittest.TestCase):
 
         # --- multi-channel case ---
         input_image = np.random.rand(32, 32, 3).astype(np.float32)
-        out = math.BilateralBlur(d=5, sigma_color=50, sigma_space=50).resolve(
+        out = dt_math.BilateralBlur(d=5, sigma_color=50, sigma_space=50).resolve(
             input_image
         )
         self.assertEqual(out.shape, input_image.shape)
 
         # --- constant image invariance ---
         image = np.ones((32, 32), dtype=np.float32)
-        out = math.BilateralBlur(d=5, sigma_color=50, sigma_space=50).resolve(
+        out = dt_math.BilateralBlur(d=5, sigma_color=50, sigma_space=50).resolve(
             image
         )
         np.testing.assert_allclose(out, 1.0)
@@ -1448,7 +1448,7 @@ class TestMath_TorchOnly(BackendTestBase):
     BACKEND = "torch"
 
     def test_Resize_torch_backend(self):
-        feature = math.Resize(dsize=(4, 8))
+        feature = dt_math.Resize(dsize=(4, 8))
         x = torch.rand(16, 16)
         out = feature.resolve(x)
         self.assertIsInstance(out, torch.Tensor)
@@ -1458,7 +1458,7 @@ class TestMath_TorchOnly(BackendTestBase):
 
         # --- gradient flow ---
         img = torch.ones((5, 5), requires_grad=True)
-        out = math.pad_image_to_fft(img)
+        out = dt_math.pad_image_to_fft(img)
         loss = out.sum()
         loss.backward()
         self.assertIsNotNone(img.grad)

@@ -7,8 +7,8 @@ import unittest
 import numpy as np
 
 from deeptrack.backend import TORCH_AVAILABLE
-from deeptrack.optics import Fluorescence
-from deeptrack import scatterers
+from deeptrack.optical.optics import Fluorescence
+from deeptrack.optical import scatterers
 from tests import BackendTestBase
 
 if TORCH_AVAILABLE:

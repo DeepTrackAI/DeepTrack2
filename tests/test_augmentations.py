@@ -8,13 +8,12 @@
 
 import unittest
 
+from deeptrack.optical import augmentations, scatterers
 import numpy as np
 
 from deeptrack import (
-    augmentations,
     config,
     features,
-    scatterers,
     sources,
     TORCH_AVAILABLE,
 )

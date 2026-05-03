@@ -45,7 +45,9 @@ from typing import Any, TYPE_CHECKING
 
 import numpy as np
 
-from deeptrack import Feature, PropertyLike, TORCH_AVAILABLE
+from deeptrack.features import Feature
+from deeptrack.types import PropertyLike
+from deeptrack.backend import TORCH_AVAILABLE
 
 if TORCH_AVAILABLE:
     import torch
@@ -146,7 +148,7 @@ class Noise(Feature):
 
         # Lazy import avoids circular dependency
         try:
-            from deeptrack.scatterers import ScatteredVolume, ScatteredField
+            from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
 
             scattered_types = (ScatteredVolume, ScatteredField)
         except Exception:
