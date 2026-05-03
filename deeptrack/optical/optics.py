@@ -2443,7 +2443,7 @@ class IlluminationGradient(Feature):
             x = xp.arange(image.shape[0])
             y = xp.arange(image.shape[1])
 
-            X, Y = xp.meshgrid(y, x)
+            X, Y = xp.meshgrid(y, x, indexing="xy")
 
             amplitude = X * gradient[0] + Y * gradient[1]
 
