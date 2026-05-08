@@ -506,7 +506,9 @@ class Zernike(Aberration):
         Z = 0 * rho
 
         for n, m, coefficient in zip(n_list, m_list, coefficients):
-            if (n - abs(m)) % 2 or coefficient == 0:
+            if (n - abs(m)) % 2:
+                continue
+            if not (TORCH_AVAILABLE and torch.is_tensor(coefficient)) and coefficient == 0:
                 continue
 
             R = 0 * rho
