@@ -37,10 +37,17 @@ Print them:
 
 from __future__ import annotations
 
+import array_api_compat as apc
 import numpy as np
 from numpy.typing import NDArray
 
 from .polynomials import (
+    _dricbesh_array_api,
+    _dricbesj_array_api,
+    _dricbesy_array_api,
+    _ricbesh_array_api,
+    _ricbesj_array_api,
+    _ricbesy_array_api,
     ricbesh,
     ricbesy,
     ricbesj,
@@ -49,165 +56,138 @@ from .polynomials import (
     dricbesy,
 )
 
-try:
-    import torch
 
-    TORCH_AVAILABLE = True
-except ImportError:
-    TORCH_AVAILABLE = False
-
-
-def _is_torch_array(x) -> bool:
-    """Return whether x is, or contains, a torch tensor."""
-
-    if not TORCH_AVAILABLE:
-        return False
-
-    if torch.is_tensor(x):
-        return True
-
-    if isinstance(x, (list, tuple)):
-        return any(_is_torch_array(v) for v in x)
-
-    return False
-
-
-def _first_torch_array(*values):
-    """Return the first torch tensor in values, searching nested sequences."""
+def _first_array(*values):
+    """Return the first array API object in values."""
 
     for value in values:
-        if torch.is_tensor(value):
+        if apc.is_array_api_obj(value):
             return value
 
         if isinstance(value, (list, tuple)):
-            found = _first_torch_array(*value)
+            found = _first_array(*value)
             if found is not None:
                 return found
 
     return None
 
 
-def _torch_complex_dtype(*values):
-    """Return a complex dtype compatible with the torch inputs."""
+def _array_api_namespace(*values):
+    """Return a non-NumPy array API namespace and reference array if present."""
+
+    reference = _first_array(*values)
+
+    if reference is None:
+        return None, None
+
+    namespace = apc.array_namespace(reference)
+
+    if apc.is_numpy_namespace(namespace):
+        return None, None
+
+    return namespace, reference
+
+
+def _complex_dtype(namespace, *values):
+    """Return a complex dtype compatible with the array inputs."""
 
     for value in values:
-        if torch.is_tensor(value):
-            if value.dtype in (torch.float64, torch.complex128):
-                return torch.complex128
+        if apc.is_array_api_obj(value):
+            if value.dtype in (namespace.float64, namespace.complex128):
+                return namespace.complex128
 
         if isinstance(value, (list, tuple)):
-            dtype = _torch_complex_dtype(*value)
-            if dtype == torch.complex128:
+            dtype = _complex_dtype(namespace, *value)
+            if dtype == namespace.complex128:
                 return dtype
 
-    return torch.complex64
+    return namespace.complex64
 
 
-def _as_torch_scalar(value, dtype, device):
-    """Convert value to a scalar torch tensor on device with dtype."""
+def _asarray(value, namespace, dtype, reference):
+    """Convert value to an array on the same backend as reference."""
 
-    if torch.is_tensor(value):
-        return value.to(dtype=dtype, device=device)
+    if apc.is_array_api_obj(value):
+        return namespace.astype(value, dtype)
 
-    return torch.as_tensor(value, dtype=dtype, device=device)
+    try:
+        return namespace.asarray(
+            value, dtype=dtype, device=apc.device(reference)
+        )
+    except TypeError:
+        return namespace.asarray(value, dtype=dtype)
 
 
-def _as_torch_vector(value, dtype, device):
-    """Convert a tensor or sequence of scalars to a one-dimensional tensor."""
+def _asarray_vector(value, namespace, dtype, reference):
+    """Convert a tensor or sequence of scalars to a one-dimensional array."""
 
-    if torch.is_tensor(value):
-        return value.to(dtype=dtype, device=device).reshape(-1)
+    if apc.is_array_api_obj(value):
+        return namespace.reshape(
+            _asarray(value, namespace, dtype, reference), (-1,)
+        )
 
-    return torch.stack(
+    return namespace.stack(
         [
-            _as_torch_scalar(element, dtype=dtype, device=device).reshape(())
+            namespace.reshape(
+                _asarray(element, namespace, dtype, reference), ()
+            )
             for element in value
         ]
     )
 
 
-def _ricbesj_torch(l: int, x):
-    """Differentiable torch Riccati-Bessel polynomial of the first kind."""
+def _empty(namespace, shape, dtype, reference):
+    """Create an empty array on the same backend as reference."""
 
-    if l == 0:
-        return torch.sin(x)
-
-    previous = torch.sin(x)
-    current = torch.sin(x) / x - torch.cos(x)
-
-    for order in range(1, l):
-        previous, current = current, (2 * order + 1) / x * current - previous
-
-    return current
+    try:
+        return namespace.empty(
+            shape, dtype=dtype, device=apc.device(reference)
+        )
+    except TypeError:
+        return namespace.empty(shape, dtype=dtype)
 
 
-def _dricbesj_torch(l: int, x):
-    """Differentiable torch derivative of ricbesj."""
+def _zeros(namespace, shape, dtype, reference):
+    """Create a zero array on the same backend as reference."""
 
-    return _ricbesj_torch(l - 1, x) - l / x * _ricbesj_torch(l, x)
-
-
-def _ricbesy_torch(l: int, x):
-    """Differentiable torch Riccati-Bessel polynomial of the second kind."""
-
-    if l == 0:
-        return torch.cos(x)
-
-    previous = torch.cos(x)
-    current = torch.cos(x) / x + torch.sin(x)
-
-    for order in range(1, l):
-        previous, current = current, (2 * order + 1) / x * current - previous
-
-    return current
+    try:
+        return namespace.zeros(
+            shape, dtype=dtype, device=apc.device(reference)
+        )
+    except TypeError:
+        return namespace.zeros(shape, dtype=dtype)
 
 
-def _dricbesy_torch(l: int, x):
-    """Differentiable torch derivative of ricbesy."""
-
-    return _ricbesy_torch(l - 1, x) - l / x * _ricbesy_torch(l, x)
-
-
-def _ricbesh_torch(l: int, x):
-    """Differentiable torch Riccati-Bessel polynomial of the third kind."""
-
-    return _ricbesj_torch(l, x) - 1j * _ricbesy_torch(l, x)
-
-
-def _dricbesh_torch(l: int, x):
-    """Differentiable torch derivative of ricbesh."""
-
-    return _dricbesj_torch(l, x) - 1j * _dricbesy_torch(l, x)
-
-
-def _coefficients_torch(
-    m: float | complex | "torch.Tensor",
-    a: float | "torch.Tensor",
+def _coefficients_array_api(
+    m: float | complex,
+    a: float,
     L: int,
-) -> tuple["torch.Tensor", "torch.Tensor"]:
-    """Torch implementation of Mie coefficients."""
+    namespace,
+    reference,
+):
+    """Array API implementation of Mie coefficients."""
 
-    reference = _first_torch_array(m, a)
-    device = reference.device
-    dtype = _torch_complex_dtype(m, a)
+    dtype = _complex_dtype(namespace, m, a)
 
-    m = _as_torch_scalar(m, dtype=dtype, device=device)
-    a = _as_torch_scalar(a, dtype=dtype, device=device)
+    m = _asarray(m, namespace, dtype, reference)
+    a = _asarray(a, namespace, dtype, reference)
 
     if L == 0:
-        empty = torch.empty((0,), dtype=dtype, device=device)
-        return empty, empty.clone()
+        return (
+            _empty(namespace, (0,), dtype, reference),
+            _empty(namespace, (0,), dtype, reference),
+        )
 
     A = []
     B = []
 
     for l in range(1, L + 1):
-        Sx = _ricbesj_torch(l, a)
-        dSx = _dricbesj_torch(l, a)
-        Smx = _ricbesj_torch(l, m * a)
-        dSmx = _dricbesj_torch(l, m * a)
-        xix = _ricbesh_torch(l, a)
-        dxix = _dricbesh_torch(l, a)
+        Sx = _ricbesj_array_api(l, a, namespace)
+        dSx = _dricbesj_array_api(l, a, namespace)
+        Smx = _ricbesj_array_api(l, m * a, namespace)
+        dSmx = _dricbesj_array_api(l, m * a, namespace)
+        xix = _ricbesh_array_api(l, a, namespace)
+        dxix = _dricbesh_array_api(l, a, namespace)
 
         A.append(
             (m * Smx * dSx - Sx * dSmx)
@@ -218,30 +198,34 @@ def _coefficients_torch(
             / (Smx * dxix - m * xix * dSmx)
         )
 
-    return torch.stack(A), torch.stack(B)
+    return namespace.stack(A), namespace.stack(B)
 
 
-def _stratified_coefficients_torch(
-    m: list[complex] | "torch.Tensor",
-    a: list[float] | "torch.Tensor",
+def _stratified_coefficients_array_api(
+    m: list[complex],
+    a: list[float],
     L: int,
-) -> tuple["torch.Tensor", "torch.Tensor"]:
-    """Torch implementation of stratified Mie coefficients."""
+    namespace,
+    reference,
+):
+    """Array API implementation of stratified Mie coefficients."""
 
-    reference = _first_torch_array(m, a)
-    device = reference.device
-    dtype = _torch_complex_dtype(m, a)
+    dtype = _complex_dtype(namespace, m, a)
 
-    m = _as_torch_vector(m, dtype=dtype, device=device)
-    a = _as_torch_vector(a, dtype=dtype, device=device)
-    n_layers = a.numel()
+    m = _asarray_vector(m, namespace, dtype, reference)
+    a = _asarray_vector(a, namespace, dtype, reference)
+    n_layers = a.shape[0]
 
     if n_layers == 1:
-        return _coefficients_torch(m[0], a[0], L)
+        return _coefficients_array_api(
+            m[0], a[0], L, namespace, reference
+        )
 
     if L == 0:
-        empty = torch.empty((0,), dtype=dtype, device=device)
-        return empty, empty.clone()
+        return (
+            _empty(namespace, (0,), dtype, reference),
+            _empty(namespace, (0,), dtype, reference),
+        )
 
     an = []
     bn = []
@@ -249,7 +233,7 @@ def _stratified_coefficients_torch(
     for n in range(L):
         A_rows = []
         C_rows = []
-        zero = torch.zeros((), dtype=dtype, device=device)
+        zero = _zeros(namespace, (), dtype, reference)
 
         for i in range(2 * n_layers):
             for j in range(2 * n_layers):
@@ -265,11 +249,17 @@ def _stratified_coefficients_torch(
                             j < 2 * n_layers - 1
                             and (j == 0 or j % 2 == 1)
                         ):
-                            A_ij = _dricbesj_torch(n + 1, m[p] * a[q])
+                            A_ij = _dricbesj_array_api(
+                                n + 1, m[p] * a[q], namespace
+                            )
                         elif j % 2 == 0:
-                            A_ij = _dricbesy_torch(n + 1, m[p] * a[q])
+                            A_ij = _dricbesy_array_api(
+                                n + 1, m[p] * a[q], namespace
+                            )
                         else:
-                            A_ij = _dricbesj_torch(n + 1, a[q])
+                            A_ij = _dricbesj_array_api(
+                                n + 1, a[q], namespace
+                            )
 
                         if j != 2 * n_layers - 1:
                             C_ij = m[p] * A_ij
@@ -280,11 +270,17 @@ def _stratified_coefficients_torch(
                             j < 2 * n_layers - 1
                             and (j == 0 or j % 2 == 1)
                         ):
-                            C_ij = _ricbesj_torch(n + 1, m[p] * a[q])
+                            C_ij = _ricbesj_array_api(
+                                n + 1, m[p] * a[q], namespace
+                            )
                         elif j % 2 == 0:
-                            C_ij = _ricbesy_torch(n + 1, m[p] * a[q])
+                            C_ij = _ricbesy_array_api(
+                                n + 1, m[p] * a[q], namespace
+                            )
                         else:
-                            C_ij = _ricbesj_torch(n + 1, a[q])
+                            C_ij = _ricbesj_array_api(
+                                n + 1, a[q], namespace
+                            )
 
                         if j != 2 * n_layers - 1:
                             A_ij = m[p] * C_ij
@@ -294,27 +290,30 @@ def _stratified_coefficients_torch(
                 A_rows.append(A_ij)
                 C_rows.append(C_ij)
 
-        A = torch.stack(A_rows).reshape(2 * n_layers, 2 * n_layers)
-        C = torch.stack(C_rows).reshape(2 * n_layers, 2 * n_layers)
+        shape = (2 * n_layers, 2 * n_layers)
+        A = namespace.reshape(namespace.stack(A_rows), shape)
+        C = namespace.reshape(namespace.stack(C_rows), shape)
 
-        B = A.clone()
-        B[-2, -1] = _dricbesh_torch(n + 1, a[-1])
-        B[-1, -1] = _ricbesh_torch(n + 1, a[-1])
-        an.append(torch.linalg.det(A) / torch.linalg.det(B))
+        B = A * 1
+        B[-2, -1] = _dricbesh_array_api(n + 1, a[-1], namespace)
+        B[-1, -1] = _ricbesh_array_api(n + 1, a[-1], namespace)
+        an.append(namespace.linalg.det(A) / namespace.linalg.det(B))
 
-        D = C.clone()
-        D[-2, -1] = _dricbesh_torch(n + 1, a[-1])
-        D[-1, -1] = _ricbesh_torch(n + 1, a[-1])
-        bn.append(torch.linalg.det(C) / torch.linalg.det(D))
+        D = C * 1
+        D[-2, -1] = _dricbesh_array_api(n + 1, a[-1], namespace)
+        D[-1, -1] = _ricbesh_array_api(n + 1, a[-1], namespace)
+        bn.append(namespace.linalg.det(C) / namespace.linalg.det(D))
 
-    return torch.stack(an), torch.stack(bn)
+    return namespace.stack(an), namespace.stack(bn)
 
 
-def _harmonics_torch(
-    x: "torch.Tensor",
+def _harmonics_array_api(
+    x,
     L: int,
-) -> tuple["torch.Tensor", "torch.Tensor"]:
-    """Torch implementation of Mie harmonics."""
+    namespace,
+    reference,
+):
+    """Array API implementation of Mie harmonics."""
 
     PI = []
     TAU = []
@@ -322,12 +321,12 @@ def _harmonics_torch(
     if L == 0:
         shape = (0, *x.shape)
         return (
-            torch.empty(shape, dtype=x.dtype, device=x.device),
-            torch.empty(shape, dtype=x.dtype, device=x.device),
+            _empty(namespace, shape, x.dtype, reference),
+            _empty(namespace, shape, x.dtype, reference),
         )
 
     if L >= 1:
-        PI.append(torch.ones_like(x))
+        PI.append(namespace.ones_like(x))
         TAU.append(x)
 
     if L >= 2:
@@ -341,7 +340,7 @@ def _harmonics_torch(
         )
         TAU.append(i * x * PI[i - 1] - (i + 1) * PI[i - 2])
 
-    return torch.stack(PI), torch.stack(TAU)
+    return namespace.stack(PI), namespace.stack(TAU)
 
 
 #TODO ***??*** revise coefficients - torch, docstring, unit test
@@ -373,8 +372,10 @@ def coefficients(
 
     """
 
-    if _is_torch_array(m) or _is_torch_array(a):
-        return _coefficients_torch(m, a, L)
+    namespace, reference = _array_api_namespace(m, a)
+
+    if namespace is not None:
+        return _coefficients_array_api(m, a, L, namespace, reference)
 
     A = np.zeros((L,), dtype=np.complex128)
     B = np.zeros((L,), dtype=np.complex128)
@@ -430,8 +431,12 @@ def stratified_coefficients(
         including) order L.
 
     """
-    if _is_torch_array(m) or _is_torch_array(a):
-        return _stratified_coefficients_torch(m, a, L)
+    namespace, reference = _array_api_namespace(m, a)
+
+    if namespace is not None:
+        return _stratified_coefficients_array_api(
+            m, a, L, namespace, reference
+        )
 
     n_layers = len(a)
 
@@ -531,8 +536,10 @@ def harmonics(
 
     """
 
-    if _is_torch_array(x):
-        return _harmonics_torch(x, L)
+    namespace, reference = _array_api_namespace(x)
+
+    if namespace is not None:
+        return _harmonics_array_api(x, L, namespace, reference)
 
     PI = np.zeros((L, *x.shape))
     TAU = np.zeros((L, *x.shape))
