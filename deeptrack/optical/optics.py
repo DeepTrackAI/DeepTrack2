@@ -3,7 +3,7 @@
 This module provides features for simulating optical image formation from
 sample representations such as `ScatteredVolume` and `ScatteredField`.
 It includes a high-level `Microscope` wrapper, a base `Optics` class, and
-specialized optical systems for coherent and incoherent imaging
+specialized optical systems for coherent and incoherent imaging.
 
 Key Features
 ------------
