@@ -1626,9 +1626,12 @@ class MieScatterer(FieldScatterer):
         R3 = xp.sqrt(R2_squared + Z**2)
 
         cos_theta = Z / R3
-        illumination_cos_theta = xp.cos(
-            xp.acos(cos_theta) + illumination_angle
-        )
+        if float(illumination_angle) == 0:
+            illumination_cos_theta = cos_theta
+        else:
+            illumination_cos_theta = xp.cos(
+                xp.acos(cos_theta) + illumination_angle
+            )
         phi = xp.atan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi
@@ -1693,9 +1696,12 @@ class MieScatterer(FieldScatterer):
             xp.zeros_like(cos_theta),
         )
 
-        illumination_cos_theta = xp.cos(
-            xp.acos(cos_theta) + illumination_angle
-        )
+        if float(illumination_angle) == 0:
+            illumination_cos_theta = cos_theta
+        else:
+            illumination_cos_theta = xp.cos(
+                xp.acos(cos_theta) + illumination_angle
+            )
         phi = xp.atan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi, pupil_mask
