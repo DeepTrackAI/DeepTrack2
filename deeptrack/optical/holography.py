@@ -93,6 +93,7 @@ from typing import Any
 
 import numpy as np
 
+from deeptrack.backend import xp
 from deeptrack.backend.units import get_active_voxel_size
 
 from deeptrack import Feature
@@ -144,7 +145,9 @@ def get_propagation_matrix(
     if pixel_size is None:
         pixel_size = get_active_voxel_size()
 
-    if np.isscalar(pixel_size):
+    if np.isscalar(pixel_size) or (
+        hasattr(pixel_size, "ndim") and pixel_size.ndim == 0
+    ):
         pixel_size = (pixel_size, pixel_size)
 
     px, py = pixel_size
@@ -152,21 +155,26 @@ def get_propagation_matrix(
     k = 2 * np.pi / wavelength
     yr, xr, *_ = shape
 
-    x = np.arange(0, xr, 1) - xr / 2 + (xr % 2) / 2
-    y = np.arange(0, yr, 1) - yr / 2 + (yr % 2) / 2
+    x = xp.arange(0, xr, 1, dtype=xp.float64) - xr / 2 + (xr % 2) / 2
+    y = xp.arange(0, yr, 1, dtype=xp.float64) - yr / 2 + (yr % 2) / 2
 
     x = 2 * np.pi / px * x / xr
     y = 2 * np.pi / py * y / yr
 
-    KXk, KYk = np.meshgrid(x, y)
-    KXk = KXk.astype(complex)
-    KYk = KYk.astype(complex)
+    KXk_real, KYk_real = xp.meshgrid(x, y)
+    KXk = xp.astype(KXk_real, xp.complex128)
+    KYk = xp.astype(KYk_real, xp.complex128)
 
-    K = np.real(np.sqrt(1 - (KXk / k) ** 2 - (KYk / k) ** 2))
-    C = np.fft.fftshift(((KXk / k) ** 2 + (KYk / k) ** 2 < 1) * 1.0)
+    K = xp.real(xp.sqrt(1 - (KXk / k) ** 2 - (KYk / k) ** 2))
+    C = xp.fft.fftshift(
+        xp.astype(
+            ((KXk_real / k) ** 2 + (KYk_real / k) ** 2 < 1),
+            xp.float64,
+        )
+    )
 
-    return C * np.fft.fftshift(
-        np.exp(k * 1j * (to_z * (K - 1) - dx * KXk / k - dy * KYk / k))
+    return C * xp.fft.fftshift(
+        xp.exp(k * 1j * (to_z * (K - 1) - dx * KXk / k - dy * KYk / k))
     )
 
 
