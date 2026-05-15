@@ -2001,7 +2001,8 @@ class Brightfield(Optics):
 
                     field_arrays.append(arr)
 
-                field = xp.sum(field_arrays, axis=0)
+                field = xp.sum(xp.stack(field_arrays, axis=0), axis=0)
+              
                 light_in_focus += field[..., 0]
             shifted_pupil = xp.fft.fftshift(pupils[-1])
             light_in_focus = light_in_focus * shifted_pupil
