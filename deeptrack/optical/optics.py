@@ -86,6 +86,9 @@ Utility Functions:
 - `_pad_volume(volume, limits, padding, output_region, **kwargs)`
     Pads a volume with zeros to avoid edge effects during imaging.
 
+- `_merge_placed_volumes(contrast_volumes, contrast_limits)`
+    Merges multiple placed volumes into a single volume based on their positions.
+
 Examples
 --------
 >>> import deeptrack as dt
@@ -373,19 +376,37 @@ class Microscope(StructuralFeature):
                 if isinstance(scatterer, ScatteredField)
             ]
 
-            # Merge all volumes into a single volume.
-            sample_volume, limits = _create_volume(
-                volume_samples,
-                **additional_sample_kwargs,
-            )
-
             if volume_samples:
-                # Interpret the merged volume semantically
-                sample_volume = self._extract_contrast_volume(
-                    ScatteredVolume(
-                        array=sample_volume,
-                        properties=volume_samples[0].properties,
-                    ),
+                contrast_volumes = []
+                contrast_limits = []
+
+                for scatterer in volume_samples:
+                    placed, limits_i = _create_volume(
+                        [scatterer],
+                        **additional_sample_kwargs,
+                    )
+
+                    if limits_i is None:
+                        continue
+
+                    contrast_i = self._extract_contrast_volume(
+                        ScatteredVolume(
+                            array=placed,
+                            properties=scatterer.properties,
+                        )
+                    )
+
+                    contrast_volumes.append(contrast_i)
+                    contrast_limits.append(limits_i)
+
+                sample_volume, limits = _merge_placed_volumes(
+                    contrast_volumes,
+                    contrast_limits,
+                )
+            else:
+                sample_volume, limits = _create_volume(
+                    volume_samples,
+                    **additional_sample_kwargs,
                 )
 
             # Let the objective know about the limits of the volume and all the fields.
@@ -1296,6 +1317,7 @@ class Fluorescence(Optics):
         itself.
 
         """
+        
         scale = np.asarray(get_active_scale(), float)
         scale_volume = np.prod(scale)
 
@@ -3792,3 +3814,123 @@ def _create_volume(
         if limits is not None:
             limits = torch.as_tensor(limits, dtype=torch.int32, device=device)
     return volume, limits
+
+
+# This can be reafctored within _create_volume, but it is cleaner to keep it 
+# separate for now.
+def _merge_placed_volumes(
+        volumes: list[np.ndarray | torch.Tensor],
+        limits_list: list[np.ndarray | torch.Tensor]
+    ) -> tuple[np.ndarray | torch.Tensor, np.ndarray | torch.Tensor | None]:
+
+    """Merges already-positioned volumes with known limits.
+
+    This function takes a list of volumes and their corresponding limits, 
+    computes the global limits that encompass all volumes, and merges the 
+    volumes into a single volume based on their positions. The merging is done 
+    by summing the volumes in their respective positions within the global 
+    limits. It is necessary to allow different scatterers within the same 
+    volume to keep their individual gradients, which is why the merging is done
+    at this stage rather than during the initial volume creation.
+    
+    Parameters
+    ----------
+    volumes : list[np.ndarray | torch.Tensor]
+        Volumes already placed by _create_volume([scatterer]).
+    limits_list : list[np.ndarray | torch.Tensor]
+        Corresponding limits for each volume.
+
+    Returns
+    -------
+    merged : np.ndarray | torch.Tensor
+        The merged volume containing all input volumes positioned according to
+        their limits.
+    global_limits : np.ndarray | torch.Tensor | None
+        An array of shape (3, 2) giving the global bounds of the merged volume
+        in the format [[x_min, x_max], [y_min, y_max], [z_min, z_max]]. Returns 
+        `None` if the input list of volumes is empty.
+
+    """
+
+    if len(volumes) == 0:
+        return np.zeros((1, 1, 1)), None
+
+    backend = config.get_backend()
+
+    # Limits are integer geometry, so they do not need gradients.
+    limits_np = [
+        (
+            l.detach().cpu().numpy()
+            if TORCH_AVAILABLE and isinstance(l, torch.Tensor)
+            else np.asarray(l)
+        )
+        for l in limits_list
+    ]
+
+    global_limits = np.zeros((3, 2), dtype=np.int32)
+    global_limits[:, 0] = np.min([l[:, 0] for l in limits_np], axis=0)
+    global_limits[:, 1] = np.max([l[:, 1] for l in limits_np], axis=0)
+
+    shape = np.diff(global_limits, axis=1)[:, 0].astype(int)
+
+    if backend == "torch":
+        device = None
+        dtype = None
+
+        for v in volumes:
+            if TORCH_AVAILABLE and isinstance(v, torch.Tensor):
+                device = v.device
+                dtype = v.dtype
+                break
+
+        if device is None:
+            device = torch.device("cpu")
+        if dtype is None:
+            dtype = torch.float32
+
+        merged = torch.zeros(tuple(shape), dtype=dtype, device=device)
+
+        for v, lim in zip(volumes, limits_np):
+            if not isinstance(v, torch.Tensor):
+                v = torch.as_tensor(v, dtype=dtype, device=device)
+
+            offset = lim[:, 0] - global_limits[:, 0]
+            sx, sy, sz = v.shape
+
+            merged[
+                offset[0] : offset[0] + sx,
+                offset[1] : offset[1] + sy,
+                offset[2] : offset[2] + sz,
+            ] = (
+                merged[
+                    offset[0] : offset[0] + sx,
+                    offset[1] : offset[1] + sy,
+                    offset[2] : offset[2] + sz,
+                ]
+                + v
+            )
+
+        global_limits = torch.as_tensor(
+            global_limits,
+            dtype=torch.int32,
+            device=device,
+        )
+
+        return merged, global_limits
+
+    else:
+        dtype = np.result_type(*[np.asarray(v).dtype for v in volumes])
+        merged = np.zeros(tuple(shape), dtype=dtype)
+
+        for v, lim in zip(volumes, limits_np):
+            v = np.asarray(v)
+            offset = lim[:, 0] - global_limits[:, 0]
+            sx, sy, sz = v.shape
+
+            merged[
+                offset[0] : offset[0] + sx,
+                offset[1] : offset[1] + sy,
+                offset[2] : offset[2] + sz,
+            ] += v
+
+        return merged, global_limits
