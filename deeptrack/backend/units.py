@@ -386,6 +386,22 @@ class ConversionTable:
 
             default_unit, desired_unit = value
 
+            if TORCH_AVAILABLE and torch.is_tensor(quantity):
+                factor = (1 * default_unit).to(desired_unit).to_reduced_units()
+                factor = factor.magnitude
+                kwargs[key] = quantity * factor
+                continue
+
+            if (
+                TORCH_AVAILABLE
+                and isinstance(quantity, (list, tuple))
+                and any(torch.is_tensor(item) for item in quantity)
+            ):
+                factor = (1 * default_unit).to(desired_unit).to_reduced_units()
+                factor = factor.magnitude
+                kwargs[key] = type(quantity)(item * factor for item in quantity)
+                continue
+
             # Convert non-quantities to quantities in default units
             if not isinstance(quantity, Quantity):
                 quantity = quantity * default_unit
