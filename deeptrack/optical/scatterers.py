@@ -448,12 +448,9 @@ class Scatterer(Feature):
             Positional arguments passed to the method. Not used in this
             implementation.
         voxel_size: array
-            Voxel size supplied by the feature pipeline. In practice,
-            scatterers use the active optics configuration
-            (`get_active_voxel_size()`) to ensure that geometry evaluation is
-            consistent with the current imaging context. This argument is
-            considered framework-internal and is not intended as a user-facing
-            override.
+            Voxel size supplied by the feature pipeline. Field scatterers use
+            this value directly; volume scatterers use the active optics
+            context to keep geometry evaluation aligned with upsampling.
         upsample: int
             Geometry supersampling factor for volume-based scatterers. Ignored
             by field-based scatterers.
@@ -482,7 +479,10 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
+        if isinstance(self, FieldScatterer) and voxel_size is not None:
+            voxel_size = _asarray(voxel_size, dtype=xp.float64)
+        else:
+            voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
 
         apply_supersampling = upsample > 1 and isinstance(
             self, VolumeScatterer
@@ -1452,12 +1452,17 @@ class MieScatterer(FieldScatterer):
                 radius_for_l = properties["radius"]
                 if TORCH_AVAILABLE and torch.is_tensor(radius_for_l):
                     radius_for_l = radius_for_l.detach().cpu().numpy()
+                wavelength_for_l = properties["wavelength"]
+                if TORCH_AVAILABLE and torch.is_tensor(wavelength_for_l):
+                    wavelength_for_l = (
+                        wavelength_for_l.detach().cpu().numpy()
+                    )
 
                 v = (
                     2
                     * np.pi
                     * np.max(radius_for_l)
-                    / properties["wavelength"]
+                    / wavelength_for_l
                 )
 
                 properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
@@ -1487,10 +1492,13 @@ class MieScatterer(FieldScatterer):
                     collection_angle,
                     dtype=xp.float64,
                 )
+            voxel_size = properties.get("voxel_size")
+            if voxel_size is None:
+                voxel_size = get_active_voxel_size()
             properties["offset_z"] = (
                 min_edge_size
                 * 0.45
-                * min(get_active_voxel_size()[:2])
+                * xp.min(_asarray(voxel_size, dtype=xp.float64)[:2])
                 / xp.tan(collection_angle)
             )
         return properties
@@ -1814,6 +1822,7 @@ class MieScatterer(FieldScatterer):
     def _common_setup(
         self: MieScatterer,
         position: tuple[float, float, float],
+        voxel_size: np.ndarray,
         padding: tuple[int, int, int, int],
         output_region: tuple[int, int, int, int],
         wavelength: float,
@@ -1837,6 +1846,8 @@ class MieScatterer(FieldScatterer):
         ----------
         position: tuple[float, float, float]
             The position of the particle in (x, y, z) coordinates.
+        voxel_size: np.ndarray
+            The physical voxel size in meters.
         padding: int
             The padding applied to the output region.
         output_region: tuple[int, int]
@@ -1864,8 +1875,8 @@ class MieScatterer(FieldScatterer):
         """
 
         xSize, ySize = self.get_xy_size(output_region, padding)
-        voxel_size = xp.asarray(
-            get_active_voxel_size(),
+        voxel_size = _asarray(
+            voxel_size,
             dtype=xp.float64,
         )
         scale = xp.asarray(
@@ -2079,6 +2090,7 @@ class MieScatterer(FieldScatterer):
             relative_position,
         ) = self._common_setup(
             position,
+            voxel_size,
             padding,
             output_region,
             wavelength,
@@ -2300,6 +2312,7 @@ class MieScatterer(FieldScatterer):
             relative_position,
         ) = self._common_setup(
             position,
+            voxel_size,
             padding,
             output_region,
             wavelength,

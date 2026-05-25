@@ -3,6 +3,7 @@
 # sys.path.append(".")  # Adds the module to path
 
 import unittest
+import warnings
 
 import numpy as np
 
@@ -715,6 +716,90 @@ class TestMath_TorchOnly(BackendTestBase):
         self.assertTrue(torch.isfinite(radius_2.grad))
         self.assertGreater(abs(float(radius_1.grad)), 0)
         self.assertGreater(abs(float(radius_2.grad)), 0)
+
+    def test_mie_sphere_brightfield_autodiff_learnable_parameters(self):
+        cases = [
+            ("x", 14.25, "sample"),
+            ("y", 16.75, "sample"),
+            ("resolution", 1.0e-6, "optics"),
+            ("NA", 0.7, "optics"),
+            ("magnification", 10.0, "optics"),
+            ("wavelength", 680e-9, "optics"),
+            ("refractive_index_medium", 1.33, "optics"),
+        ]
+
+        for name, value, owner in cases:
+            with self.subTest(parameter=name):
+                parameter = torch.tensor(
+                    value,
+                    dtype=torch.float64,
+                    requires_grad=True,
+                )
+
+                sample_kwargs = dict(
+                    radius=0.5e-6,
+                    refractive_index=1.45,
+                    position=(14.25, 16.75),
+                    position_unit="pixel",
+                    input_polarization=0.0,
+                    output_polarization=0.0,
+                    L=5,
+                    collection_angle=0.3,
+                    offset_z=1e-5,
+                    mode="hybrid",
+                )
+                optics_kwargs = dict(
+                    NA=0.7,
+                    wavelength=680e-9,
+                    refractive_index_medium=1.33,
+                    resolution=1e-6,
+                    magnification=10,
+                    output_region=(0, 0, 32, 32),
+                    padding=(4, 4, 4, 4),
+                    return_field=True,
+                )
+
+                if owner == "sample" and name == "x":
+                    sample_kwargs["position"] = (parameter, 16.75)
+                elif owner == "sample" and name == "y":
+                    sample_kwargs["position"] = (14.25, parameter)
+                else:
+                    optics_kwargs[name] = parameter
+                    if name == "NA":
+                        sample_kwargs.pop("collection_angle")
+                        sample_kwargs.pop("offset_z")
+
+                sample = scatterers.MieSphere(**sample_kwargs)
+                microscope = Brightfield(**optics_kwargs)
+
+                with warnings.catch_warnings(record=True) as caught:
+                    warnings.simplefilter("always")
+                    image = microscope(sample).resolve()
+
+                tensor_warning = (
+                    "Converting a tensor with requires_grad=True to a scalar"
+                )
+                self.assertFalse(
+                    any(tensor_warning in str(w.message) for w in caught)
+                )
+                self.assertIsInstance(image, torch.Tensor)
+                self.assertTrue(image.requires_grad)
+                self.assertTrue(torch.isfinite(image.real).all())
+                self.assertTrue(torch.isfinite(image.imag).all())
+
+                weights = torch.linspace(
+                    0.5,
+                    1.5,
+                    image.numel(),
+                    dtype=image.real.dtype,
+                    device=image.device,
+                ).reshape(image.shape)
+                loss = (torch.abs(image) * weights).sum()
+                loss.backward()
+
+                self.assertIsNotNone(parameter.grad)
+                self.assertTrue(torch.isfinite(parameter.grad))
+                self.assertGreater(abs(float(parameter.grad)), 0)
 
     def test_point_particle_intensity_gradient(self):
 

@@ -312,9 +312,23 @@ class Microscope(StructuralFeature):
         if np.array(_upscale_given_by_optics).size == 1:
             _upscale_given_by_optics = (_upscale_given_by_optics,) * 3
 
+        voxel_size_for_context = additional_sample_kwargs["voxel_size"]
+        if TORCH_AVAILABLE and torch.is_tensor(voxel_size_for_context):
+            voxel_size_for_context = (
+                voxel_size_for_context.detach().cpu().numpy()
+            )
+        elif TORCH_AVAILABLE and isinstance(
+            voxel_size_for_context,
+            (list, tuple),
+        ):
+            voxel_size_for_context = type(voxel_size_for_context)(
+                item.detach().cpu().item() if torch.is_tensor(item) else item
+                for item in voxel_size_for_context
+            )
+
         with u.context(
             create_context(
-                *additional_sample_kwargs["voxel_size"],
+                *voxel_size_for_context,
                 *_upscale_given_by_optics,
             )
         ):
@@ -629,7 +643,11 @@ class Optics(Feature):
             props = self._normalize(
                 resolution=resolution, magnification=magnification
             )
-            return np.ones((3,)) * props["resolution"] / props["magnification"]
+            return (
+                xp.ones((3,), dtype=xp.float64)
+                * props["resolution"]
+                / props["magnification"]
+            )
 
         def get_pixel_size(
             resolution: (
@@ -711,8 +729,20 @@ class Optics(Feature):
 
         NA = propertydict["NA"]
         wavelength = propertydict["wavelength"]
-        voxel_size = get_active_voxel_size()
-        radius = NA / wavelength * np.array(voxel_size)
+        voxel_size = propertydict.get("voxel_size", get_active_voxel_size())
+        if TORCH_AVAILABLE and torch.is_tensor(NA):
+            NA = NA.detach().cpu().numpy()
+        if TORCH_AVAILABLE and torch.is_tensor(wavelength):
+            wavelength = wavelength.detach().cpu().numpy()
+        if TORCH_AVAILABLE and torch.is_tensor(voxel_size):
+            voxel_size = voxel_size.detach().cpu().numpy()
+        elif TORCH_AVAILABLE and isinstance(voxel_size, (list, tuple)):
+            voxel_size = [
+                item.detach().cpu().item() if torch.is_tensor(item) else item
+                for item in voxel_size
+            ]
+
+        radius = NA / wavelength * np.array(voxel_size, dtype=float)
 
         if np.any(radius[:2] > 0.5):
             required_upscale = np.max(np.ceil(radius[:2] * 2))
@@ -890,17 +920,34 @@ class Optics(Feature):
             semantics.
         """
 
-        # Resolve device
-        if isinstance(defocus, torch.Tensor):
-            device = defocus.device
-            complex_dtype = (
-                defocus.dtype
-                if defocus.dtype in (torch.complex64, torch.complex128)
-                else torch.complex64
+        voxel_size = kwargs.get("voxel_size", get_active_voxel_size())
+
+        tensor_refs = [
+            value
+            for value in (defocus, NA, wavelength, refractive_index_medium)
+            if torch.is_tensor(value)
+        ]
+        if torch.is_tensor(voxel_size):
+            tensor_refs.append(voxel_size)
+        elif isinstance(voxel_size, (list, tuple)):
+            tensor_refs.extend(
+                value for value in voxel_size if torch.is_tensor(value)
             )
-        else:
-            device = torch.device("cpu")
-            complex_dtype = torch.complex64
+
+        device = kwargs.get("device") or (
+            tensor_refs[0].device if tensor_refs else torch.device("cpu")
+        )
+        real_dtype = (
+            torch.float64
+            if any(
+                value.dtype in (torch.float64, torch.complex128)
+                for value in tensor_refs
+            )
+            else torch.float32
+        )
+        complex_dtype = (
+            torch.complex128 if real_dtype == torch.float64 else torch.complex64
+        )
 
         # shape -> (H, W) following current usage where shape[0] is x-axis length
         shape_arr = np.array(shape, dtype=int)
@@ -910,33 +957,43 @@ class Optics(Feature):
         H = int(shape_arr[0])
         W = int(shape_arr[1])
 
-        voxel_size_np = np.array(
-            get_active_voxel_size(), dtype=float
-        )  # (vx, vy, vz)
-        # Use python floats for constants; this is fine for differentiability
-        # w.r.t. volume
-        # If you ever want gradients w.r.t voxel_size, you’d pass it as
-        # torch.Tensor.
-        vx, vy, vz = (
-            float(voxel_size_np[0]),
-            float(voxel_size_np[1]),
-            float(voxel_size_np[2]),
+        if isinstance(voxel_size, (list, tuple)):
+            voxel_size = torch.stack(
+                [
+                    torch.as_tensor(
+                        value,
+                        device=device,
+                        dtype=real_dtype,
+                    )
+                    for value in voxel_size
+                ]
+            )
+        else:
+            voxel_size = torch.as_tensor(
+                voxel_size,
+                device=device,
+                dtype=real_dtype,
+            )
+
+        NA = torch.as_tensor(NA, device=device, dtype=real_dtype)
+        wavelength = torch.as_tensor(
+            wavelength,
+            device=device,
+            dtype=real_dtype,
         )
+        refractive_index_medium = torch.as_tensor(
+            refractive_index_medium,
+            device=device,
+            dtype=real_dtype,
+        )
+
+        vx, vy, vz = voxel_size[0], voxel_size[1], voxel_size[2]
 
         # Pupil radius
         Rx = (NA / wavelength) * vx
         Ry = (NA / wavelength) * vy
         x_radius = Rx * H
         y_radius = Ry * W
-
-        # Build coordinates exactly like NumPy:
-        # np.linspace(-(N/2), N/2 - 1, N) / radius + 1e-8
-        # Use float for coordinate grid to reduce artifacts
-        real_dtype = (
-            torch.float32
-            if complex_dtype == torch.complex64
-            else torch.float64
-        )
 
         x = (
             torch.linspace(
@@ -946,7 +1003,7 @@ class Optics(Feature):
                 device=device,
                 dtype=real_dtype,
             )
-            / float(x_radius)
+            / x_radius
             + 1e-8
         )
 
@@ -958,7 +1015,7 @@ class Optics(Feature):
                 device=device,
                 dtype=real_dtype,
             )
-            / float(y_radius)
+            / y_radius
             + 1e-8
         )
 
@@ -970,33 +1027,41 @@ class Optics(Feature):
 
         pupil_function = (RHO.real < 1.0).to(complex_dtype)
 
-        k0 = 2.0 * np.pi * float(refractive_index_medium) / float(wavelength)
-        alpha = (float(NA) / float(refractive_index_medium)) ** 2
+        k0 = 2.0 * np.pi * refractive_index_medium / wavelength
+        alpha = (NA / refractive_index_medium) ** 2
 
-        inside = 1.0 - alpha * RHO  # complex
-        sqrt_term = torch.sqrt(inside.to(complex_dtype))
+        # inside = 1.0 - alpha * RHO  # complex
+        # sqrt_term = torch.sqrt(inside.to(complex_dtype))
 
-        z_shift = (k0 * float(vz)) * sqrt_term  # complex
+        # z_shift = (k0 * float(vz)) * sqrt_term  # complex
 
-        # Torch equivalent:
-        z_shift = torch.where(
-            z_shift.imag.abs() > 1e-12,
-            torch.zeros_like(z_shift),
-            z_shift,
+        # # Torch equivalent:
+        # z_shift = torch.where(
+        #     z_shift.imag.abs() > 1e-12,
+        #     torch.zeros_like(z_shift),
+        #     z_shift,
+        # )
+
+        # # nan_to_num equivalent
+        # z_shift = torch.nan_to_num(z_shift)
+
+        # torch.nan_to_num on complex tensors does not support autograd
+        # workaround:
+
+        inside = 1.0 - alpha * RHO.real
+        inside = torch.where(
+            inside >= 0,
+            inside,
+            torch.zeros_like(inside),
         )
-
-        # nan_to_num equivalent
-        z_shift = torch.nan_to_num(z_shift)
+        z_shift = (k0 * vz) * torch.sqrt(inside).to(complex_dtype)
 
         # defocus reshape (-1,1,1)
-        if isinstance(defocus, torch.Tensor):
-            defocus_t = defocus.to(device=device, dtype=real_dtype)
-        else:
-            defocus_t = torch.as_tensor(
-                defocus, device=device, dtype=real_dtype
-            )
-
-        defocus_t = defocus_t.reshape(-1, 1, 1)
+        defocus_t = torch.as_tensor(
+            defocus,
+            device=device,
+            dtype=real_dtype,
+        ).reshape(-1, 1, 1)
 
         # broadcast z_shift to (Z,H,W)
         z_shift_3d = defocus_t * z_shift.unsqueeze(0)
@@ -1014,7 +1079,9 @@ class Optics(Feature):
             # move it to torch)
             elif isinstance(pupil_feat, np.ndarray):
                 pf = torch.as_tensor(
-                    pupil_feat, device=device, dtype=pupil_function.dtype
+                    pupil_feat,
+                    device=device,
+                    dtype=pupil_function.dtype,
                 )
                 pupil_function = pupil_function * pf
 
@@ -1928,7 +1995,11 @@ class Brightfield(Optics):
 
             volume = pad_image_to_fft(padded_volume, axes=(0, 1))
 
-            voxel_size = get_active_voxel_size()
+            voxel_size = kwargs.get("voxel_size", get_active_voxel_size())
+            if self.get_backend() == "torch" and not torch.is_tensor(
+                voxel_size
+            ):
+                voxel_size = xp.asarray(voxel_size, dtype=xp.float64)
 
             pupils = [
                 self._pupil(
