@@ -335,6 +335,16 @@ class Microscope(StructuralFeature):
 
             upscale = np.round(get_active_scale())
 
+            voxel_size = additional_sample_kwargs["voxel_size"]
+            if TORCH_AVAILABLE and torch.is_tensor(voxel_size):
+                additional_sample_kwargs["voxel_size"] = voxel_size / torch.as_tensor(
+                    upscale,
+                    device=voxel_size.device,
+                    dtype=voxel_size.dtype,
+                )
+            else:
+                additional_sample_kwargs["voxel_size"] = get_active_voxel_size()
+
             output_region = additional_sample_kwargs.pop("output_region")
             additional_sample_kwargs["output_region"] = [
                 int(o * upsc)
@@ -357,6 +367,9 @@ class Microscope(StructuralFeature):
             )
             self._objective.padding.set_value(
                 additional_sample_kwargs["padding"]
+            )
+            self._objective.voxel_size.set_value(
+                additional_sample_kwargs["voxel_size"]
             )
 
             propagate_data_to_dependencies(
