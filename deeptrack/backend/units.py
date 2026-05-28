@@ -386,7 +386,11 @@ class ConversionTable:
 
             default_unit, desired_unit = value
 
-            if TORCH_AVAILABLE and torch.is_tensor(quantity):
+            if (
+                TORCH_AVAILABLE
+                and torch.is_tensor(quantity)
+                and quantity.requires_grad
+            ):
                 factor = (1 * default_unit).to(desired_unit).to_reduced_units()
                 factor = factor.magnitude
                 kwargs[key] = quantity * factor
@@ -395,7 +399,10 @@ class ConversionTable:
             if (
                 TORCH_AVAILABLE
                 and isinstance(quantity, (list, tuple))
-                and any(torch.is_tensor(item) for item in quantity)
+                and any(
+                    torch.is_tensor(item) and item.requires_grad
+                    for item in quantity
+                )
             ):
                 factor = (1 * default_unit).to(desired_unit).to_reduced_units()
                 factor = factor.magnitude
