@@ -216,6 +216,21 @@ class TestAberrations_NumPy(BackendTestBase):
 class TestAberrations_PyTorch(TestAberrations_NumPy):
     BACKEND = "torch"
 
+    def test_zero_zernike_coefficient_keeps_torch_gradient(self):
+        coefficient = torch.tensor(
+            0.0,
+            dtype=torch.float64,
+            requires_grad=True,
+        )
+        pupil = aberrations.Zernike(n=2, m=0, coefficient=coefficient)
+        image = self._make_optics(pupil)(self.particle).resolve()
+
+        loss = image.sum()
+        loss.backward()
+
+        self.assertIsNotNone(coefficient.grad)
+        self.assertTrue(torch.isfinite(coefficient.grad))
+
 
 if __name__ == "__main__":
     unittest.main()
