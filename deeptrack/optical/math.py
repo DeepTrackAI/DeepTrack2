@@ -3742,65 +3742,26 @@ def pad_image_to_fft(
             f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
             f"for dimension {dim}."
         )
-    
+
     shape = list(image.shape)
-    ndim = len(shape)
-
-    # Normalize axes, so negative axes work correctly.
-    axes = tuple(axis % ndim for axis in axes)
-
     new_shape = list(shape)
 
     for axis in axes:
-        if shape[axis] == 0:
-            raise ValueError(
-                f"Cannot FFT-pad along empty axis {axis}; "
-                f"image shape is {tuple(shape)}."
-            )
-
         new_shape[axis] = _closest(shape[axis])
 
     pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
-
-    # Avoid calling torch.nn.functional.pad for no-op padding.
-    # Older Torch versions can fail on tensors with empty non-padded dimensions.
-    if all(before == 0 and after == 0 for before, after in pad_sizes):
-        return image
 
     # --- NumPy backend ---
     if isinstance(image, np.ndarray):
         return np.pad(image, pad_sizes, mode="constant")
 
-
     # --- Torch backend ---
     if isinstance(image, torch.Tensor):
-        # torch.nn.functional.pad crashes on some torch versions
-        # when the input has any zero-sized dimension.
-        # If padding is needed, use torch.cat along the padded axes only.
-        if any(s == 0 for s in image.shape):
-            result = image
-
-            for axis, (before, after) in enumerate(pad_sizes):
-                if before != 0:
-                    raise NotImplementedError(
-                        "pad_image_to_fft only supports padding at the end."
-                    )
-
-                if after == 0:
-                    continue
-
-                pad_shape = list(result.shape)
-                pad_shape[axis] = after
-                zeros = result.new_zeros(tuple(pad_shape))
-
-                result = torch.cat([result, zeros], dim=axis)
-
-            return result
-
+        # torch.nn.functional.pad expects reversed flat list
         pad = []
         for before, after in reversed(pad_sizes):
             pad.extend([before, after])
 
-        return torch.nn.functional.pad(image, tuple(pad), mode="constant", value=0.0)
+        return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
 
-    raise TypeError(f"Unsupported type: {type(image)}") /
+    raise TypeError(f"Unsupported type: {type(image)}")
