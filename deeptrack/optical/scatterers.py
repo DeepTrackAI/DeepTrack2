@@ -187,7 +187,7 @@ from deeptrack.backend.units import (
     get_active_scale,
     get_active_voxel_size,
 )
-from deeptrack.backend import mie, TORCH_AVAILABLE, xp
+from deeptrack.backend import config, mie, TORCH_AVAILABLE, xp
 from deeptrack.optical.math import AveragePooling, pad_image_to_fft
 from deeptrack.features import (
     Feature,
@@ -199,6 +199,37 @@ from deeptrack import units_registry as u
 
 if TORCH_AVAILABLE:
     import torch
+
+
+def _asarray(value, dtype=None):
+    """Convert values through xp while preserving existing tensor gradients."""
+
+    is_current_backend_array = (
+        config.get_backend() == "numpy"
+        and apc.is_numpy_array(value)
+        or config.get_backend() == "torch"
+        and apc.is_torch_array(value)
+    )
+
+    if is_current_backend_array:
+        return xp.astype(value, dtype) if dtype is not None else value
+
+    if dtype is not None:
+        return xp.asarray(value, dtype=dtype)
+    return xp.asarray(value)
+
+
+def _asarray_vector(value, dtype=None):
+    """Convert a vector-like value without detaching tensor elements."""
+
+    if isinstance(value, (list, tuple)) and any(
+        apc.is_array_api_obj(element) for element in value
+    ):
+        return xp.stack(
+            [xp.reshape(_asarray(element, dtype), ()) for element in value]
+        )
+
+    return xp.reshape(_asarray(value, dtype), (-1,))
 
 
 __all__ = [
@@ -417,12 +448,9 @@ class Scatterer(Feature):
             Positional arguments passed to the method. Not used in this
             implementation.
         voxel_size: array
-            Voxel size supplied by the feature pipeline. In practice,
-            scatterers use the active optics configuration
-            (`get_active_voxel_size()`) to ensure that geometry evaluation is
-            consistent with the current imaging context. This argument is
-            considered framework-internal and is not intended as a user-facing
-            override.
+            Voxel size supplied by the feature pipeline. Field scatterers use
+            this value directly; volume scatterers use the active optics
+            context to keep geometry evaluation aligned with upsampling.
         upsample: int
             Geometry supersampling factor for volume-based scatterers. Ignored
             by field-based scatterers.
@@ -451,7 +479,10 @@ class Scatterer(Feature):
                 + "Optics.upscale != 1."
             )
 
-        voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
+        if isinstance(self, FieldScatterer) and voxel_size is not None:
+            voxel_size = _asarray(voxel_size, dtype=xp.float64)
+        else:
+            voxel_size = xp.asarray(get_active_voxel_size(), dtype=float)
 
         apply_supersampling = upsample > 1 and isinstance(
             self, VolumeScatterer
@@ -1418,20 +1449,32 @@ class MieScatterer(FieldScatterer):
 
         if properties["L"] == "auto":
             try:
+                radius_for_l = properties["radius"]
+                if TORCH_AVAILABLE and torch.is_tensor(radius_for_l):
+                    radius_for_l = radius_for_l.detach().cpu().numpy()
+                wavelength_for_l = properties["wavelength"]
+                if TORCH_AVAILABLE and torch.is_tensor(wavelength_for_l):
+                    wavelength_for_l = (
+                        wavelength_for_l.detach().cpu().numpy()
+                    )
+
                 v = (
                     2
                     * np.pi
-                    * np.max(properties["radius"])
-                    / properties["wavelength"]
+                    * np.max(radius_for_l)
+                    / wavelength_for_l
                 )
 
                 properties["L"] = int(np.floor((v + 4 * (v ** (1 / 3)) + 1)))
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, RuntimeError):
                 pass
         if properties["collection_angle"] == "auto":
-            properties["collection_angle"] = np.arcsin(
+            collection_arg = (
                 properties["NA"] / properties["refractive_index_medium"]
             )
+            if config.get_backend() == "torch":
+                collection_arg = _asarray(collection_arg, dtype=xp.float64)
+            properties["collection_angle"] = xp.asin(collection_arg)
 
         if properties["offset_z"] == "auto":
             size = (
@@ -1443,11 +1486,20 @@ class MieScatterer(FieldScatterer):
             # offset_z should be calculated with the physical size of the image
             # not the fft-padded size
             min_edge_size = np.min([xSize, ySize])
+            collection_angle = properties["collection_angle"]
+            if config.get_backend() == "torch":
+                collection_angle = _asarray(
+                    collection_angle,
+                    dtype=xp.float64,
+                )
+            voxel_size = properties.get("voxel_size")
+            if voxel_size is None:
+                voxel_size = get_active_voxel_size()
             properties["offset_z"] = (
                 min_edge_size
                 * 0.45
-                * min(get_active_voxel_size()[:2])
-                / np.tan(properties["collection_angle"])
+                * xp.min(_asarray(voxel_size, dtype=xp.float64)[:2])
+                / xp.tan(collection_angle)
             )
         return properties
 
@@ -1497,9 +1549,11 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        x = np.arange(shape[0]) - shape[0] / 2
-        y = np.arange(shape[1]) - shape[1] / 2
-        return np.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
+        x = xp.arange(shape[0], dtype=xp.float64)
+        y = xp.arange(shape[1], dtype=xp.float64)
+        x = x - shape[0] / 2
+        y = y - shape[1] / 2
+        return xp.meshgrid(x * voxel_size[0], y * voxel_size[1], indexing="ij")
 
     def get_detector_mask(
         self: MieScatterer,
@@ -1527,7 +1581,7 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        return np.sqrt(X**2 + Y**2) < radius
+        return xp.sqrt(X**2 + Y**2) < radius
 
     def _plane_in_polar_coords_geometric(
         self: MieScatterer,
@@ -1577,13 +1631,16 @@ class MieScatterer(FieldScatterer):
         Z = plane_position[2]
 
         R2_squared = X**2 + Y**2
-        R3 = np.sqrt(R2_squared + Z**2)
+        R3 = xp.sqrt(R2_squared + Z**2)
 
         cos_theta = Z / R3
-        illumination_cos_theta = np.cos(
-            np.arccos(cos_theta) + illumination_angle
-        )
-        phi = np.arctan2(Y, X)
+        if float(illumination_angle) == 0:
+            illumination_cos_theta = cos_theta
+        else:
+            illumination_cos_theta = xp.cos(
+                xp.acos(cos_theta) + illumination_angle
+            )
+        phi = xp.atan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi
 
@@ -1633,18 +1690,27 @@ class MieScatterer(FieldScatterer):
         Z = plane_position[2]
 
         R2_squared = X**2 + Y**2
-        R3 = np.sqrt(R2_squared + Z**2)
+        R3 = xp.sqrt(R2_squared + Z**2)
 
-        Q = np.sqrt(R2_squared) / voxel_size[0] ** 2 * 2 * np.pi / shape[0]
+        Q = xp.sqrt(R2_squared) / voxel_size[0] ** 2 * 2 * np.pi / shape[0]
         sin_theta = Q / (k)
         pupil_mask = sin_theta < 1
-        cos_theta = np.zeros(sin_theta.shape)
-        cos_theta[pupil_mask] = np.sqrt(1 - sin_theta[pupil_mask] ** 2)
-
-        illumination_cos_theta = np.cos(
-            np.arccos(cos_theta) + illumination_angle
+        cos_theta = xp.sqrt(
+            xp.maximum(xp.zeros_like(sin_theta), 1 - sin_theta**2)
         )
-        phi = np.arctan2(Y, X)
+        cos_theta = xp.where(
+            pupil_mask,
+            cos_theta,
+            xp.zeros_like(cos_theta),
+        )
+
+        if float(illumination_angle) == 0:
+            illumination_cos_theta = cos_theta
+        else:
+            illumination_cos_theta = xp.cos(
+                xp.acos(cos_theta) + illumination_angle
+            )
+        phi = xp.atan2(Y, X)
 
         return R3, cos_theta, illumination_cos_theta, phi, pupil_mask
 
@@ -1683,33 +1749,37 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        if isinstance(input_polarization, (float, int, str, Quantity)):
-            if isinstance(input_polarization, Quantity):
-                input_polarization = input_polarization.to("rad").magnitude
+        if isinstance(input_polarization, Quantity):
+            input_polarization = input_polarization.to("rad").magnitude
 
-            if isinstance(input_polarization, (float, int)):
-                S1_coef = np.sin(phi + input_polarization)
-                S2_coef = np.cos(phi + input_polarization)
-
-            elif (
-                isinstance(input_polarization, str)
-                and input_polarization == "circular"
-            ):
-                S1_coef = 1 / np.sqrt(2)
-                S2_coef = 1j / np.sqrt(2)
-            else:
+        if isinstance(input_polarization, str):
+            if input_polarization != "circular":
                 raise TypeError(
                     f"Unsupported input_polarization: {input_polarization}"
                 )
-
-        if isinstance(output_polarization, (float, int, Quantity)):
-            if isinstance(output_polarization, Quantity):
-                output_polarization = output_polarization.to("rad").magnitude
-
-            S1_coef *= np.sin(phi + output_polarization)
-            S2_coef *= (
-                np.cos(phi + output_polarization) * illumination_cos_theta
+            S1_coef = 1 / np.sqrt(2)
+            S2_coef = 1j / np.sqrt(2)
+        else:
+            input_polarization = _asarray(
+                input_polarization,
+                dtype=xp.float64,
             )
+            S1_coef = xp.sin(phi + input_polarization)
+            S2_coef = xp.cos(phi + input_polarization)
+
+        if isinstance(output_polarization, Quantity):
+            output_polarization = output_polarization.to("rad").magnitude
+
+        output_polarization = _asarray(
+            output_polarization,
+            dtype=xp.float64,
+        )
+        S1_coef = S1_coef * xp.sin(phi + output_polarization)
+        S2_coef = (
+            S2_coef
+            * xp.cos(phi + output_polarization)
+            * illumination_cos_theta
+        )
 
         return S1_coef, S2_coef
 
@@ -1752,6 +1822,7 @@ class MieScatterer(FieldScatterer):
     def _common_setup(
         self: MieScatterer,
         position: tuple[float, float, float],
+        voxel_size: np.ndarray,
         padding: tuple[int, int, int, int],
         output_region: tuple[int, int, int, int],
         wavelength: float,
@@ -1775,6 +1846,8 @@ class MieScatterer(FieldScatterer):
         ----------
         position: tuple[float, float, float]
             The position of the particle in (x, y, z) coordinates.
+        voxel_size: np.ndarray
+            The physical voxel size in meters.
         padding: int
             The padding applied to the output region.
         output_region: tuple[int, int]
@@ -1802,27 +1875,57 @@ class MieScatterer(FieldScatterer):
         """
 
         xSize, ySize = self.get_xy_size(output_region, padding)
-        voxel_size = get_active_voxel_size()
-        scale = get_active_scale()
+        voxel_size = _asarray(
+            voxel_size,
+            dtype=xp.float64,
+        )
+        scale = xp.asarray(
+            get_active_scale(),
+            dtype=xp.float64,
+        )
 
-        arr = pad_image_to_fft(np.zeros((xSize, ySize))).astype(complex)
+        arr = pad_image_to_fft(
+            xp.zeros((xSize, ySize), dtype=xp.complex128)
+        )
 
+        position = _asarray_vector(
+            position,
+            dtype=xp.float64,
+        )
         position = (
-            np.array(position)
+            position
             * scale[: len(position)]
             * voxel_size[: len(position)]
         )
+        wavelength = _asarray(wavelength, dtype=xp.float64)
+        refractive_index_medium = _asarray(
+            refractive_index_medium,
+            dtype=xp.float64,
+        )
+        collection_angle = _asarray(
+            collection_angle,
+            dtype=xp.float64,
+        )
+        working_distance = _asarray(
+            working_distance,
+            dtype=xp.float64,
+        )
+        z = _asarray(z, dtype=xp.float64)
         z = z * voxel_size[2] * scale[2]
+        position_objective = _asarray_vector(
+            position_objective,
+            dtype=xp.float64,
+        )
 
-        pupil_physical_size = working_distance * np.tan(collection_angle) * 2
+        pupil_physical_size = working_distance * xp.tan(collection_angle) * 2
         k = 2 * np.pi / wavelength * refractive_index_medium
 
-        relative_position = np.array(
-            (
+        relative_position = xp.stack(
+            [
                 position_objective[0] - position[0],
                 position_objective[1] - position[1],
                 working_distance - z,
-            )
+            ]
         )
 
         return (
@@ -1987,6 +2090,7 @@ class MieScatterer(FieldScatterer):
             relative_position,
         ) = self._common_setup(
             position,
+            voxel_size,
             padding,
             output_region,
             wavelength,
@@ -2008,20 +2112,20 @@ class MieScatterer(FieldScatterer):
             )
         )
 
-        cos_phi_field = np.cos(phi_field)
-        sin_phi_field = np.sin(phi_field)
+        cos_phi_field = xp.cos(phi_field)
+        sin_phi_field = xp.sin(phi_field)
 
         x_farfield = (
             position[0]
             + R3_field
-            * np.sqrt(1 - cos_theta_field**2)
+            * xp.sqrt(1 - cos_theta_field**2)
             * cos_phi_field
             / ratio
         )
         y_farfield = (
             position[1]
             + R3_field
-            * np.sqrt(1 - cos_theta_field**2)
+            * xp.sqrt(1 - cos_theta_field**2)
             * sin_phi_field
             / ratio
         )
@@ -2048,29 +2152,29 @@ class MieScatterer(FieldScatterer):
         arr[pupil_mask] = (
             -1j
             / (k * R3_field)
-            * np.exp(1j * k * R3_field)
+            * xp.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         ) / amp_factor
 
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
         if phase_shift_correction:
-            arr *= np.exp(1j * k * z + 1j * np.pi / 2)
+            arr = arr * xp.exp(1j * k * z + 1j * np.pi / 2)
 
         # For partially coherent illumination.
         if coherence_length:
-            sigma = z * np.sqrt((coherence_length / z + 1) ** 2 - 1)
+            sigma = z * xp.sqrt((coherence_length / z + 1) ** 2 - 1)
             sigma = sigma * (offset_z / z)
 
-            mask = np.zeros_like(arr)
-            y, x = np.ogrid[
-                -mask.shape[0] // 2 : mask.shape[0] // 2,
-                -mask.shape[1] // 2 : mask.shape[1] // 2,
-            ]
-            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+            y = xp.arange(arr.shape[0], dtype=xp.float64)
+            x = xp.arange(arr.shape[1], dtype=xp.float64)
+            y = y - arr.shape[0] // 2
+            x = x - arr.shape[1] // 2
+            y, x = xp.meshgrid(y, x, indexing="ij")
+            mask = xp.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
             arr = arr * mask
 
-        fourier_field = np.fft.fft2(arr)
+        fourier_field = xp.fft.fft2(arr)
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
@@ -2089,11 +2193,15 @@ class MieScatterer(FieldScatterer):
             ),
         )
 
-        fourier_field *= propagation_matrix * np.exp(-1j * k * offset_z)
+        fourier_field = (
+            fourier_field
+            * propagation_matrix
+            * xp.exp(-1j * k * offset_z)
+        )
 
         if return_fft:
-            return fourier_field[..., np.newaxis]
-        return np.fft.ifft2(fourier_field)[..., np.newaxis]
+            return fourier_field[..., None]
+        return xp.fft.ifft2(fourier_field)[..., None]
 
     def _solve_hybrid(
         self: MieScatterer,
@@ -2204,6 +2312,7 @@ class MieScatterer(FieldScatterer):
             relative_position,
         ) = self._common_setup(
             position,
+            voxel_size,
             padding,
             output_region,
             wavelength,
@@ -2230,20 +2339,20 @@ class MieScatterer(FieldScatterer):
             k,
         )
 
-        cos_phi_field = np.cos(phi_field)
-        sin_phi_field = np.sin(phi_field)
+        cos_phi_field = xp.cos(phi_field)
+        sin_phi_field = xp.sin(phi_field)
 
         x_farfield = (
             position[0]
             + R3_field
-            * np.sqrt(1 - cos_theta_field**2)
+            * xp.sqrt(1 - cos_theta_field**2)
             * cos_phi_field
             / ratio
         )
         y_farfield = (
             position[1]
             + R3_field
-            * np.sqrt(1 - cos_theta_field**2)
+            * xp.sqrt(1 - cos_theta_field**2)
             * sin_phi_field
             / ratio
         )
@@ -2261,19 +2370,19 @@ class MieScatterer(FieldScatterer):
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
         if phase_shift_correction:
-            arr *= np.exp(1j * k * z + 1j * np.pi / 2)
+            arr = arr * xp.exp(1j * k * z + 1j * np.pi / 2)
 
         # For partially coherent illumination.
         if coherence_length:
-            sigma = z * np.sqrt((coherence_length / z + 1) ** 2 - 1)
+            sigma = z * xp.sqrt((coherence_length / z + 1) ** 2 - 1)
             sigma = sigma * (offset_z / z)
 
-            mask = np.zeros_like(arr)
-            y, x = np.ogrid[
-                -mask.shape[0] // 2 : mask.shape[0] // 2,
-                -mask.shape[1] // 2 : mask.shape[1] // 2,
-            ]
-            mask = np.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
+            y = xp.arange(arr.shape[0], dtype=xp.float64)
+            x = xp.arange(arr.shape[1], dtype=xp.float64)
+            y = y - arr.shape[0] // 2
+            x = x - arr.shape[1] // 2
+            y, x = xp.meshgrid(y, x, indexing="ij")
+            mask = xp.exp(-0.5 * (x**2 + y**2) / ((sigma) ** 2))
             arr = arr * mask
 
         if pupil is not None and len(pupil) > 0:
@@ -2281,10 +2390,15 @@ class MieScatterer(FieldScatterer):
             c1 = arr.shape[1] // 2
             h0 = pupil.shape[0] // 2
             h1 = pupil.shape[1] // 2
-            arr[c0 - h0 : c0 + h0, c1 - h1 : c1 + h1] *= pupil
+            pupil_mask = xp.ones_like(arr)
+            pupil_mask[c0 - h0 : c0 + h0, c1 - h1 : c1 + h1] = _asarray(
+                pupil,
+                dtype=arr.dtype,
+            )
+            arr = arr * pupil_mask
 
-        fourier_field = np.fft.ifft2(
-            np.fft.fftshift(np.fft.fft2(np.fft.fftshift(arr)))
+        fourier_field = xp.fft.ifft2(
+            xp.fft.fftshift(xp.fft.fft2(xp.fft.fftshift(arr)))
         )
 
         propagation_matrix = get_propagation_matrix(
@@ -2304,11 +2418,11 @@ class MieScatterer(FieldScatterer):
             ),
         )
 
-        fourier_field *= propagation_matrix
+        fourier_field = fourier_field * propagation_matrix
 
         if return_fft:
-            return fourier_field[..., np.newaxis]
-        return np.fft.ifft2(fourier_field)[..., np.newaxis]
+            return fourier_field[..., None]
+        return xp.fft.ifft2(fourier_field)[..., None]
 
 
 class MieSphere(MieScatterer):
@@ -2537,7 +2651,21 @@ class MieStratifiedSphere(MieScatterer):
 
             """
 
-            if not np.all(radius[1:] >= radius[:-1]):
+            radius_for_check = radius
+            if TORCH_AVAILABLE and torch.is_tensor(radius_for_check):
+                radius_for_check = radius_for_check.detach().cpu().numpy()
+            elif isinstance(radius_for_check, (list, tuple)):
+                radius_for_check = [
+                    item.detach().cpu().numpy()
+                    if TORCH_AVAILABLE and torch.is_tensor(item)
+                    else item
+                    for item in radius_for_check
+                ]
+
+            if not np.all(
+                np.asarray(radius_for_check)[1:]
+                >= np.asarray(radius_for_check)[:-1]
+            ):
                 raise ValueError(
                     "Radius of the shells of a stratified sphere should be "
                     "monotonically increasing."
@@ -2545,8 +2673,13 @@ class MieStratifiedSphere(MieScatterer):
 
             def inner(L: int):
                 return mie.stratified_coefficients(
-                    np.array(refractive_index) / refractive_index_medium,
-                    np.array(radius)
+                    _asarray_vector(
+                        refractive_index,
+                    )
+                    / refractive_index_medium,
+                    _asarray_vector(
+                        radius,
+                    )
                     * 2
                     * np.pi
                     / wavelength
