@@ -2005,41 +2005,11 @@ class Brightfield(Optics):
                 else int(output_region[3] - limits[1, 0] + pad[3])
             )
 
-            # Convert output_region to valid slice bounds.
-            x0, y0, x1, y1 = output_region
-
-            height, width = padded_volume.shape[:2]
-
-            x0 = 0 if x0 is None else int(x0)
-            y0 = 0 if y0 is None else int(y0)
-            x1 = height if x1 is None else int(x1)
-            y1 = width if y1 is None else int(y1)
-
-            # Clamp to padded_volume bounds.
-            x0 = max(0, min(x0, height))
-            x1 = max(0, min(x1, height))
-            y0 = max(0, min(y0, width))
-            y1 = max(0, min(y1, width))
-
-            # Empty crop means upstream output_region/limits/padding is inconsistent.
-            if x1 <= x0 or y1 <= y0:
-                raise ValueError(
-                    "Empty output crop in brightfield propagation: "
-                    f"output_region={output_region}, "
-                    f"clamped={(x0, y0, x1, y1)}, "
-                    f"padded_volume_shape={tuple(padded_volume.shape)}, "
-                    f"limits={limits}, padding={pad}"
-                )
-
-            padded_volume = padded_volume[x0:x1, y0:y1, :]
-
-            if padded_volume.shape[2] == 0:
-                raise ValueError(
-                    "Empty z dimension in brightfield propagation: "
-                    f"padded_volume_shape={tuple(padded_volume.shape)}, "
-                    f"limits={limits}, padding={pad}"
-                )
-
+            padded_volume = padded_volume[
+                output_region[0] : output_region[2],
+                output_region[1] : output_region[3],
+                :,
+            ]
             z_limits = limits[2, :]
 
             output_image = xp.zeros(
@@ -2150,12 +2120,7 @@ class Brightfield(Optics):
                 : padded_volume.shape[0], : padded_volume.shape[1]
             ]
             output_image = xp.expand_dims(output_image, axis=-1)
-            # output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
-
-            x_end = None if pad[2] == 0 else -pad[2]
-            y_end = None if pad[3] == 0 else -pad[3]
-
-            output_image = output_image[pad[0]:x_end, pad[1]:y_end]
+            output_image = output_image[pad[0] : -pad[2], pad[1] : -pad[3]]
 
             if not kwargs.get("return_field", False):
                 output_image = xp.square(xp.abs(output_image))

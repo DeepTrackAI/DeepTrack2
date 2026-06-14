@@ -3774,9 +3774,10 @@ def pad_image_to_fft(
 
     # --- Torch backend ---
     if isinstance(image, torch.Tensor):
-        # torch.nn.functional.pad can fail on some torch versions when any
-        # dimension has size 0. Use differentiable torch.cat padding instead.
-        if any(dim == 0 for dim in shape):
+        # torch.nn.functional.pad crashes on some torch versions
+        # when the input has any zero-sized dimension.
+        # If padding is needed, use torch.cat along the padded axes only.
+        if any(s == 0 for s in image.shape):
             result = image
 
             for axis, (before, after) in enumerate(pad_sizes):
@@ -3790,8 +3791,8 @@ def pad_image_to_fft(
 
                 pad_shape = list(result.shape)
                 pad_shape[axis] = after
-
                 zeros = result.new_zeros(tuple(pad_shape))
+
                 result = torch.cat([result, zeros], dim=axis)
 
             return result
@@ -3800,11 +3801,6 @@ def pad_image_to_fft(
         for before, after in reversed(pad_sizes):
             pad.extend([before, after])
 
-        return torch.nn.functional.pad(
-            image,
-            tuple(pad),
-            mode="constant",
-            value=0.0,
-        )
+        return torch.nn.functional.pad(image, tuple(pad), mode="constant", value=0.0)
 
-    raise TypeError(f"Unsupported type: {type(image)}")
+    raise TypeError(f"Unsupported type: {type(image)}") /
