@@ -3742,14 +3742,30 @@ def pad_image_to_fft(
             f"No suitable size found in _FASTEST_SIZES={_FASTEST_SIZES} "
             f"for dimension {dim}."
         )
-
+    
     shape = list(image.shape)
+    ndim = len(shape)
+
+    # Normalize axes, so negative axes work correctly.
+    axes = tuple(axis % ndim for axis in axes)
+
     new_shape = list(shape)
 
     for axis in axes:
+        if shape[axis] == 0:
+            raise ValueError(
+                f"Cannot FFT-pad along empty axis {axis}; "
+                f"image shape is {tuple(shape)}."
+            )
+
         new_shape[axis] = _closest(shape[axis])
 
     pad_sizes = [(0, new - old) for old, new in zip(shape, new_shape)]
+
+    # Avoid calling torch.nn.functional.pad for no-op padding.
+    # Older Torch versions can fail on tensors with empty non-padded dimensions.
+    if all(before == 0 and after == 0 for before, after in pad_sizes):
+        return image
 
     # --- NumPy backend ---
     if isinstance(image, np.ndarray):
@@ -3762,6 +3778,11 @@ def pad_image_to_fft(
         for before, after in reversed(pad_sizes):
             pad.extend([before, after])
 
-        return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
+        return torch.nn.functional.pad(
+            image, 
+            tuple(pad), 
+            mode="constant", 
+            value=0.0
+        )
 
     raise TypeError(f"Unsupported type: {type(image)}")
