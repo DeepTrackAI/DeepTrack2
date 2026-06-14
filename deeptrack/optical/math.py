@@ -3771,15 +3771,30 @@ def pad_image_to_fft(
     if isinstance(image, np.ndarray):
         return np.pad(image, pad_sizes, mode="constant")
 
+
     # --- Torch backend ---
     if isinstance(image, torch.Tensor):
-        # torch.nn.functional.pad fails on some torch versions when any
-        # non-padded dimension has size 0. Use manual padding instead.
+        # torch.nn.functional.pad can fail on some torch versions when any
+        # dimension has size 0. Use differentiable torch.cat padding instead.
         if any(dim == 0 for dim in shape):
-            output = image.new_zeros(tuple(new_shape))
-            source_slices = tuple(slice(0, dim) for dim in shape)
-            output[source_slices] = image
-            return output
+            result = image
+
+            for axis, (before, after) in enumerate(pad_sizes):
+                if before != 0:
+                    raise NotImplementedError(
+                        "pad_image_to_fft only supports padding at the end."
+                    )
+
+                if after == 0:
+                    continue
+
+                pad_shape = list(result.shape)
+                pad_shape[axis] = after
+
+                zeros = result.new_zeros(tuple(pad_shape))
+                result = torch.cat([result, zeros], dim=axis)
+
+            return result
 
         pad = []
         for before, after in reversed(pad_sizes):
