@@ -3757,11 +3757,39 @@ def pad_image_to_fft(
 
     # --- Torch backend ---
     if isinstance(image, torch.Tensor):
-        # torch.nn.functional.pad expects reversed flat list
+        # torch.nn.functional.pad fails in some torch/python stacks when
+        # any dimension included in the padded tensor has size 0.
+        # This happens for tensors like (H, W, 0), even if the 0-sized
+        # dimension receives padding (0, 0).
+        if any(dim == 0 for dim in image.shape):
+            result = image
+
+            for axis, (before, after) in enumerate(pad_sizes):
+                if before != 0:
+                    raise NotImplementedError(
+                        "pad_image_to_fft only supports padding at the end."
+                    )
+
+                if after == 0:
+                    continue
+
+                pad_shape = list(result.shape)
+                pad_shape[axis] = after
+
+                zeros = result.new_zeros(tuple(pad_shape))
+                result = torch.cat([result, zeros], dim=axis)
+
+            return result
+
         pad = []
         for before, after in reversed(pad_sizes):
             pad.extend([before, after])
 
-        return torch.nn.functional.pad(image, pad, mode="constant", value=0.0)
+        return torch.nn.functional.pad(
+            image,
+            tuple(pad),
+            mode="constant",
+            value=0.0,
+        )
 
     raise TypeError(f"Unsupported type: {type(image)}")
