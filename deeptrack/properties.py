@@ -97,6 +97,7 @@ from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 
+from deeptrack import TORCH_AVAILABLE
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
 
