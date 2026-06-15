@@ -225,6 +225,15 @@ def _asarray_vector(value, dtype=None):
     if isinstance(value, (list, tuple)) and any(
         apc.is_array_api_obj(element) for element in value
     ):
+        if TORCH_AVAILABLE and any(torch.is_tensor(e) for e in value):
+            elements = []
+            for e in value:
+                if not torch.is_tensor(e):
+                    e = torch.tensor(e, dtype=dtype)
+                elif dtype is not None:
+                    e = e.to(dtype=dtype)
+                elements.append(e.reshape(()))
+            return torch.stack(elements)
         return xp.stack(
             [xp.reshape(_asarray(element, dtype), ()) for element in value]
         )

@@ -677,10 +677,17 @@ class Optics(Feature):
             props = self._normalize(
                 resolution=resolution, magnification=magnification
             )
+            res = props["resolution"]
+            mag = props["magnification"]
+            if TORCH_AVAILABLE and (
+                torch.is_tensor(res) or torch.is_tensor(mag)
+            ):
+                res = res if torch.is_tensor(res) else torch.tensor(res, dtype=torch.float64)
+                mag = mag if torch.is_tensor(mag) else torch.tensor(mag, dtype=torch.float64)
+                v = res / mag
+                return torch.stack([v, v, v])
             return (
-                xp.ones((3,), dtype=xp.float64)
-                * props["resolution"]
-                / props["magnification"]
+                xp.ones((3,), dtype=xp.float64) * res / mag
             )
 
         def get_pixel_size(
