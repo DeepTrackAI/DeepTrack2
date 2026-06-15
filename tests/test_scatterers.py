@@ -660,7 +660,8 @@ class TestMath_TorchOnly(BackendTestBase):
                 self.assertGreater(abs(float(refractive_index.grad)), 0)
 
     @unittest.skipIf(
-        parse_version(torch.__version__) < parse_version("2.9"),
+        not TORCH_AVAILABLE
+        or parse_version(torch.__version__) < parse_version("2.9"),
         "Autograd through Mie scatterer requires torch >= 2.9"
     )
     def test_mie_sphere_brightfield_sums_multiple_torch_fields(self):
@@ -707,9 +708,6 @@ class TestMath_TorchOnly(BackendTestBase):
 
         image = microscope(sample).resolve()
 
-        loss = torch.abs(image).sum()
-        loss.backward()
-
         self.assertIsInstance(image, torch.Tensor)
         self.assertEqual(image.shape, (32, 32, 1))
         self.assertTrue(torch.is_complex(image))
@@ -727,7 +725,8 @@ class TestMath_TorchOnly(BackendTestBase):
         self.assertGreater(abs(float(radius_2.grad)), 0)
 
     @unittest.skipIf(
-        parse_version(torch.__version__) < parse_version("2.9"),
+        not TORCH_AVAILABLE
+        or parse_version(torch.__version__) < parse_version("2.9"),
         "Autograd through Mie scatterer requires torch >= 2.9"
     )
     def test_mie_sphere_brightfield_autodiff_learnable_parameters(self):
