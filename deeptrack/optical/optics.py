@@ -1219,6 +1219,10 @@ class Optics(Feature):
                     new_limits[i, 1], output_region[i + 2] + padding[i + 2]
                 )
 
+            # Ensure the volume has at least one z-slice.
+            if new_limits[2, 1] <= new_limits[2, 0]:
+                new_limits[2, 1] = new_limits[2, 0] + 1
+
             shape = new_limits[:, 1] - new_limits[:, 0]
             if TORCH_AVAILABLE and isinstance(shape, torch.Tensor):
                 shape = shape.to(dtype=torch.int)
