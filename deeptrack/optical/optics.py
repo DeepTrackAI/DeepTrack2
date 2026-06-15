@@ -2081,7 +2081,7 @@ class Brightfield(Optics):
             for i, z in zip(index_iterator, z_iterator):
                 light_in = light_in * pupil_step
 
-                if zero_plane[i]:
+                if zero_plane[i] and padded_volume.shape[2] > 1:
                     continue
 
                 ri_slice = volume[:, :, i]
