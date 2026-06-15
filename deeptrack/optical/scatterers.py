@@ -448,6 +448,14 @@ class Scatterer(Feature):
 
         # Rescales the position property.
         properties = super()._process_properties(properties)
+
+        pos = properties.get("position")
+        print(f"[PROC] position type={type(pos)}, value={pos}")
+        if isinstance(pos, tuple):
+            for i, p in enumerate(pos):
+                if TORCH_AVAILABLE and torch.is_tensor(p):
+                    print(f"  [{i}] requires_grad={p.requires_grad}")
+
         self._processed_properties = True
         return properties
 
