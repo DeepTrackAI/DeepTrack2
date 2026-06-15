@@ -1235,6 +1235,10 @@ class Optics(Feature):
                     dtype=volume.dtype,
                     device=volume.device,
                 )
+                # Preserve an autograd connection if the input volume has an empty z-axis
+                # but we expanded it to one z-slice.
+                if volume.shape[2] == 0 and new_volume.shape[2] > 0:
+                    new_volume = new_volume + volume.sum() * 0
             else:
                 new_volume = np.zeros(
                     shape.tolist(),
