@@ -201,6 +201,10 @@ if TORCH_AVAILABLE:
     import torch
 
 
+def _check_grad(tensor, name):
+    if TORCH_AVAILABLE and torch.is_tensor(tensor):
+        print(f"[GRAD] {name}: requires_grad={tensor.requires_grad}, grad_fn={tensor.grad_fn}")
+
 def _asarray(value, dtype=None):
     """Convert values through xp while preserving existing tensor gradients."""
 
@@ -2158,14 +2162,6 @@ class MieScatterer(FieldScatterer):
             L, illumination_angle_field, coefficients
         )
 
-        # arr[pupil_mask] = (
-        #     -1j
-        #     / (k * R3_field)
-        #     * xp.exp(1j * k * R3_field)
-        #     * (S2 * S2_coef + S1 * S1_coef)
-        # ) / amp_factor
-
-        # AFTER — differentiable scatter:
         scattered_values = (
             -1j
             / (k * R3_field)
@@ -2349,6 +2345,9 @@ class MieScatterer(FieldScatterer):
             position_objective,
         )
 
+        _check_grad(position, "position after _common_setup")
+        _check_grad(arr, "arr after init")
+
         ratio = offset_z / (working_distance - z)
 
         (
@@ -2367,6 +2366,9 @@ class MieScatterer(FieldScatterer):
 
         cos_phi_field = xp.cos(phi_field)
         sin_phi_field = xp.sin(phi_field)
+
+        _check_grad(phi_field, "phi_field")
+        _check_grad(cos_theta_field, "cos_theta_field")
 
         x_farfield = (
             position[0]
@@ -2389,10 +2391,19 @@ class MieScatterer(FieldScatterer):
         S1_coef, S2_coef = self._polarization_coefficients(
             phi_valid, illum_valid, input_polarization, output_polarization
         )
+
+        _check_grad(S1_coef, "S1_coef")
+        _check_grad(S2_coef, "S2_coef")
+
         S1, S2 = self._mie_scattering(L, illum_valid, coefficients)
 
-        # AFTER:
+        _check_grad(S1, "S1")
+        _check_grad(S2, "S2")
+
         scattered_values = (S2 * S2_coef + S1 * S1_coef) / amp_factor
+
+        _check_grad(scattered_values, "scattered_values")
+
 
         if TORCH_AVAILABLE and torch.is_tensor(arr):
             flat_values = torch.zeros(
@@ -2402,6 +2413,9 @@ class MieScatterer(FieldScatterer):
             arr = arr + flat_values.reshape(arr.shape)
         else:
             arr[pupil_mask] = scattered_values
+
+        _check_grad(arr, "arr after scatter")
+
 
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
@@ -2436,6 +2450,9 @@ class MieScatterer(FieldScatterer):
         fourier_field = xp.fft.ifft2(
             xp.fft.fftshift(xp.fft.fft2(xp.fft.fftshift(arr)))
         )
+
+        _check_grad(arr, "arr after scatter")
+        _check_grad(fourier_field, "fourier_field")
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
