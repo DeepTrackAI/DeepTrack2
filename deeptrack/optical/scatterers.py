@@ -235,6 +235,7 @@ def _asarray(value, dtype=None):
 def _asarray_vector(value, dtype=None):
     """Convert a vector-like value without detaching tensor elements."""
 
+    print(f"[ASARRAY_VECTOR] type={type(value)}, value={value}")
     if isinstance(value, (list, tuple)) and any(
         apc.is_array_api_obj(element) for element in value
     ):
