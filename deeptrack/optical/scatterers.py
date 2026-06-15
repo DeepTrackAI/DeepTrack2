@@ -173,6 +173,7 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
+from turtle import position
 import warnings
 from typing import Any, TYPE_CHECKING
 
@@ -204,6 +205,14 @@ if TORCH_AVAILABLE:
 def _check_grad(tensor, name):
     if TORCH_AVAILABLE and torch.is_tensor(tensor):
         print(f"[GRAD] {name}: requires_grad={tensor.requires_grad}, grad_fn={tensor.grad_fn}")
+
+def _check_grad_list(value, name):
+    if isinstance(value, (list, tuple)):
+        for i, v in enumerate(value):
+            if TORCH_AVAILABLE and torch.is_tensor(v):
+                print(f"[GRAD] {name}[{i}]: requires_grad={v.requires_grad}, grad_fn={v.grad_fn}")
+    elif TORCH_AVAILABLE and torch.is_tensor(value):
+        print(f"[GRAD] {name}: requires_grad={value.requires_grad}, grad_fn={value.grad_fn}")
 
 def _asarray(value, dtype=None):
     """Convert values through xp while preserving existing tensor gradients."""
@@ -1887,6 +1896,8 @@ class MieScatterer(FieldScatterer):
 
         """
 
+        _check_grad_list(position, "position input")
+
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = _asarray(
             voxel_size,
@@ -1905,11 +1916,15 @@ class MieScatterer(FieldScatterer):
             position,
             dtype=xp.float64,
         )
+        _check_grad(position, "position after _asarray_vector")
+
         position = (
             position
             * scale[: len(position)]
             * voxel_size[: len(position)]
         )
+        _check_grad(position, "position after scaling")
+
         wavelength = _asarray(wavelength, dtype=xp.float64)
         refractive_index_medium = _asarray(
             refractive_index_medium,
@@ -1929,6 +1944,8 @@ class MieScatterer(FieldScatterer):
             position_objective,
             dtype=xp.float64,
         )
+        _check_grad(z, "z after scaling")
+
 
         pupil_physical_size = working_distance * xp.tan(collection_angle) * 2
         k = 2 * np.pi / wavelength * refractive_index_medium
