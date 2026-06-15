@@ -376,6 +376,15 @@ class ConversionTable:
 
             quantity = kwargs[key]
 
+            # ADD THIS:
+            if key == "position":
+                print(f"[CONVERT] key=position, type={type(quantity)}, val={quantity}")
+                if isinstance(quantity, (list, tuple)):
+                    for i, item in enumerate(quantity):
+                        if TORCH_AVAILABLE and torch.is_tensor(item):
+                            print(f"  [{i}] tensor requires_grad={item.requires_grad}")
+
+
             # Skip unsupported types
             valid_types = (int, float, list, tuple, ndarray, Quantity)
             if TORCH_AVAILABLE:

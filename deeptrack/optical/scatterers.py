@@ -173,7 +173,6 @@ Create a stratified Mie sphere and resolve it through a microscope:
 
 from __future__ import annotations
 
-from turtle import position
 import warnings
 from typing import Any, TYPE_CHECKING
 
@@ -202,18 +201,6 @@ if TORCH_AVAILABLE:
     import torch
 
 
-def _check_grad(tensor, name):
-    if TORCH_AVAILABLE and torch.is_tensor(tensor):
-        print(f"[GRAD] {name}: requires_grad={tensor.requires_grad}, grad_fn={tensor.grad_fn}")
-
-def _check_grad_list(value, name):
-    if isinstance(value, (list, tuple)):
-        for i, v in enumerate(value):
-            if TORCH_AVAILABLE and torch.is_tensor(v):
-                print(f"[GRAD] {name}[{i}]: requires_grad={v.requires_grad}, grad_fn={v.grad_fn}")
-    elif TORCH_AVAILABLE and torch.is_tensor(value):
-        print(f"[GRAD] {name}: requires_grad={value.requires_grad}, grad_fn={value.grad_fn}")
-
 def _asarray(value, dtype=None):
     """Convert values through xp while preserving existing tensor gradients."""
 
@@ -235,7 +222,6 @@ def _asarray(value, dtype=None):
 def _asarray_vector(value, dtype=None):
     """Convert a vector-like value without detaching tensor elements."""
 
-    print(f"[ASARRAY_VECTOR] type={type(value)}, value={value}")
     if isinstance(value, (list, tuple)) and any(
         apc.is_array_api_obj(element) for element in value
     ):
@@ -448,14 +434,6 @@ class Scatterer(Feature):
 
         # Rescales the position property.
         properties = super()._process_properties(properties)
-
-        pos = properties.get("position")
-        print(f"[PROC] position type={type(pos)}, value={pos}")
-        if isinstance(pos, tuple):
-            for i, p in enumerate(pos):
-                if TORCH_AVAILABLE and torch.is_tensor(p):
-                    print(f"  [{i}] requires_grad={p.requires_grad}")
-
         self._processed_properties = True
         return properties
 
@@ -1905,8 +1883,6 @@ class MieScatterer(FieldScatterer):
 
         """
 
-        _check_grad_list(position, "position input")
-
         xSize, ySize = self.get_xy_size(output_region, padding)
         voxel_size = _asarray(
             voxel_size,
@@ -1925,15 +1901,11 @@ class MieScatterer(FieldScatterer):
             position,
             dtype=xp.float64,
         )
-        _check_grad(position, "position after _asarray_vector")
-
         position = (
             position
             * scale[: len(position)]
             * voxel_size[: len(position)]
         )
-        _check_grad(position, "position after scaling")
-
         wavelength = _asarray(wavelength, dtype=xp.float64)
         refractive_index_medium = _asarray(
             refractive_index_medium,
@@ -1953,8 +1925,6 @@ class MieScatterer(FieldScatterer):
             position_objective,
             dtype=xp.float64,
         )
-        _check_grad(z, "z after scaling")
-
 
         pupil_physical_size = working_distance * xp.tan(collection_angle) * 2
         k = 2 * np.pi / wavelength * refractive_index_medium
@@ -2371,9 +2341,6 @@ class MieScatterer(FieldScatterer):
             position_objective,
         )
 
-        _check_grad(position, "position after _common_setup")
-        _check_grad(arr, "arr after init")
-
         ratio = offset_z / (working_distance - z)
 
         (
@@ -2392,9 +2359,6 @@ class MieScatterer(FieldScatterer):
 
         cos_phi_field = xp.cos(phi_field)
         sin_phi_field = xp.sin(phi_field)
-
-        _check_grad(phi_field, "phi_field")
-        _check_grad(cos_theta_field, "cos_theta_field")
 
         x_farfield = (
             position[0]
@@ -2417,19 +2381,9 @@ class MieScatterer(FieldScatterer):
         S1_coef, S2_coef = self._polarization_coefficients(
             phi_valid, illum_valid, input_polarization, output_polarization
         )
-
-        _check_grad(S1_coef, "S1_coef")
-        _check_grad(S2_coef, "S2_coef")
-
         S1, S2 = self._mie_scattering(L, illum_valid, coefficients)
 
-        _check_grad(S1, "S1")
-        _check_grad(S2, "S2")
-
         scattered_values = (S2 * S2_coef + S1 * S1_coef) / amp_factor
-
-        _check_grad(scattered_values, "scattered_values")
-
 
         if TORCH_AVAILABLE and torch.is_tensor(arr):
             flat_values = torch.zeros(
@@ -2439,9 +2393,6 @@ class MieScatterer(FieldScatterer):
             arr = arr + flat_values.reshape(arr.shape)
         else:
             arr[pupil_mask] = scattered_values
-
-        _check_grad(arr, "arr after scatter")
-
 
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
@@ -2476,9 +2427,6 @@ class MieScatterer(FieldScatterer):
         fourier_field = xp.fft.ifft2(
             xp.fft.fftshift(xp.fft.fft2(xp.fft.fftshift(arr)))
         )
-
-        _check_grad(arr, "arr after scatter")
-        _check_grad(fourier_field, "fourier_field")
 
         propagation_matrix = get_propagation_matrix(
             fourier_field.shape,
