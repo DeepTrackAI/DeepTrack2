@@ -699,7 +699,9 @@ class TestMath_TorchOnly(BackendTestBase):
             return_field=True,
         )
 
+        print(parameter.requires_grad)  # True here
         image = microscope(sample).resolve()
+        print(parameter.requires_grad)  # Still True, but now detached from computation graph
 
         self.assertIsInstance(image, torch.Tensor)
         self.assertEqual(image.shape, (32, 32, 1))
