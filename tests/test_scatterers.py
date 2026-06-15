@@ -12,6 +12,8 @@ from deeptrack.optical.optics import Brightfield, Fluorescence
 from deeptrack.optical import scatterers
 from tests import BackendTestBase
 
+from packaging.version import parse as parse_version
+
 if TORCH_AVAILABLE:
     import torch
 
@@ -657,6 +659,10 @@ class TestMath_TorchOnly(BackendTestBase):
                 self.assertGreater(abs(float(radius.grad)), 0)
                 self.assertGreater(abs(float(refractive_index.grad)), 0)
 
+    @unittest.skipIf(
+        parse_version(torch.__version__) < parse_version("2.9"),
+        "Autograd through Mie scatterer requires torch >= 2.9"
+    )
     def test_mie_sphere_brightfield_sums_multiple_torch_fields(self):
         radius_1 = torch.tensor(
             0.45e-6,
@@ -699,10 +705,8 @@ class TestMath_TorchOnly(BackendTestBase):
             return_field=True,
         )
 
-        # image = microscope(sample).resolve()
         image = microscope(sample).resolve()
-        print(radius_1.requires_grad)  # True — set by us
-        print(image.requires_grad)     # Is the graph connected?
+
         loss = torch.abs(image).sum()
         loss.backward()
 
@@ -722,6 +726,10 @@ class TestMath_TorchOnly(BackendTestBase):
         self.assertGreater(abs(float(radius_1.grad)), 0)
         self.assertGreater(abs(float(radius_2.grad)), 0)
 
+    @unittest.skipIf(
+        parse_version(torch.__version__) < parse_version("2.9"),
+        "Autograd through Mie scatterer requires torch >= 2.9"
+    )
     def test_mie_sphere_brightfield_autodiff_learnable_parameters(self):
         cases = [
             ("x", 14.25, "sample"),
@@ -779,11 +787,7 @@ class TestMath_TorchOnly(BackendTestBase):
 
                 with warnings.catch_warnings(record=True) as caught:
                     warnings.simplefilter("always")
-                    print(parameter.requires_grad)  # True here
                     image = microscope(sample).resolve()
-                    print(parameter.requires_grad)  # Still True, but now detached from computation graph
-                    
-                    # image = microscope(sample).resolve()
 
                 tensor_warning = (
                     "Converting a tensor with requires_grad=True to a scalar"
