@@ -699,7 +699,12 @@ class TestMath_TorchOnly(BackendTestBase):
             return_field=True,
         )
 
+        # image = microscope(sample).resolve()
         image = microscope(sample).resolve()
+        print(radius_1.requires_grad)  # True — set by us
+        print(image.requires_grad)     # Is the graph connected?
+        loss = torch.abs(image).sum()
+        loss.backward()
 
         self.assertIsInstance(image, torch.Tensor)
         self.assertEqual(image.shape, (32, 32, 1))
@@ -774,7 +779,11 @@ class TestMath_TorchOnly(BackendTestBase):
 
                 with warnings.catch_warnings(record=True) as caught:
                     warnings.simplefilter("always")
+                    print(parameter.requires_grad)  # True here
                     image = microscope(sample).resolve()
+                    print(parameter.requires_grad)  # Still True, but now detached from computation graph
+                    
+                    # image = microscope(sample).resolve()
 
                 tensor_warning = (
                     "Converting a tensor with requires_grad=True to a scalar"
