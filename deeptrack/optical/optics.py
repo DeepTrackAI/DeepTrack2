@@ -2117,7 +2117,7 @@ class Brightfield(Optics):
 
                 field = xp.sum(xp.stack(field_arrays, axis=0), axis=0)
               
-                light_in_focus += field[..., 0]
+                light_in_focus = light_in_focus + field[..., 0]
             shifted_pupil = xp.fft.fftshift(pupils[-1])
             light_in_focus = light_in_focus * shifted_pupil
             # Mask to remove light outside the pupil.
