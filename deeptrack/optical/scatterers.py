@@ -2149,12 +2149,29 @@ class MieScatterer(FieldScatterer):
             L, illumination_angle_field, coefficients
         )
 
-        arr[pupil_mask] = (
+        # arr[pupil_mask] = (
+        #     -1j
+        #     / (k * R3_field)
+        #     * xp.exp(1j * k * R3_field)
+        #     * (S2 * S2_coef + S1 * S1_coef)
+        # ) / amp_factor
+
+        # AFTER — differentiable scatter:
+        scattered_values = (
             -1j
             / (k * R3_field)
             * xp.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
         ) / amp_factor
+
+        if TORCH_AVAILABLE and torch.is_tensor(arr):
+            flat_values = torch.zeros(
+                arr.numel(), dtype=arr.dtype, device=arr.device
+            )
+            flat_values[pupil_mask.reshape(-1)] = scattered_values
+            arr = arr + flat_values.reshape(arr.shape)
+        else:
+            arr[pupil_mask] = scattered_values
 
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
@@ -2365,7 +2382,17 @@ class MieScatterer(FieldScatterer):
         )
         S1, S2 = self._mie_scattering(L, illum_valid, coefficients)
 
-        arr[pupil_mask] = (S2 * S2_coef + S1 * S1_coef) / amp_factor
+        # AFTER:
+        scattered_values = (S2 * S2_coef + S1 * S1_coef) / amp_factor
+
+        if TORCH_AVAILABLE and torch.is_tensor(arr):
+            flat_values = torch.zeros(
+                arr.numel(), dtype=arr.dtype, device=arr.device
+            )
+            flat_values[pupil_mask.reshape(-1)] = scattered_values
+            arr = arr + flat_values.reshape(arr.shape)
+        else:
+            arr[pupil_mask] = scattered_values
 
         # For phase shift correction (a multiplication of the field
         # by exp(1j * k * z)).
