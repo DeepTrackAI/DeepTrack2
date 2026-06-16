@@ -172,9 +172,7 @@ def coefficients(
 
     dtype = _complex_dtype(m, a)
     reference = _first_array(m, a)
-
     m = _asarray(m, dtype=dtype, reference=reference)
-    a_real = _asarray(a, dtype=None, reference=reference)
     a = _asarray(a, dtype=dtype, reference=reference)
 
     if L == 0:
@@ -187,12 +185,12 @@ def coefficients(
     B = []
 
     for l in range(1, L + 1):
-        Sx = ricbesj(l, a_real)
-        dSx = dricbesj(l, a_real)
-        Smx = ricbesj(l, m * a_real)
-        dSmx = dricbesj(l, m * a_real)
-        xix = ricbesh(l, a_real)
-        dxix = dricbesh(l, a_real)
+        Sx = ricbesj(l, a)
+        dSx = dricbesj(l, a)
+        Smx = ricbesj(l, m * a)
+        dSmx = dricbesj(l, m * a)
+        xix = ricbesh(l, a)
+        dxix = dricbesh(l, a)
 
         A.append(
             (m * Smx * dSx - Sx * dSmx)
