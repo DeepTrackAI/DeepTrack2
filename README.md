@@ -41,7 +41,7 @@ The following quick-start guide is intended for complete beginners to understand
 
 # Installation
 
-DeepTrack2 requires at least python 3.9.
+DeepTrack2 requires at least python 3.10.
 
 To install DeepTrack2, open a terminal or command prompt and run:
 ```bash
@@ -55,7 +55,7 @@ This will automatically install the required dependencies.
 
 # Getting Started
 
-Here you find a series of notebooks that give you an overview of the core features of DeepTrack2 and how to use them:
+Here you find a series of notebooks providing an overview of the core features of DeepTrack2 and how to use them:
 
 - DTGS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -101,7 +101,7 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Creating custom scatterers of arbitrary shapes.
 
-- DTGS171B  **[Creating Custom Scatterers: Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS171B  **[Simulating Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS171B_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Creating custom scatterers in the shape of bacteria.
 
@@ -218,7 +218,7 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 # Advanced Tutorials
 
-This section provides a list of advanced topic tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
+This section provides a list of advanced tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
 
 - DTAT301 **[deeptrack.features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
