@@ -107,6 +107,7 @@ __all__ = [
     "SequentialProperty",
 ]
 
+
 if TYPE_CHECKING:
     import torch
 
