@@ -12,6 +12,8 @@ from deeptrack.optical.optics import Brightfield, Fluorescence
 from deeptrack.optical import scatterers
 from tests import BackendTestBase
 
+from packaging.version import parse as parse_version
+
 if TORCH_AVAILABLE:
     import torch
 
@@ -657,6 +659,11 @@ class TestMath_TorchOnly(BackendTestBase):
                 self.assertGreater(abs(float(radius.grad)), 0)
                 self.assertGreater(abs(float(refractive_index.grad)), 0)
 
+    @unittest.skipIf(
+        not TORCH_AVAILABLE
+        or parse_version(torch.__version__) < parse_version("2.9"),
+        "Autograd through Mie scatterer requires torch >= 2.9"
+    )
     def test_mie_sphere_brightfield_sums_multiple_torch_fields(self):
         radius_1 = torch.tensor(
             0.45e-6,
@@ -717,6 +724,11 @@ class TestMath_TorchOnly(BackendTestBase):
         self.assertGreater(abs(float(radius_1.grad)), 0)
         self.assertGreater(abs(float(radius_2.grad)), 0)
 
+    @unittest.skipIf(
+        not TORCH_AVAILABLE
+        or parse_version(torch.__version__) < parse_version("2.9"),
+        "Autograd through Mie scatterer requires torch >= 2.9"
+    )
     def test_mie_sphere_brightfield_autodiff_learnable_parameters(self):
         cases = [
             ("x", 14.25, "sample"),

@@ -1219,6 +1219,10 @@ class Optics(Feature):
                     new_limits[i, 1], output_region[i + 2] + padding[i + 2]
                 )
 
+            # Ensure the volume has at least one z-slice.
+            if new_limits[2, 1] <= new_limits[2, 0]:
+                new_limits[2, 1] = new_limits[2, 0] + 1
+
             shape = new_limits[:, 1] - new_limits[:, 0]
             if TORCH_AVAILABLE and isinstance(shape, torch.Tensor):
                 shape = shape.to(dtype=torch.int)
@@ -1231,6 +1235,10 @@ class Optics(Feature):
                     dtype=volume.dtype,
                     device=volume.device,
                 )
+                # Preserve an autograd connection if the input volume has an empty z-axis
+                # but we expanded it to one z-slice.
+                if volume.shape[2] == 0 and new_volume.shape[2] > 0:
+                    new_volume = new_volume + volume.sum() * 0
             else:
                 new_volume = np.zeros(
                     shape.tolist(),
@@ -2077,7 +2085,7 @@ class Brightfield(Optics):
             for i, z in zip(index_iterator, z_iterator):
                 light_in = light_in * pupil_step
 
-                if zero_plane[i]:
+                if zero_plane[i] and padded_volume.shape[2] > 1:
                     continue
 
                 ri_slice = volume[:, :, i]
@@ -2109,7 +2117,7 @@ class Brightfield(Optics):
 
                 field = xp.sum(xp.stack(field_arrays, axis=0), axis=0)
               
-                light_in_focus += field[..., 0]
+                light_in_focus = light_in_focus + field[..., 0]
             shifted_pupil = xp.fft.fftshift(pupils[-1])
             light_in_focus = light_in_focus * shifted_pupil
             # Mask to remove light outside the pupil.
