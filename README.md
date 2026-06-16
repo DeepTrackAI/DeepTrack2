@@ -16,7 +16,7 @@
     <img src="https://img.shields.io/badge/docs-available-blue?logo=readthedocs">
   </a>
   <a href="https://badge.fury.io/py/deeptrack">
-    <img src="https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python version">
+    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue" alt="Python version">
   </a>
   <a href="https://doi.org/10.1063/5.0034891">
     <img src="https://img.shields.io/badge/cite us-10.1063%2F5.0034891-blue">
@@ -32,12 +32,12 @@
   <a href="/LICENSE">License</a> 
 </p>
 
-DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and experimental imaging.
+DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and digital microscopy.
 
-<b>TensorFlow Compatibility Notice:</b> 
-DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
+> <b>TensorFlow Compatibility Notice:</b> 
+> DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
 
-The following quick start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
+The following quick-start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
 
 # Installation
 
