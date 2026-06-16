@@ -97,7 +97,6 @@ from typing import Any, Callable, TYPE_CHECKING
 
 import numpy as np
 
-from deeptrack import TORCH_AVAILABLE
 from deeptrack.backend.core import DeepTrackNode
 from deeptrack.utils import get_kwarg_names
 
@@ -107,9 +106,6 @@ __all__ = [
     "PropertyDict",
     "SequentialProperty",
 ]
-
-if TORCH_AVAILABLE:
-    import torch
 
 if TYPE_CHECKING:
     import torch
@@ -363,22 +359,6 @@ class Property(DeepTrackNode):
         self.action = self.create_action(sampling_rule, **dependencies)
 
         self.node_name = node_name
-
-        # If the sampling rule is a tuple/list containing a live tensor,
-        # never use the cache — always re-evaluate.
-        self._always_recompute = (
-            TORCH_AVAILABLE
-            and isinstance(sampling_rule, (list, tuple))
-            and any(
-                torch.is_tensor(item) and item.requires_grad
-                for item in sampling_rule
-        )
-    )
-
-    def is_valid(self, _ID=()):
-        if getattr(self, '_always_recompute', False):
-            return False
-        return super().is_valid(_ID)
 
     def create_action(
         self: Property,
