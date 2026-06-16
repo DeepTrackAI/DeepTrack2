@@ -1,4 +1,4 @@
-"""Core features for manipulating optical fields using Fourier transforms and 
+"""Core features for manipulating optical fields using Fourier transforms and
 propagation matrices.
 
 This module includes operations to simulate optical field propagation and
@@ -10,18 +10,18 @@ Key Features
 ------------
 - **Optical Field Processing**
 
-    Provides Fourier transforms, rescaling, and wavefront propagation for 
+    Provides Fourier transforms, rescaling, and wavefront propagation for
     complex-valued optical fields, handling both real and imaginary components.
 
 - **Fourier Optics and Wave Propagation**
 
-    Implements Fourier transforms with optional padding for accurate 
-    frequency-domain analysis and propagation matrices to simulate free-space 
+    Implements Fourier transforms with optional padding for accurate
+    frequency-domain analysis and propagation matrices to simulate free-space
     wavefront propagation with spatial and frequency domain shifts.
 
 - **Phase & Amplitude Manipulation**
 
-    Enables scaling, normalization, and modulation of phase and amplitude to 
+    Enables scaling, normalization, and modulation of phase and amplitude to
     preserve intensity distribution and enhance wavefront reconstruction.
 
 Module Structure
@@ -29,20 +29,20 @@ Module Structure
 Classes:
 
 - `Rescale`:
-    
+
     Rescales an optical field by subtracting the real part of the
     field before multiplication.
 
 - `FourierTransform`:
-    
+
     Creates matrices for propagating an optical field.
 
 - `InverseFourierTransform`:
-    
+
     Creates matrices for propagating an optical field.
 
 - `FourierTransformTransformation`:
-    
+
     Applies a power of the forward or inverse
     propagation matrix to an optical field.
 
@@ -70,7 +70,7 @@ Simulate optical field propagation with Fourier transforms:
 >>> import numpy as np
 
 Define a random optical field:
->>> field = np.random.rand(128, 128, 2)  
+>>> field = np.random.rand(128, 128, 2)
 
 Rescale the field and compute the Fourier transform:
 >>> rescale_op = dt.holography.Rescale(0.5)
@@ -84,8 +84,8 @@ Reconstruct the field using the inverse Fourier transform:
 
 """
 
-#TODO ***??*** revise class docstring
-#TODO ***??*** revise DTAT324
+# TODO ***??*** revise class docstring
+# TODO ***??*** revise DTATo30
 
 from __future__ import annotations
 
@@ -99,19 +99,19 @@ from deeptrack.backend.units import get_active_voxel_size
 from deeptrack import Feature
 
 
-#TODO ***??*** revise get_propagation_matrix - torch, typing, docstring, unit test
+# TODO ***??*** revise get_propagation_matrix - torch, typing, docstring, unit test
 def get_propagation_matrix(
     shape: tuple[int, int],
     to_z: float,
     pixel_size: float | tuple[float, float],
     wavelength: float,
     dx: float = 0,
-    dy: float = 0
+    dy: float = 0,
 ) -> np.ndarray:
     """Computes the propagation matrix for simulating the propagation of an
     optical field.
 
-    The propagation matrix is used to model wavefront propagation in free space 
+    The propagation matrix is used to model wavefront propagation in free space
     based on the angular spectrum method.
 
     Parameters
@@ -136,7 +136,7 @@ def get_propagation_matrix(
 
     Notes
     -----
-    - Uses `np.fft.fftshift` to shift the zero-frequency component to the 
+    - Uses `np.fft.fftshift` to shift the zero-frequency component to the
       center.
     - Computed based on the wave equation in Fourier space.
 
@@ -178,9 +178,9 @@ def get_propagation_matrix(
     )
 
 
-#TODO ***??*** revise Rescale - torch, typing, docstring, unit test
+# TODO ***??*** revise Rescale - torch, typing, docstring, unit test
 class Rescale(Feature):
-    """Rescales an optical field by modifying its real and imaginary 
+    """Rescales an optical field by modifying its real and imaginary
     components.
 
     The transformation is applied as:
@@ -210,9 +210,9 @@ class Rescale(Feature):
         super().__init__(rescale=rescale, **kwargs)
 
     def get(
-        self: Rescale, 
-        image: np.ndarray, 
-        rescale: float, 
+        self: Rescale,
+        image: np.ndarray,
+        rescale: float,
         **kwargs: Any,
     ) -> np.ndarray:
         """Rescales the image by subtracting the real part of the field before
@@ -241,12 +241,12 @@ class Rescale(Feature):
         return image
 
 
-#TODO ***??*** revise FourierTransform - torch, typing, docstring, unit test
+# TODO ***??*** revise FourierTransform - torch, typing, docstring, unit test
 class FourierTransform(Feature):
-    """Computes the Fourier transform of an optical field with optional 
+    """Computes the Fourier transform of an optical field with optional
     symmetric padding.
 
-    The Fourier transform converts a spatial-domain optical field into 
+    The Fourier transform converts a spatial-domain optical field into
     the frequency domain.
 
     Parameters
@@ -269,7 +269,7 @@ class FourierTransform(Feature):
     - Uses `np.fft.fft2` for fast computation.
     - Pads the image symmetrically to avoid edge artifacts.
     - Returns a complex-valued result.
-    
+
     """
 
     def __init__(self, **kwargs):
@@ -280,7 +280,7 @@ class FourierTransform(Feature):
         image: np.ndarray,
         padding: int = 32,
         **kwargs: Any,
-    ) -> np.ndarray: 
+    ) -> np.ndarray:
         """Computes the Fourier transform of the image.
 
         Parameters
@@ -295,22 +295,20 @@ class FourierTransform(Feature):
         -------
         np.ndarray
             The Fourier transform of the image.
-        
+
         """
 
         im = np.copy(image[..., 0] + 1j * image[..., 1])
         im = np.pad(
-            im,
-            ((padding, padding), (padding, padding)),
-            mode="symmetric"
-            )
+            im, ((padding, padding), (padding, padding)), mode="symmetric"
+        )
         f1 = np.fft.fft2(im)
         return f1
 
 
-#TODO ***??*** revise InverseFourierTransform - torch, typing, docstring, unit test
+# TODO ***??*** revise InverseFourierTransform - torch, typing, docstring, unit test
 class InverseFourierTransform(Feature):
-    """Applies a power of the forward or inverse propagation matrix to an 
+    """Applies a power of the forward or inverse propagation matrix to an
     optical field.
 
     This operation simulates multiple propagation steps in Fourier optics.
@@ -385,9 +383,9 @@ class InverseFourierTransform(Feature):
         return imnew
 
 
-#TODO ***??*** revise FourierTransformTransformation - torch, typing, docstring, unit test
+# TODO ***??*** revise FourierTransformTransformation - torch, typing, docstring, unit test
 class FourierTransformTransformation(Feature):
-    """Applies a power of the forward or inverse propagation matrix to an 
+    """Applies a power of the forward or inverse propagation matrix to an
     optical field.
 
     Parameters
@@ -449,7 +447,7 @@ class FourierTransformTransformation(Feature):
             inverse.
         **kwargs: Any
             Additional keyword arguments.
-        
+
         Returns
         -------
         np.ndarray
@@ -460,5 +458,5 @@ class FourierTransformTransformation(Feature):
         if i < 0:
             image *= Tzinv ** np.abs(i)
         else:
-            image *= Tz ** i
+            image *= Tz**i
         return image
