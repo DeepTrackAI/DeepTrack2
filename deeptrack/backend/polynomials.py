@@ -21,9 +21,6 @@ Functions:
 
 """
 
-# TODO ***??*** revise class docstring
-# TODO ***??*** revise DTAT394
-
 from __future__ import annotations
 
 import array_api_compat as apc
@@ -133,7 +130,6 @@ def _dricbesh_array_api(l: int | float, x, namespace=None):
     return _dricbesj_array_api(l, x, xp) - 1j * _dricbesy_array_api(l, x, xp)
 
 
-# TODO ***??*** revise besselj - torch, docstring, unit test
 def besselj(
     l: int | float,
     x: int | float | NDArray,
@@ -157,7 +153,6 @@ def besselj(
     return jv(l, x)
 
 
-# TODO ***??*** revise dbesselj - torch, docstring, unit test
 def dbesselj(
     l: int | float,
     x: int | float | NDArray,
@@ -181,7 +176,6 @@ def dbesselj(
     return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
 
 
-# TODO ***??*** revise bessely - torch, docstring, unit test
 def bessely(
     l: int | float,
     x: int | float | NDArray,
@@ -205,7 +199,6 @@ def bessely(
     return yv(l, x)
 
 
-# TODO ***??*** revise dbessely - torch, docstring, unit test
 def dbessely(
     l: int | float,
     x: int | float | NDArray,
@@ -229,7 +222,6 @@ def dbessely(
     return 0.5 * (bessely(l - 1, x) - bessely(l + 1, x))
 
 
-# TODO ***??*** revise ricbesj - torch, docstring, unit test
 def ricbesj(
     l: int | float,
     x: int | float | NDArray,
@@ -257,7 +249,6 @@ def ricbesj(
     return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
 
 
-# TODO ***??*** revise dricbesj - torch, docstring, unit test
 def dricbesj(
     l: int | float,
     x: int | float | NDArray,
@@ -287,7 +278,6 @@ def dricbesj(
     ) * dbesselj(l + 0.5, x)
 
 
-# TODO ***??*** revise ricbesy - torch, docstring, unit test
 def ricbesy(
     l: int | float,
     x: int | float | NDArray,
@@ -315,7 +305,6 @@ def ricbesy(
     return -np.sqrt(np.pi * x / 2) * bessely(l + 0.5, x)
 
 
-# TODO ***??*** revise dricbesy - torch, docstring, unit test
 def dricbesy(
     l: int | float,
     x: int | float | NDArray,
@@ -345,7 +334,6 @@ def dricbesy(
     ) * dbessely(l + 0.5, x)
 
 
-# TODO ***??*** revise ricbesh - torch, docstring, unit test
 def ricbesh(
     l: int | float,
     x: int | float | NDArray,
@@ -373,7 +361,6 @@ def ricbesh(
     return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
 
 
-# TODO ***??*** revise dricbesh - torch, docstring, unit test
 def dricbesh(
     l: int | float,
     x: int | float | NDArray,

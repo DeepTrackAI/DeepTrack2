@@ -32,9 +32,6 @@ Print them:
 
 """
 
-# TODO ***??*** revise class docstring
-# TODO ***??*** revise DTAT395
-
 from __future__ import annotations
 
 import array_api_compat as apc
@@ -141,7 +138,6 @@ def _zeros(shape, dtype, reference=None):
         return xp.zeros(shape, **kwargs)
 
 
-# TODO ***??*** revise coefficients - torch, docstring, unit test
 def coefficients(
     m: float | complex,
     a: float,
@@ -198,7 +194,6 @@ def coefficients(
     return xp.stack(A), xp.stack(B)
 
 
-# TODO ***??*** revise stratified_coefficients - torch, docstring, unit test
 def stratified_coefficients(
     m: list[complex],
     a: list[float],
@@ -303,7 +298,6 @@ def stratified_coefficients(
     return xp.stack(an), xp.stack(bn)
 
 
-# TODO ***??*** revise harmonics - torch, docstring, unit test
 def harmonics(
     x: NDArray,
     L: int,
