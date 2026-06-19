@@ -12,7 +12,7 @@
     <img src="https://img.shields.io/badge/docs-available-blue?logo=readthedocs">
   </a>
   <a href="https://badge.fury.io/py/deeptrack">
-    <img src="https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue" alt="Python version">
+    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue" alt="Python version">
   </a>
   <a href="https://doi.org/10.1063/5.0034891">
     <img src="https://img.shields.io/badge/cite us-10.1063%2F5.0034891-blue">
@@ -28,16 +28,16 @@
   <a href="/LICENSE">License</a> 
 </p>
 
-DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and experimental imaging.
+DeepTrack2 is a modular Python library for generating, manipulating, and analyzing image data pipelines for machine learning and digital microscopy.
 
-<b>TensorFlow Compatibility Notice:</b> 
-DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
+> <b>TensorFlow Compatibility Notice:</b> 
+> DeepTrack2 version 2.0 and subsequent do not support TensorFlow. If you need TensorFlow support, please install the legacy version 1.7.
 
-The following quick start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
+The following quick-start guide is intended for complete beginners to understand how to use DeepTrack2, from installation to training your first model. Let's get started!
 
 # Installation
 
-DeepTrack2 requires at least python 3.9.
+DeepTrack2 requires at least python 3.10.
 
 To install DeepTrack2, open a terminal or command prompt and run:
 ```bash
@@ -51,7 +51,7 @@ This will automatically install the required dependencies.
 
 # Getting Started
 
-Here you find a series of notebooks that give you an overview of the core features of DeepTrack2 and how to use them:
+Here you find a series of notebooks providing an overview of the core features of DeepTrack2 and how to use them:
 
 - DTGS101 **[Introduction to DeepTrack2](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS101_intro.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -97,7 +97,7 @@ Here you find a series of notebooks that give you an overview of the core featur
 
   Creating custom scatterers of arbitrary shapes.
 
-- DTGS172  **[Creating Custom Scatterers: Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS172_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS172_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTGS172  **[Simulating Bacteria](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS172_custom_scatterers_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS172_custom_scatterers_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Creating custom scatterers in the shape of bacteria.
 
@@ -171,27 +171,15 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 # Advanced Tutorials
 
-This section provides a list of advanced topic tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
+This section provides a list of advanced tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
 
 - DTAT301 **[deeptrack.features](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT301_features.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 - DTAT311 **[deeptrack.properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_properties.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT311_properties.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
-- DTATo10 **[deeptrack.scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo10_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo10_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTATo20 **[deeptrack.optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo20_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo20_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTATo30 **[deeptrack.holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo30_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo30_holography.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
-
-- DTATo40 **[deeptrack.aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo40_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo40_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTATo50 **[deeptrack.noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo50_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo50_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTATo60 **[deeptrack.augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo60_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo60_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTAT321 **[deeptrack.properties](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_wrappers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT321_wrappers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 - DTAT331 **[deeptrack.sequences](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT331_sequences.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT331_sequences.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
-
-- DTATo90 **[deeptrack.math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo90_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo90_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 - DTAT351 **[deeptrack.utils](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT351_utils.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT351_utils.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
@@ -222,6 +210,22 @@ This section provides a list of advanced topic tutorials. The primary focus of t
 - DTAT395 **[deeptrack.backend.mie](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT395_backend.mie.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT395_backend.mie.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
   
 - DTAT396 **[deeptrack.backend._config](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT396_backend._config.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTAT396_backend._config.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+## Advanced Tutorials for Optical Microscopy
+
+- DTATo10 **[deeptrack.optical.scatterers](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo10_scatterers.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo10_scatterers.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTATo20 **[deeptrack.optical.optics](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo20_optics.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo20_optics.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTATo30 **[deeptrack.optical.holography](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo30_holography.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo30_holography.ipynb" target="_parent"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/></a>
+
+- DTATo40 **[deeptrack.optical.aberrations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo40_aberrations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo40_aberrations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTATo50 **[deeptrack.optical.noises](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo50_noises.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo50_noises.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTATo60 **[deeptrack.optical.augmentations](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo60_augmentations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo60_augmentations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTATo90 **[deeptrack.optical.math](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo90_math.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/3-advanced-topics/DTATo90_math.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
 # Developer Tutorials
 
