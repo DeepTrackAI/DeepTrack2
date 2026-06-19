@@ -1,7 +1,7 @@
 """Bessel and Riccati-Bessel polynomials.
 
-This module defines a set of functions for computing Bessel and Riccati-Bessel 
-polynomials and their derivatives. It expands the corresponding capabilities of 
+This module defines a set of functions for computing Bessel and Riccati-Bessel
+polynomials and their derivatives. It expands the corresponding capabilities of
 `scipy`.
 
 Module Structure
@@ -18,11 +18,8 @@ Functions:
 - `dricbesy`: First derivative of the Riccati-Bessel polynomial of the 2nd kind.
 - `ricbesh`: Riccati-Bessel polynomial of the 3rd kind.
 - `dricbesh`: First derivative of the Riccati-Bessel polynomial of the 3rd kind.
-    
-"""
 
-#TODO ***??*** revise class docstring
-#TODO ***??*** revise DTAT399D
+"""
 
 from __future__ import annotations
 
@@ -82,9 +79,8 @@ def _dricbesj_array_api(l: int | float, x, namespace=None):
     if l == 0:
         return xp.cos(x)
 
-    return (
-        _ricbesj_array_api(l - 1, x, xp)
-        - l / x * _ricbesj_array_api(l, x, xp)
+    return _ricbesj_array_api(l - 1, x, xp) - l / x * _ricbesj_array_api(
+        l, x, xp
     )
 
 
@@ -115,9 +111,8 @@ def _dricbesy_array_api(l: int | float, x, namespace=None):
     if l == 0:
         return -xp.sin(x)
 
-    return (
-        _ricbesy_array_api(l - 1, x, xp)
-        - l / x * _ricbesy_array_api(l, x, xp)
+    return _ricbesy_array_api(l - 1, x, xp) - l / x * _ricbesy_array_api(
+        l, x, xp
     )
 
 
@@ -135,7 +130,6 @@ def _dricbesh_array_api(l: int | float, x, namespace=None):
     return _dricbesj_array_api(l, x, xp) - 1j * _dricbesy_array_api(l, x, xp)
 
 
-#TODO ***??*** revise besselj - torch, docstring, unit test
 def besselj(
     l: int | float,
     x: int | float | NDArray,
@@ -159,11 +153,10 @@ def besselj(
     return jv(l, x)
 
 
-#TODO ***??*** revise dbesselj - torch, docstring, unit test
 def dbesselj(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The first derivative of the Bessel polynomial of the 1st kind.
 
     Parameters
@@ -183,11 +176,10 @@ def dbesselj(
     return 0.5 * (besselj(l - 1, x) - besselj(l + 1, x))
 
 
-#TODO ***??*** revise bessely - torch, docstring, unit test
 def bessely(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -207,11 +199,10 @@ def bessely(
     return yv(l, x)
 
 
-#TODO ***??*** revise dbessely - torch, docstring, unit test
 def dbessely(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The first derivative of the Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -231,11 +222,10 @@ def dbessely(
     return 0.5 * (bessely(l - 1, x) - bessely(l + 1, x))
 
 
-#TODO ***??*** revise ricbesj - torch, docstring, unit test
 def ricbesj(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
@@ -259,11 +249,10 @@ def ricbesj(
     return np.sqrt(np.pi * x / 2) * besselj(l + 0.5, x)
 
 
-#TODO ***??*** revise dricbesj - torch, docstring, unit test
 def dricbesj(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
@@ -289,11 +278,10 @@ def dricbesj(
     ) * dbesselj(l + 0.5, x)
 
 
-#TODO ***??*** revise ricbesy - torch, docstring, unit test
 def ricbesy(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -317,11 +305,10 @@ def ricbesy(
     return -np.sqrt(np.pi * x / 2) * bessely(l + 0.5, x)
 
 
-#TODO ***??*** revise dricbesy - torch, docstring, unit test
 def dricbesy(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
@@ -347,11 +334,10 @@ def dricbesy(
     ) * dbessely(l + 0.5, x)
 
 
-#TODO ***??*** revise ricbesh - torch, docstring, unit test
 def ricbesh(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters
@@ -375,11 +361,10 @@ def ricbesh(
     return np.sqrt(np.pi * x / 2) * h1vp(l + 0.5, x, False)
 
 
-#TODO ***??*** revise dricbesh - torch, docstring, unit test
 def dricbesh(
-        l: int | float,
-        x: int | float | NDArray,
-    ) -> float | NDArray:
+    l: int | float,
+    x: int | float | NDArray,
+) -> float | NDArray:
     """The first derivative of the Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters

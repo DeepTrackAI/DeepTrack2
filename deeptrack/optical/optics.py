@@ -2212,6 +2212,8 @@ class ISCAT(Brightfield):
         self: ISCAT,
         illumination_angle: float = np.pi,
         amp_factor: float = 1,
+        input_polarization: float | str | None = "circular",
+        output_polarization: float | None = None,
         **kwargs: Any,
     ) -> None:
         """Initializes the ISCAT class.
@@ -2223,16 +2225,37 @@ class ISCAT(Brightfield):
         amp_factor: float
             Amplitude factor of the illuminating field relative to the
             reference field.
+        input_polarization: float | str | None
+            Forwarded to the scatterer (e.g. `MieSphere`), which is where the
+            polarization projection is actually computed. Default `None`
+            (isotropic illumination, no preferred axis), the standard ISCAT
+            configuration. Override here to use a fixed linear polarization
+            instead.
+        output_polarization: float | None
+            Forwarded to the scatterer. Default `None` (no analyzer), the
+            standard ISCAT configuration. Override here for a fixed linear
+            analyzer angle instead.
         **kwargs: Any
             Additional parameters for the Brightfield class.
 
+        Notes
+        -----
+        `input_polarization`/`output_polarization` parametrize the
+        scattered-field calculation, which happens on the scatterer (e.g.
+        `MieSphere`), not here. Setting them on `ISCAT` only supplies the
+        value that gets forwarded to the scatterer, it does not
+        relocate the computation. `MieScatterer`'s own standalone default
+        remains `0`/`0` (linear). `ISCAT`'s default of `"circular"`/`None` is 
+        what applies whenever a scatterer is imaged through `ISCAT`.
+
+        
         """
 
         super().__init__(
             illumination_angle=illumination_angle,
             amp_factor=amp_factor,
-            input_polarization="circular",
-            output_polarization="circular",
+            input_polarization=input_polarization,
+            output_polarization=output_polarization,
             phase_shift_correction=True,
             **kwargs,
         )

@@ -5,7 +5,7 @@ import warnings
 from contextlib import contextmanager
 
 from deeptrack.optical import optics
-from deeptrack.optical.scatterers import PointParticle, Sphere
+from deeptrack.optical.scatterers import PointParticle, Sphere, MieSphere
 from deeptrack import units_registry as u
 
 from deeptrack.backend import TORCH_AVAILABLE, xp
@@ -194,6 +194,157 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
         self.assertEqual(microscope.amp_factor(), 1)
+
+    def _rot90_asymmetry_ratio(self, image: np.ndarray) -> float:
+            """Returns max|img - rot90(img)| / std(img), a scale-independent
+            measure of how far an image is from being rotationally symmetric.
+            """
+            img = np.asarray(image).squeeze()
+            std = img.std()
+            if std == 0:
+                return 0.0
+            return float(np.abs(img - np.rot90(img)).max() / std)
+
+    def test_ISCAT_MieSphere_no_analyzer_is_symmetric(self):
+
+        common_kwargs = dict(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 64, 64),
+            padding=(32, 32, 32, 32),
+        )
+        scatterer_common = dict(
+            position=(32, 32, 2),
+            position_unit="pixel",
+            radius=2e-6,
+            refractive_index=1.42,
+            phase_shift_correction=True,
+            L=10,
+        )
+
+        microscope_no_analyzer = optics.ISCAT(**common_kwargs)
+
+        microscope_fixed_linear = optics.ISCAT(
+            input_polarization=0.0,
+            output_polarization=0.0,
+            **common_kwargs,
+        )
+
+        no_analyzer = MieSphere(
+            **scatterer_common,
+        )
+        fixed_linear = MieSphere(
+            **scatterer_common,
+        )
+
+        with self._suppress_expected_optics_warnings():
+            img_no_analyzer = microscope_no_analyzer(no_analyzer).resolve()
+            img_fixed_linear = microscope_fixed_linear(
+                fixed_linear
+            ).resolve()
+
+        self.assertIsInstance(img_no_analyzer, self.array_type)
+        self.assertEqual(img_no_analyzer.shape, (64, 64, 1))
+
+        ratio_no_analyzer = self._rot90_asymmetry_ratio(img_no_analyzer)
+        ratio_fixed_linear = self._rot90_asymmetry_ratio(img_fixed_linear)
+
+        self.assertLess(ratio_no_analyzer, 3.0)
+        self.assertLess(ratio_no_analyzer, ratio_fixed_linear / 3.0)
+
+    def test_Holography_MieSphere_no_analyzer_is_symmetric(self):
+        common_kwargs = dict(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 64, 64),
+            padding=(32, 32, 32, 32),
+            return_field=True,
+        )
+        scatterer_common = dict(
+            position=(32, 32, 2),
+            position_unit="pixel",
+            radius=2e-6,
+            refractive_index=1.42,
+            L=10,
+        )
+
+        microscope = optics.Holography(**common_kwargs)
+
+        no_analyzer = MieSphere(
+            input_polarization=None,
+            output_polarization=None,
+            **scatterer_common,
+        )
+        fixed_linear = MieSphere(
+            input_polarization=0.0,
+            output_polarization=0.0,
+            **scatterer_common,
+        )
+
+        with self._suppress_expected_optics_warnings():
+            field_no_analyzer = np.asarray(
+                microscope(no_analyzer).resolve()
+            ).squeeze()
+            field_fixed_linear = np.asarray(
+                microscope(fixed_linear).resolve()
+            ).squeeze()
+
+        self.assertTrue(np.iscomplexobj(field_no_analyzer))
+
+        for component in ("real", "imag"):
+            ratio_no_analyzer = self._rot90_asymmetry_ratio(
+                getattr(field_no_analyzer, component)
+            )
+            ratio_fixed_linear = self._rot90_asymmetry_ratio(
+                getattr(field_fixed_linear, component)
+            )
+            self.assertLess(ratio_no_analyzer, 3.0)
+            self.assertLessEqual(ratio_no_analyzer, ratio_fixed_linear)
+
+    def test_ISCAT_Holography_MieSphere_no_analyzer_equivalence(self):
+
+        common = dict(
+            NA=0.7,
+            wavelength=660e-9,
+            resolution=1e-6,
+            magnification=10,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 64, 64),
+            padding=(32, 32, 32, 32),
+        )
+        scatterer_kwargs = dict(
+            position=(32, 32, 2),
+            position_unit="pixel",
+            radius=2e-6,
+            refractive_index=1.42,
+            input_polarization=None,
+            output_polarization=None,
+            L=10,
+        )
+
+        holography = optics.Holography(
+            phase_shift_correction=True,
+            illumination_angle=np.pi,
+            return_field=True,
+            **common,
+        )
+        iscat = optics.ISCAT(
+            return_field=True,
+            **common,
+        )
+
+        with self._suppress_expected_optics_warnings():
+            img_holo = holography(MieSphere(**scatterer_kwargs)).resolve()
+            img_iscat = iscat(MieSphere(**scatterer_kwargs)).resolve()
+
+        err = float(xp.mean(xp.abs(img_holo - img_iscat)))
+        self.assertLess(err, 1e-10)
 
     def test_Darkfield(self):
         microscope = optics.Darkfield(

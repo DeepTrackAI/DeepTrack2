@@ -1421,11 +1421,11 @@ class Feature(DeepTrackNode):
         components = list(zip(*normalized))
 
         # Stack each component along a new leading batch axis.
-        with config.with_backend(self._backend):    
+        with config.with_backend(self._backend):
             return tuple(
-            xp.stack([xp.asarray(x) for x in component])
-            for component in components
-        )
+                xp.stack([xp.asarray(x) for x in component])
+                for component in components
+            )
 
     def _action(
         self: Feature,
@@ -7659,7 +7659,9 @@ class LoadImage(Feature):
                     image = []
                     for img in raw:
                         if img.ndim == 3 and img.shape[-1] >= 3:
-                            image.append(cv2.cvtColor(img, cv2.COLOR_BGR2RGB).copy())
+                            image.append(
+                                cv2.cvtColor(img, cv2.COLOR_BGR2RGB).copy()
+                            )
                         else:
                             image.append(np.asarray(img).copy())
 
@@ -8532,7 +8534,7 @@ class Transpose(Feature):
             NumPy array or a PyTorch tensor.
 
         """
-        
+
         if TORCH_AVAILABLE and isinstance(inputs, torch.Tensor):
             if axes is None:
                 axes = tuple(range(inputs.ndim - 1, -1, -1))
