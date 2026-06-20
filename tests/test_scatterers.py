@@ -272,31 +272,6 @@ class TestScatterers_NumPy_Only(BackendTestBase):
             )
         )
 
-    def test_MieSphere_rejects_none_polarizations(self):
-        with self.assertRaises(ValueError):
-            scatterers.MieSphere(
-                radius=0.5e-6,
-                refractive_index=1.45,
-                wavelength=680e-9,
-                refractive_index_medium=1.33,
-                NA=0.7,
-                output_region=(0, 0, 32, 32),
-                input_polarization=None,
-                output_polarization=0.0,
-            ).resolve()
-
-        with self.assertRaises(ValueError):
-            scatterers.MieSphere(
-                radius=0.5e-6,
-                refractive_index=1.45,
-                wavelength=680e-9,
-                refractive_index_medium=1.33,
-                NA=0.7,
-                output_region=(0, 0, 32, 32),
-                input_polarization=0.0,
-                output_polarization=None,
-            ).resolve()
-
     def test_MieSphere_auto_parameters(self):
         scatterer = scatterers.MieSphere(
             radius=0.5e-6,
@@ -401,31 +376,6 @@ class TestScatterers_NumPy_Only(BackendTestBase):
                 np.array([16, 16]),
             )
         )
-
-    def test_MieStratifiedSphere_rejects_none_polarizations(self):
-        with self.assertRaises(ValueError):
-            scatterers.MieStratifiedSphere(
-                radius=(0.5e-6, 1.0e-6),
-                refractive_index=(1.45, 1.52),
-                wavelength=680e-9,
-                refractive_index_medium=1.33,
-                NA=0.7,
-                output_region=(0, 0, 32, 32),
-                input_polarization=None,
-                output_polarization=0.0,
-            ).resolve()
-
-        with self.assertRaises(ValueError):
-            scatterers.MieStratifiedSphere(
-                radius=(0.5e-6, 1.0e-6),
-                refractive_index=(1.45, 1.52),
-                wavelength=680e-9,
-                refractive_index_medium=1.33,
-                NA=0.7,
-                output_region=(0, 0, 32, 32),
-                input_polarization=0.0,
-                output_polarization=None,
-            ).resolve()
 
     def test_MieStratifiedSphere_auto_parameters(self):
         scatterer = scatterers.MieStratifiedSphere(

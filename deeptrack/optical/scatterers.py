@@ -1176,18 +1176,21 @@ class MieScatterer(FieldScatterer):
         Maximum collection angle in radians. If `"auto"`, this is computed
         from the objective NA (assuming the objective is the limiting
         aperture).
-    input_polarization: float | Quantity | str
+    input_polarization: float | Quantity | str | None
         Polarization angle of the incident illumination in radians. If a float
         (or `Quantity`), it specifies the orientation of a linear polarizer
-        before the sample. If set to `"circular"`, circular polarization is
-        approximated by assigning equal weights to the two orthogonal
-        scattering components. `None` is not supported in coherent mode. Use
-        `Incoherent` to model unpolarized illumination.
-    output_polarization: float | Quantity
+        before the sample. `None` represents genuinely unpolarized
+        illumination with no preferred axis. `"circular"` represents
+        physically circularly polarized illumination (e.g. a standard ISCAT
+        QWP+PBS illumination path); it gives the same phi-independent
+        coefficients as `None` for intensity purposes here, but is the more
+        physically accurate term when the illumination genuinely is
+        circularly polarized.
+    output_polarization: float | Quantity | None
         Angle of a polarization analyzer placed after the sample, in radians.
         If a float (or `Quantity`), the detected field is projected onto the
-        corresponding linear polarization direction. `None` is not supported in
-        coherent mode. Use `Incoherent` to model detection without analyzer.
+        corresponding linear polarization direction. `None` represents
+        detection with no analyzer (the standard, recommended way).
     L: int | str
         Number of terms used to evaluate the Mie series. If `"auto"`,
         the number of terms is determined automatically.
@@ -1246,8 +1249,8 @@ class MieScatterer(FieldScatterer):
     def __init__(
         self: MieScatterer,
         coefficients: callable,
-        input_polarization: float | Quantity | str = 0,
-        output_polarization: float | Quantity = 0,
+        input_polarization: float | Quantity | str | None = 0,
+        output_polarization: float | Quantity | None = 0,
         offset_z: str | float = "auto",
         collection_angle: str | float = "auto",
         L: str | int = "auto",
@@ -1279,16 +1282,17 @@ class MieScatterer(FieldScatterer):
         input_polarization: float | Quantity | str
             Polarization angle of the incident illumination in radians. If a
             float (or `Quantity`), it specifies the orientation of a linear
-            polarizer before the sample. If set to `"circular"`, circular
-            polarization is approximated by assigning equal weights to the two
-            orthogonal scattering components. `None` is not supported in
-            coherent mode. Use `Incoherent` to model unpolarized illumination.
-        output_polarization: float | Quantity
+            polarizer before the sample. If set to `"circular"`,  circular 
+            polarization is approximated by assigning equal weights to the two 
+            orthogonal scattering components. If `None`, unpolarized is 
+            obtained by assigning equal weights to the two orthogonal 
+            scattering components.
+        output_polarization: float | Quantity | None
             Angle of a polarization analyzer placed after the sample, in
             radians. If a float (or `Quantity`), the detected field is
-            projected onto the corresponding linear polarization direction.
-            `None` is not supported in coherent mode. Use `Incoherent` to
-            model detection without analyzer.
+            projected onto the corresponding linear polarization direction. If 
+            `None`, unpolarized is obtained by assigning equal weights to the 
+            two orthogonal scattering components.
         offset_z: "auto" | float
             Distance from the particle in the z direction where the field is
             evaluated. If `"auto"`, this is calculated from the pixel size and
@@ -1428,24 +1432,6 @@ class MieScatterer(FieldScatterer):
         """
 
         properties = super()._process_properties(properties)
-
-        # --- polarization validation ---
-        inp = properties.get("input_polarization", None)
-        out = properties.get("output_polarization", None)
-
-        if inp is None:
-            raise ValueError(
-                "input_polarization must be specified for coherent "
-                "scattering. Use the Incoherent feature to model unpolarized "
-                "illumination."
-            )
-
-        if out is None:
-            raise ValueError(
-                "output_polarization=None (no analyzer) is not supported in "
-                "coherent mode. Use the Incoherent feature to model detection "
-                "without analyzer."
-            )
 
         if properties["L"] == "auto":
             try:
@@ -1733,12 +1719,12 @@ class MieScatterer(FieldScatterer):
         input_polarization: float | int | str | Quantity
             The polarization state of the incident illumination. Can be a float
             representing the angle of linear polarization, the string
-            "circular" for circular polarization, or a Quantity with angle
-            units.
+            "circular" for circular polarization, a Quantity with angle
+            units, or `None` for unpolarized.
         output_polarization: float | int | Quantity
             The angle of the polarization analyzer for detection. Can be a
-            float representing the angle of linear polarization, or a Quantity
-            with angle units.
+            float representing the angle of linear polarization, a Quantity
+            with angle units, or `None` for unpolarized.
 
         Returns
         -------
@@ -1752,13 +1738,13 @@ class MieScatterer(FieldScatterer):
         if isinstance(input_polarization, Quantity):
             input_polarization = input_polarization.to("rad").magnitude
 
-        if isinstance(input_polarization, str):
-            if input_polarization != "circular":
+        if input_polarization is None or isinstance(input_polarization, str):
+            if input_polarization not in (None, "circular"):
                 raise TypeError(
                     f"Unsupported input_polarization: {input_polarization}"
                 )
-            S1_coef = 1 / np.sqrt(2)
-            S2_coef = 1j / np.sqrt(2)
+            S1_coef = 0.5
+            S2_coef = 0.5
         else:
             input_polarization = _asarray(
                 input_polarization,
@@ -1770,16 +1756,12 @@ class MieScatterer(FieldScatterer):
         if isinstance(output_polarization, Quantity):
             output_polarization = output_polarization.to("rad").magnitude
 
-        output_polarization = _asarray(
-            output_polarization,
-            dtype=xp.float64,
-        )
-        S1_coef = S1_coef * xp.sin(phi + output_polarization)
-        S2_coef = (
-            S2_coef
-            * xp.cos(phi + output_polarization)
-            * illumination_cos_theta
-        )
+        if output_polarization is None or isinstance(output_polarization, str):
+            pass  # no analyzer — leave S1_coef/S2_coef unmodified
+        else:
+            output_polarization = _asarray(output_polarization, dtype=xp.float64)
+            S1_coef = S1_coef * xp.sin(phi + output_polarization)
+            S2_coef = S2_coef * xp.cos(phi + output_polarization) * illumination_cos_theta
 
         return S1_coef, S2_coef
 
@@ -1989,8 +1971,8 @@ class MieScatterer(FieldScatterer):
         refractive_index_medium: float,
         L: int,
         collection_angle: float,
-        input_polarization: float | int | str | Quantity,
-        output_polarization: float | int | Quantity,
+        input_polarization: float | int | str | Quantity | None,
+        output_polarization: float | int | Quantity | None,
         coefficients: Any,
         offset_z: float,
         z: float,
@@ -2222,8 +2204,8 @@ class MieScatterer(FieldScatterer):
         refractive_index_medium: float,
         L: int,
         collection_angle: float,
-        input_polarization: float | int | str | Quantity,
-        output_polarization: float | int | Quantity,
+        input_polarization: float | int | str | Quantity | None,
+        output_polarization: float | int | Quantity | None,
         coefficients: Any,
         offset_z: float,
         z: float,
