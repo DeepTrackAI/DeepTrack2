@@ -52,9 +52,8 @@ Key Features
 
 - **Backend Compatibility**
 
-    Geometry-based scatterers support both NumPy and PyTorch arrays.
-    Mie-based scatterers currently rely on NumPy implementations and
-    do not fully support PyTorch execution.
+    Both geometry-based and Mie-based scatterers support NumPy and PyTorch
+    arrays, with full backend dispatch via `deeptrack.backend.xp`.
 
 Module Structure
 ----------------
@@ -747,7 +746,7 @@ class Ellipse(VolumeScatterer):
         rotation: float = 0,
         transpose: bool = False,
         **kwargs,
-    ) -> None:
+    ):
         super().__init__(
             radius=radius, rotation=rotation, transpose=transpose, **kwargs
         )
@@ -2598,7 +2597,7 @@ class MieStratifiedSphere(MieScatterer):
         radius: tuple[float, ...] = (1e-6,),
         refractive_index: tuple[float, ...] = (1.45,),
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the MieStratifiedSphere feature.
 
         Parameters

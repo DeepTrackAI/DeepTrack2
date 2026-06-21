@@ -12,8 +12,8 @@ Functions:
 - `stratified_coefficients`: Coefficients for stratified spherical harmonics.
 - `harmonics`: Evaluates spherical harmonics of the Mie field.
 
-Example
--------
+Examples
+--------
 Define the parameters of the particle and the Mie scattering:
 
 >>> relative_refract_index = 1.5 + 0.01j
@@ -151,16 +151,17 @@ def coefficients(
 
     Parameters
     ----------
-    m : float or complex
+    m: float | complex
         The relative refractive index of the particle n_particle / n_medium.
-    a : float
+    a: float
         The radius of the particle (> 0).
-    L : int
-        The maximum order of the spherical harmonics to be calculated.
+    L: int
+        The maximum order of the spherical harmonics to be calculated. If 0,
+        two empty arrays are returned.
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing two arrays of complex numbers, A and B, which
         are the Mie scattering coefficients up to (and including) order L.
 
@@ -207,21 +208,23 @@ def stratified_coefficients(
 
     Parameters
     ----------
-    m : List[float or complex]
+    m: list[complex]
         The relative refractive indices of the particle layers
         (n_particle / n_medium).
-    a : List[float]
+    a: list[float]
         The radii of the particle layers (> 0).
-    L : int
-        The maximum order of the spherical harmonics to be calculated.
+    L: int
+        The maximum order of the spherical harmonics to be calculated. If 0,
+        two empty arrays are returned.
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing arrays of coefficients an and bn, up to (and
         including) order L.
 
     """
+
     dtype = _complex_dtype(m, a)
     reference = _first_array(m, a)
     m = _asarray_vector(m, dtype=dtype, reference=reference)
@@ -299,16 +302,16 @@ def stratified_coefficients(
 
 
 def harmonics(
-    x: NDArray,
+    x: np.ndarray,
     L: int,
-) -> tuple[NDArray, NDArray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Calculate the spherical harmonics of the Mie field.
 
     The harmonics are calculated up to order L using an iterative method.
 
     Parameters
     ----------
-    x : np.ndarray
+    x: np.ndarray
         An array representing the cosine of the polar angle (theta) for each
         evaluation point relative to the scattering particle's center
         (the origin).
@@ -322,12 +325,14 @@ def harmonics(
         z-axis), and `x = 0` corresponds to theta = 90° (point perpendicular to
         the z-axis).
 
-    L : int
-        The order up to which to evaluate the harmonics.
+    L: int
+        The order up to which to evaluate the harmonics. If 0, two empty
+        arrays of shape (0, *x.shape) are returned.
+
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing arrays of harmonics PI and TAU of
         shape (L, *x.shape).
 

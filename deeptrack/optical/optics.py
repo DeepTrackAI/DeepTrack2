@@ -2215,7 +2215,7 @@ class ISCAT(Brightfield):
         input_polarization: float | str | None = "circular",
         output_polarization: float | None = None,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the ISCAT class.
 
         Parameters
@@ -2227,10 +2227,12 @@ class ISCAT(Brightfield):
             reference field.
         input_polarization: float | str | None
             Forwarded to the scatterer (e.g. `MieSphere`), which is where the
-            polarization projection is actually computed. Default `None`
-            (isotropic illumination, no preferred axis), the standard ISCAT
-            configuration. Override here to use a fixed linear polarization
-            instead.
+            polarization projection is actually computed. Default `"circular"`
+            (physically circularly polarized illumination, no preferred axis),
+            the standard ISCAT configuration. Override here for a fixed linear
+            polarization, or use `None` for genuinely unpolarized illumination
+            (mathematically identical here, but a different physical 
+            description).
         output_polarization: float | None
             Forwarded to the scatterer. Default `None` (no analyzer), the
             standard ISCAT configuration. Override here for a fixed linear
@@ -2324,7 +2326,7 @@ class Darkfield(Brightfield):
         self: Darkfield,
         illumination_angle: float = np.pi / 2,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the Darkfield class.
 
         Parameters
@@ -2503,7 +2505,7 @@ class IlluminationGradient(Feature):
         vmin: PropertyLike[float] = 0.0,
         vmax: PropertyLike[float] = np.inf,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the IlluminationGradient class.
 
         Parameters

@@ -13,11 +13,14 @@ Functions:
 - `bessely`: Bessel polynomial of the 2nd kind.
 - `dbessely`: First derivative of the Bessel polynomial of the 2nd kind.
 - `ricbesj`: Riccati-Bessel polynomial of the 1st kind.
-- `dricbesj`: First derivative of the Riccati-Bessel polynomial of the 1st kind.
+- `dricbesj`: First derivative of the Riccati-Bessel polynomial of the 1st 
+    kind.
 - `ricbesy`: Riccati-Bessel polynomial of the 2nd kind.
-- `dricbesy`: First derivative of the Riccati-Bessel polynomial of the 2nd kind.
+- `dricbesy`: First derivative of the Riccati-Bessel polynomial of the 2nd 
+    kind.
 - `ricbesh`: Riccati-Bessel polynomial of the 3rd kind.
-- `dricbesh`: First derivative of the Riccati-Bessel polynomial of the 3rd kind.
+- `dricbesh`: First derivative of the Riccati-Bessel polynomial of the 3rd 
+    kind.
 
 """
 
@@ -25,7 +28,6 @@ from __future__ import annotations
 
 import array_api_compat as apc
 import numpy as np
-from numpy.typing import NDArray
 from scipy.special import jv, h1vp, yv
 
 
@@ -132,15 +134,15 @@ def _dricbesh_array_api(l: int | float, x, namespace=None):
 
 def besselj(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The Bessel polynomial of the 1st kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -155,15 +157,15 @@ def besselj(
 
 def dbesselj(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The first derivative of the Bessel polynomial of the 1st kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -178,15 +180,15 @@ def dbesselj(
 
 def bessely(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The Bessel polynomial of the 2nd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -201,15 +203,15 @@ def bessely(
 
 def dbessely(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The first derivative of the Bessel polynomial of the 2nd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -224,15 +226,15 @@ def dbessely(
 
 def ricbesj(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -251,15 +253,15 @@ def ricbesj(
 
 def dricbesj(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The first derivative of the Riccati-Bessel polynomial of the 1st kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -280,15 +282,15 @@ def dricbesj(
 
 def ricbesy(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -307,15 +309,15 @@ def ricbesy(
 
 def dricbesy(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The first derivative of the Riccati-Bessel polynomial of the 2nd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -336,15 +338,15 @@ def dricbesy(
 
 def ricbesh(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns
@@ -363,15 +365,15 @@ def ricbesh(
 
 def dricbesh(
     l: int | float,
-    x: int | float | NDArray,
-) -> float | NDArray:
+    x: int | float | np.ndarray,
+) -> float | np.ndarray:
     """The first derivative of the Riccati-Bessel polynomial of the 3rd kind.
 
     Parameters
     ----------
-    l : int or float
+    l: int or float
         Polynomial order.
-    x : int or float or np.ndarray
+    x: int or float or np.ndarray
         The point(s) where the polynomial is evaluated.
 
     Returns

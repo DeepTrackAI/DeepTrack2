@@ -206,7 +206,7 @@ class GaussianApodization(Aberration):
         sigma: PropertyLike[float] = 1,
         offset: PropertyLike[tuple[float, float]] = (0, 0),
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the GaussianApodization class.
  
         Initializes the GaussianApodization class with parameters that control
@@ -376,7 +376,7 @@ class Zernike(Aberration):
         m: PropertyLike[int | list[int]],
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """ Initializes the Zernike class. 
         
         Initializes the Zernike class with the specified indices and coefficients 
@@ -584,7 +584,7 @@ class Piston(Zernike):
         self: Piston, 
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the Piston class.
 
         Parameters
@@ -643,7 +643,7 @@ class VerticalTilt(Zernike):
         self: VerticalTilt, 
         coefficient: PropertyLike[float | list[float]] = 1, 
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the VerticalTilt class.
 
         Parameters
@@ -704,7 +704,7 @@ class HorizontalTilt(Zernike):
         self: HorizontalTilt,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the HorizontalTilt class.
 
         Parameters
@@ -766,7 +766,7 @@ class ObliqueAstigmatism(Zernike):
         self: ObliqueAstigmatism,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the ObliqueAstigmatism class.
 
         Parameters
@@ -825,7 +825,7 @@ class Defocus(Zernike):
         self: Defocus,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the Defocus class.
 
         Parameters
@@ -885,7 +885,7 @@ class Astigmatism(Zernike):
         self: Astigmatism,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the Astigmatism class.
 
         Parameters
@@ -935,7 +935,7 @@ class ObliqueTrefoil(Zernike):
         self: ObliqueTrefoil,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the ObliqueTrefoil class.
 
         Parameters
@@ -970,7 +970,7 @@ class VerticalComa(Zernike):
         self: VerticalComa,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the VerticalComa class.
         
         Parameters
@@ -1004,7 +1004,7 @@ class HorizontalComa(Zernike):
         self: HorizontalComa,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the HorizontalComa class.
 
         Parameters
@@ -1038,7 +1038,7 @@ class Trefoil(Zernike):
         self: Trefoil,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the Trefoil class.
         Parameters
         ----------
@@ -1071,7 +1071,7 @@ class SphericalAberration(Zernike):
         self: SphericalAberration,
         coefficient: PropertyLike[float | list[float]] = 1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initializes the SphericalAberration class.
         
         Parameters
