@@ -24,6 +24,13 @@ Key Features
     Enables scaling, normalization, and modulation of phase and amplitude to
     preserve intensity distribution and enhance wavefront reconstruction.
 
+- **Backend Compatibility**
+
+    `get_propagation_matrix` supports both NumPy and PyTorch arrays via
+    `deeptrack.backend.xp`. The `Rescale`, `FourierTransform`,
+    `InverseFourierTransform`, and `FourierTransformTransformation` features
+    currently operate on NumPy arrays only.
+
 Module Structure
 ----------------
 Classes:

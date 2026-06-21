@@ -4,6 +4,12 @@ This module provides functions to perform Mie scattering calculations,
 including computation of spherical harmonics coefficients and related
 operations.
 
+Backend Compatibility
+----------------------
+All functions in this module support both NumPy and PyTorch arrays via
+`deeptrack.backend.xp`, dispatching automatically based on the active
+backend.
+
 Module Structure
 -----------------
 Functions:

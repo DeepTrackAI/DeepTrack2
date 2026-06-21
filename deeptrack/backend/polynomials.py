@@ -4,6 +4,12 @@ This module defines a set of functions for computing Bessel and Riccati-Bessel
 polynomials and their derivatives. It expands the corresponding capabilities of
 `scipy`.
 
+Backend Compatibility
+----------------------
+All functions support both NumPy and PyTorch arrays. The NumPy path uses
+`scipy.special` directly; non-NumPy array-API inputs (e.g. PyTorch tensors)
+are routed through differentiable recurrence-based implementations instead.
+
 Module Structure
 -----------------
 Functions:

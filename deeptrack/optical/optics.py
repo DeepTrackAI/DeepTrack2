@@ -1109,7 +1109,7 @@ class Optics(Feature):
             if isinstance(pupil_feat, Feature):
                 pupil_function = pupil_feat(pupil_function)
 
-            # If ndarray: multiply (will break differentiability unless you
+            # If np.ndarray: multiply (will break differentiability unless you
             # move it to torch)
             elif isinstance(pupil_feat, np.ndarray):
                 pf = torch.as_tensor(

@@ -1272,7 +1272,7 @@ class AverageBlur(Blur):
         ksize: int = 3,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ) -> None:
+    ):
         """Initialize the parameters for averaging input features.
 
         This constructor initializes the parameters for averaging input
