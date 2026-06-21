@@ -192,24 +192,24 @@ class Rescale(Feature):
     """
 
     def __init__(
-            self: Rescale,
-            rescale: float = 1,
-            **kwargs: Any,
-        ):
-            """Initializes the Rescale feature.
+        self: Rescale,
+        rescale: float = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the Rescale feature.
 
-            Parameters
-            ----------
-            rescale: float, optional
-                The scaling factor applied to both real and imaginary
-                components (default: 1).
-            **kwargs: Any
-                Additional keyword arguments passed to the parent Feature 
-                class.
+        Parameters
+        ----------
+        rescale: float, optional
+            The scaling factor applied to both real and imaginary
+            components (default: 1).
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature 
+            class.
 
-            """
+        """
 
-            super().__init__(rescale=rescale, **kwargs)
+        super().__init__(rescale=rescale, **kwargs)
 
     def get(
         self: Rescale,
@@ -274,20 +274,20 @@ class FourierTransform(Feature):
     """
 
     def __init__(
-            self: FourierTransform,
-            **kwargs: Any,
-        ):
-            """Initializes the FourierTransform feature.
+        self: FourierTransform,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the FourierTransform feature.
 
-            Parameters
-            ----------
-            **kwargs: Any
-                Additional keyword arguments passed to the parent Feature 
-                class, such as `padding`.
+        Parameters
+        ----------
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature 
+            class, such as `padding`.
 
-            """
+        """
 
-            super().__init__(**kwargs)
+        super().__init__(**kwargs)
 
     def get(
         self: FourierTransform,
@@ -356,7 +356,7 @@ class InverseFourierTransform(Feature):
     def __init__(
         self: InverseFourierTransform,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the InverseFourierTransform feature.
 
         Parameters
@@ -446,7 +446,7 @@ class FourierTransformTransformation(Feature):
         Tzinv: np.ndarray,
         i: int,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the FourierTransformTransformation feature.
 
         Parameters

@@ -216,7 +216,7 @@ class Microscope(StructuralFeature):
         sample: Feature,
         objective: Optics,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the `Microscope` instance.
 
         Parameters
@@ -243,11 +243,11 @@ class Microscope(StructuralFeature):
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
 
-    def _validate_input(self, scattered):
+    def _validate_input(self, scattered) -> None:
         if hasattr(self._objective, "validate_input"):
             self._objective.validate_input(scattered)
 
-    def _extract_contrast_volume(self, scattered):
+    def _extract_contrast_volume(self, scattered) -> np.ndarray:
         if hasattr(self._objective, "extract_contrast_volume"):
             return self._objective.extract_contrast_volume(
                 scattered,
@@ -255,7 +255,7 @@ class Microscope(StructuralFeature):
             )
         return scattered.array
 
-    def _downscale_image(self, image, upscale):
+    def _downscale_image(self, image, upscale) -> np.ndarray:
         if hasattr(self._objective, "downscale_image"):
             return self._objective.downscale_image(image, upscale)
 
@@ -577,7 +577,7 @@ class Optics(Feature):
         illumination: Feature | None = None,
         upscale: PropertyLike[int | tuple[int, int, int]] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the `Optics` instance.
 
         Parameters
@@ -1377,7 +1377,7 @@ class Fluorescence(Optics):
 
     """
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         """Semantic validation for fluorescence microscopy."""
 
         # Fluorescence cannot operate on coherent fields
@@ -1871,7 +1871,7 @@ class Brightfield(Optics):
         working_distance=(u.meter, u.meter),
     )
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         """Semantic validation for brightfield microscopy."""
 
         if isinstance(scattered, ScatteredVolume):
@@ -2215,7 +2215,7 @@ class ISCAT(Brightfield):
         input_polarization: float | str | None = "circular",
         output_polarization: float | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the ISCAT class.
 
         Parameters
@@ -2326,7 +2326,7 @@ class Darkfield(Brightfield):
         self: Darkfield,
         illumination_angle: float = np.pi / 2,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the Darkfield class.
 
         Parameters
@@ -2340,7 +2340,7 @@ class Darkfield(Brightfield):
 
         super().__init__(illumination_angle=illumination_angle, **kwargs)
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         if isinstance(scattered, ScatteredVolume):
             warnings.warn(
                 "Darkfield imaging from ScatteredVolume is a very rough "
@@ -2391,7 +2391,7 @@ class Darkfield(Brightfield):
 
         return (value**2) * scattered.array
 
-    def downscale_image(self, image: np.ndarray, upscale):
+    def downscale_image(self, image: np.ndarray, upscale) -> np.ndarray:
         """Detector downscaling (energy conserving)"""
         if not np.any(np.array(upscale) != 1):
             return image
@@ -2505,7 +2505,7 @@ class IlluminationGradient(Feature):
         vmin: PropertyLike[float] = 0.0,
         vmax: PropertyLike[float] = np.inf,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the IlluminationGradient class.
 
         Parameters
@@ -2761,7 +2761,7 @@ class NonOverlapping(Feature):
         max_attempts: int = 5,
         max_iters: int = 100,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the NonOverlapping feature.
 
         Ensures that volumes are placed **non-overlapping** by iteratively
@@ -3430,7 +3430,7 @@ class SampleToMasks(Feature):
             str | Callable | list[str | Callable]
         ] = "add",
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the SampleToMasks feature.
 
         Parameters
