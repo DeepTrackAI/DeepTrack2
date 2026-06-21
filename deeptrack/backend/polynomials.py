@@ -60,7 +60,7 @@ def _array_namespace(x):
         return None
 
 
-def _ricbesj_array_api(l: int | float, x, namespace=None):
+def _ricbesj_array_api(l: int | float, x, namespace=None) -> np.ndarray:
     """Array-API Riccati-Bessel polynomial of the first kind."""
 
     l = _integer_order(l)
@@ -78,7 +78,7 @@ def _ricbesj_array_api(l: int | float, x, namespace=None):
     return current
 
 
-def _dricbesj_array_api(l: int | float, x, namespace=None):
+def _dricbesj_array_api(l: int | float, x, namespace=None) -> np.ndarray:
     """Array-API derivative of ricbesj."""
 
     l = _integer_order(l)
@@ -92,7 +92,7 @@ def _dricbesj_array_api(l: int | float, x, namespace=None):
     )
 
 
-def _ricbesy_array_api(l: int | float, x, namespace=None):
+def _ricbesy_array_api(l: int | float, x, namespace=None) -> np.ndarray:
     """Array-API Riccati-Bessel polynomial of the second kind."""
 
     l = _integer_order(l)
@@ -110,7 +110,7 @@ def _ricbesy_array_api(l: int | float, x, namespace=None):
     return current
 
 
-def _dricbesy_array_api(l: int | float, x, namespace=None):
+def _dricbesy_array_api(l: int | float, x, namespace=None) -> np.ndarray:
     """Array-API derivative of ricbesy."""
 
     l = _integer_order(l)

@@ -220,7 +220,7 @@ class DeepTrackDataObject:
     _data: Any
     _valid: bool
 
-    def __init__(self: DeepTrackDataObject):
+    def __init__(self: DeepTrackDataObject) -> None:
         """Initialize the container without data.
 
         Initializes `_data` to `None` and `_valid` to `False`.
@@ -233,7 +233,7 @@ class DeepTrackDataObject:
     def store(
         self: DeepTrackDataObject,
         data: Any,
-    ):
+    ) -> None:
         """Store data and mark it as valid.
 
         Parameters
@@ -270,12 +270,12 @@ class DeepTrackDataObject:
 
         return self._valid
 
-    def invalidate(self: DeepTrackDataObject):
+    def invalidate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as invalid."""
 
         self._valid = False
 
-    def validate(self: DeepTrackDataObject):
+    def validate(self: DeepTrackDataObject) -> None:
         """Mark the stored data as valid."""
 
         self._valid = True
@@ -530,7 +530,7 @@ class DeepTrackDataDict:
     def invalidate(
         self: DeepTrackDataDict,
         _ID: tuple[int, ...] = (),
-    ):
+    ) -> None:
         """Mark stored data objects as invalid.
 
         Parameters
@@ -555,7 +555,7 @@ class DeepTrackDataDict:
     def validate(
         self: DeepTrackDataDict,
         _ID: tuple[int, ...] = (),
-    ):
+    ) -> None:
         """Mark stored data objects as valid.
 
         Parameters
@@ -632,7 +632,7 @@ class DeepTrackDataDict:
     def create_index(
         self: DeepTrackDataDict,
         _ID: tuple[int, ...] = (),
-    ):
+    ) -> None:
         """Create a new data entry for the given _ID if not already existing.
 
         Each newly created index is associated with a new
@@ -1222,7 +1222,7 @@ class DeepTrackNode:
     def action(
         self: DeepTrackNode,
         _action: Callable[..., Any],
-    ):
+    ) -> None:
         """Set the action used to compute this node's value.
 
         Parameters
@@ -1242,7 +1242,7 @@ class DeepTrackNode:
         action: Callable[..., Any] | Any = None,
         node_name: str | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize a new DeepTrackNode.
 
         Parameters
@@ -1558,7 +1558,7 @@ class DeepTrackNode:
 
         return self
 
-    def print_children_tree(self: DeepTrackNode, indent: int = 0):
+    def print_children_tree(self: DeepTrackNode, indent: int = 0) -> None:
         """Print a tree of all child nodes (recursively) for debugging.
 
         Parameters
@@ -1629,7 +1629,7 @@ class DeepTrackNode:
         for child in self._children:
             yield from child.old_recurse_children(memory=memory)
 
-    def print_dependencies_tree(self: DeepTrackNode, indent: int = 0):
+    def print_dependencies_tree(self: DeepTrackNode, indent: int = 0) -> None:
         """Print a tree of all parent nodes (recursively) for debugging.
 
         Parameters
