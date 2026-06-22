@@ -54,7 +54,7 @@ from .polynomials import (
 )
 
 
-def _iter_arrays(*values) -> np.ndarray:
+def _iter_arrays(*values: np.ndarray) -> np.ndarray:
     """Yield array API objects from values, including nested sequences."""
 
     for value in values:
@@ -64,13 +64,13 @@ def _iter_arrays(*values) -> np.ndarray:
             yield from _iter_arrays(*value)
 
 
-def _first_array(*values) -> np.ndarray | None:
+def _first_array(*values: np.ndarray) -> np.ndarray | None:
     """Return the first array API object in values, if any."""
 
     return next(_iter_arrays(*values), None)
 
 
-def _complex_dtype(*values) -> np.dtype:
+def _complex_dtype(*values: np.ndarray) -> np.dtype:
     """Return the complex dtype to use for the current xp backend."""
 
     for value in _iter_arrays(*values):
@@ -80,7 +80,11 @@ def _complex_dtype(*values) -> np.dtype:
     return xp.get_complex_dtype()
 
 
-def _asarray(value, dtype=None, reference=None) -> np.ndarray:
+def _asarray(
+    value: np.ndarray, 
+    dtype: np.dtype | None=None, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Convert value with xp without detaching existing arrays."""
 
     is_current_backend_array = (
@@ -111,7 +115,11 @@ def _asarray(value, dtype=None, reference=None) -> np.ndarray:
         return xp.asarray(value, **kwargs)
 
 
-def _asarray_vector(value, dtype=None, reference=None) -> np.ndarray:
+def _asarray_vector(
+    value: np.ndarray, 
+    dtype: np.dtype | None=None, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Convert a tensor or sequence of scalars to a one-dimensional array."""
 
     if apc.is_array_api_obj(value):
@@ -125,7 +133,11 @@ def _asarray_vector(value, dtype=None, reference=None) -> np.ndarray:
     )
 
 
-def _zeros(shape, dtype, reference=None) -> np.ndarray:
+def _zeros(
+    shape: tuple[int, ...], 
+    dtype: np.dtype, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Create a zero array on the same backend as reference."""
 
     kwargs = {"dtype": dtype}
