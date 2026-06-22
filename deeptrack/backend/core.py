@@ -484,7 +484,7 @@ class DeepTrackDataDict:
     _keylength: int | None
     _dict: dict[tuple[int, ...], DeepTrackDataObject]
 
-    def __init__(self: DeepTrackDataDict):
+    def __init__(self: DeepTrackDataDict) -> None:
         """Initialize the data dictionary.
 
         Initializes `keylength` to `None` and `dict` to an empty dictionary,
@@ -957,11 +957,11 @@ class DeepTrackNode:
         Set a value for the given `_ID`. If the new value differs from the
         current value, the node is invalidated to ensure dependencies are
         recomputed.
-    `print_children_tree(indent)`
+    `print_children_tree(indent) -> None`
         Print a tree of all child nodes (recursively) for inspection.
     `recurse_children() -> set[DeepTrackNode]`
         Return all child nodes in the dependency tree rooted at this node.
-    `print_dependencies_tree(indent)`
+    `print_dependencies_tree(indent) -> None`
         Print a tree of all parent nodes (recursively) for inspection.
     `recurse_dependencies() -> Iterator[DeepTrackNode]`
         Yield all nodes that this node depends on, traversing dependencies.
