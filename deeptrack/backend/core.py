@@ -158,15 +158,15 @@ class DeepTrackDataObject:
 
     Methods
     -------
-    `store(data)`
+    `store(data) -> None`
         Store data in the container and mark it as valid.
     `current_value() -> Any`
         Return the currently stored data.
     `is_valid() -> bool`
         Return whether the stored data is valid.
-    `invalidate()`
+    `invalidate() -> None`
         Mark the data as invalid.
-    `validate()`
+    `validate() -> None`
         Mark the data as valid.
     `__repr__() -> str`
         Return the string representation of the object.
@@ -331,11 +331,11 @@ class DeepTrackDataDict:
 
     Methods
     -------
-    `create_index(_ID)`
+    `create_index(_ID) -> None`
         Create an entry for the given `_ID` if it does not exist.
-    `invalidate(_ID)`
+    `invalidate(_ID) -> None`
         Mark stored data objects as invalid.
-    `validate(_ID)`
+    `validate(_ID) -> None`
         Mark stored data objects as valid.
     `valid_index(_ID) -> bool`
         Check if the given `_ID` is valid for the current configuration.
