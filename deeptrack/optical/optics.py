@@ -184,7 +184,7 @@ class Microscope(StructuralFeature):
 
     Methods
     -------
-    `get(image: np.ndarray or None, **kwargs: Any) -> np.ndarray`
+    `get(image, **kwargs) -> np.ndarray | torch.Tensor`
         Simulates the imaging process using the defined optical system and
         returns the resulting image.
 
@@ -1360,7 +1360,7 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume, limits, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, **kwargs) -> np.ndarray | torch.Tensor`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1851,7 +1851,7 @@ class Brightfield(Optics):
 
     Methods
     -------
-    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, fields, ...) -> np.ndarray | torch.Tensor`
         Simulates imaging with brightfield microscopy.
 
 
@@ -2307,7 +2307,7 @@ class Darkfield(Brightfield):
 
     Methods
     -------
-    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, fields, ...) -> np.ndarray | torch.Tensor`
         Retrieves the darkfield image of the illuminated volume.
 
     Examples
@@ -2485,7 +2485,7 @@ class IlluminationGradient(Feature):
 
     Methods
     -------
-    `get(image, gradient, constant, vmin, vmax, **kwargs) -> array`
+    `get(image, gradient, constant, ...) -> np.ndarray | torch.Tensor`
         Applies the gradient and constant offset to the amplitude of the field.
 
     Examples
@@ -2631,13 +2631,13 @@ class NonOverlapping(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Always `False` for `NonOverlapping`, indicating that this feature’s
+        Always `False` for `NonOverlapping`, indicating that this feature's
         `.get()` method processes the entire input at once even if it is a
         list, rather than distributing calls for each item of the list.N
 
     Methods
     -------
-    `get(*_, min_distance, max_attempts, **kwargs) -> array`
+    `get(*_, min_distance, max_attempts, ...) -> np.ndarray | torch.Tensor`
         Generate a list of non-overlapping 3D volumes.
     `_check_non_overlapping(list_of_volumes) -> bool`
         Check if all volumes in the list are non-overlapping.
@@ -2645,11 +2645,11 @@ class NonOverlapping(Feature):
         Check if two bounding cubes are non-overlapping.
     `_get_overlapping_cube(...) -> list[int]`
         Get the overlapping cube between two bounding cubes.
-    `_get_overlapping_volume(...) -> array`
+    `_get_overlapping_volume(...) -> np.ndarray | torch.Tensor`
         Get the overlapping volume between a volume and a bounding cube.
     `_check_volumes_non_overlapping(...) -> bool`
         Check if two volumes are non-overlapping.
-    `_resample_volume_position(volume) -> np.ndarray`
+    `_resample_volume_position(volume) -> np.ndarray | torch.Tensor`
         Resample the position of a volume to avoid overlap.
 
     Notes
@@ -3352,14 +3352,14 @@ class SampleToMasks(Feature):
 
     Methods
     -------
-    `get(image, transformation_function, **kwargs) -> np.ndarray`
+    `get(image, transformation_function, ...) -> np.ndarray | torch.Tensor`
         Applies the transformation function to the input image.
-    `_process_and_get(images, **kwargs) -> np.ndarray`
+    `_process_and_get(images, ...) -> np.ndarray | torch.Tensor`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
     -------
-    np.ndarray
+    np.ndarray | torch.Tensor
         The final mask image with the specified number of layers.
 
     Raises

@@ -485,7 +485,7 @@ class Poisson(Noise):
 
     Methods
     -------
-    `get(image, snr, background, max_val, **kwargs) -> array | tensor`
+    `get(image, snr, background, max_val, ...) -> np.ndarray | torch.Tensor`
         Returns the input image with Poisson noise added.
 
     Examples
