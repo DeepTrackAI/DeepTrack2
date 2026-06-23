@@ -24,42 +24,32 @@ Key Features
     Enables scaling, normalization, and modulation of phase and amplitude to
     preserve intensity distribution and enhance wavefront reconstruction.
 
+- **Backend Compatibility**
+
+    `get_propagation_matrix` supports both NumPy and PyTorch arrays via
+    `deeptrack.backend.xp`. The `Rescale`, `FourierTransform`,
+    `InverseFourierTransform`, and `FourierTransformTransformation` features
+    currently operate on NumPy arrays only.
+
 Module Structure
 ----------------
 Classes:
 
-- `Rescale`:
-
-    Rescales an optical field by subtracting the real part of the
+- `Rescale`: Rescales an optical field by subtracting the real part of the
     field before multiplication.
 
-- `FourierTransform`:
+- `FourierTransform`: Creates matrices for propagating an optical field.
 
-    Creates matrices for propagating an optical field.
+- `InverseFourierTransform`: Creates matrices for propagating an optical field.
 
-- `InverseFourierTransform`:
-
-    Creates matrices for propagating an optical field.
-
-- `FourierTransformTransformation`:
-
-    Applies a power of the forward or inverse
+- `FourierTransformTransformation`: Applies a power of the forward or inverse
     propagation matrix to an optical field.
 
 Functions:
 
-- `get_propagation_matrix`
-
-    def get_propagation_matrix(
-        shape: tuple[int, int],
-        to_z: float,
-        pixel_size: float,
-        wavelength: float,
-        dx: float = 0,
-        dy: float = 0
-    ) -> np.ndarray
-
-    Computes the propagation matrix.
+- `get_propagation_matrix(shape, to_z, pixel_size, wavelength, dx=0, dy=0)`
+    Computes the propagation matrix for simulating the propagation of an 
+    optical field.
 
 
 Examples
@@ -189,7 +179,7 @@ class Rescale(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray, rescale: float, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image, rescale, **kwargs) -> np.ndarray`
         Rescales the image while preserving phase information.
 
     Examples
@@ -201,7 +191,24 @@ class Rescale(Feature):
 
     """
 
-    def __init__(self, rescale=1, **kwargs):
+    def __init__(
+        self: Rescale,
+        rescale: float = 1,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the Rescale feature.
+
+        Parameters
+        ----------
+        rescale: float, optional
+            The scaling factor applied to both real and imaginary
+            components (default: 1).
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature 
+            class.
+
+        """
+
         super().__init__(rescale=rescale, **kwargs)
 
     def get(
@@ -250,7 +257,7 @@ class FourierTransform(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image, padding, **kwargs) -> np.ndarray`
         Computes the 2D Fourier transform of the input image.
 
     Returns
@@ -266,7 +273,20 @@ class FourierTransform(Feature):
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self: FourierTransform,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the FourierTransform feature.
+
+        Parameters
+        ----------
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature 
+            class, such as `padding`.
+
+        """
+
         super().__init__(**kwargs)
 
     def get(
@@ -282,8 +302,10 @@ class FourierTransform(Feature):
         image: np.ndarray
             The image to transform.
         padding: int, optional
-            Number of pixels to pad symmetrically around the image (default is 32).
+            Number of pixels to pad symmetrically around the image (default is 
+            32).
         **kwargs: Any
+            Additional keyword arguments.
 
         Returns
         -------
@@ -301,46 +323,50 @@ class FourierTransform(Feature):
 
 
 class InverseFourierTransform(Feature):
-    """Applies a power of the forward or inverse propagation matrix to an
-    optical field.
+    """Computes the inverse Fourier transform of an optical field and removes
+    padding.
 
-    This operation simulates multiple propagation steps in Fourier optics.
-    Negative values of `i` apply the inverse transformation.
+    The inverse Fourier transform converts a frequency-domain optical field
+    back into the spatial domain, undoing the symmetric padding applied by
+    `FourierTransform`.
 
     Parameters
     ----------
-    Tz: np.ndarray
-        Forward propagation matrix.
-    Tzinv: np.ndarray
-        Inverse propagation matrix.
-    i: int
-        Power of the propagation matrix to apply. Negative values apply the
-        inverse.
+    padding: int, optional
+        Number of pixels to remove symmetrically from each side after the
+        inverse transform (default: 32).
 
     Methods
     -------
-    `get(image: np.ndarray, padding: int, **kwargs: dict[str, Any]) -> np.ndarray`
-        Applies the power of the propagation matrix to the image.
-
-    Returns
-    -------
-    np.ndarray
-        The transformed image.
+    `get(image, padding, **kwargs) -> np.ndarray`
+        Computes the inverse Fourier transform and removes padding.
 
     Examples
     --------
     >>> import deeptrack as dt
     >>> import numpy as np
-    >>> Tz = np.random.rand(128, 128) + 1j * np.random.rand(128, 128)
-    >>> Tzinv = 1 / Tz
     >>> field = np.random.rand(128, 128, 2)
-    >>> transformed_field = dt.holography.FourierTransformTransformation(
-    >>>     Tz, Tzinv, i=2,
-    >>> )(field)
+    >>> ft_op = dt.holography.FourierTransform()
+    >>> transformed_field = ft_op(field)
+    >>> ift_op = dt.holography.InverseFourierTransform()
+    >>> reconstructed_field = ift_op(transformed_field)
 
     """
 
-    def __init__(self, **kwargs):
+    def __init__(
+        self: InverseFourierTransform,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the InverseFourierTransform feature.
+
+        Parameters
+        ----------
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature class,
+            such as `padding`.
+
+        """
+
         super().__init__(**kwargs)
 
     def get(
@@ -359,6 +385,7 @@ class InverseFourierTransform(Feature):
             Number of pixels removed symmetrically after inverse transformation
             (default is 32).
         **kwargs: Any
+            Additional keyword arguments.
 
         Returns
         -------
@@ -382,9 +409,9 @@ class FourierTransformTransformation(Feature):
 
     Parameters
     ----------
-    Tz: ndarray
+    Tz: np.ndarray
         Forward propagation matrix.
-    Tzinv: ndarray
+    Tzinv: np.ndarray
         Inverse propagation matrix.
     i: int
         Power of the propagation matrix to apply. Negative values apply the
@@ -392,7 +419,7 @@ class FourierTransformTransformation(Feature):
 
     Methods
     -------
-    `get(image: np.ndarray, Tz: np.ndarray, Tzinv: np.ndarray, i: int, **kwargs: dict[str, Any]) -> np.ndarray`
+    `get(image, Tz, Tzinv, i, **kwargs) -> np.ndarray`
         Applies the power of the propagation matrix to the image.
 
     Returns
@@ -413,7 +440,29 @@ class FourierTransformTransformation(Feature):
 
     """
 
-    def __init__(self, Tz, Tzinv, i, **kwargs):
+    def __init__(
+        self: FourierTransformTransformation,
+        Tz: np.ndarray,
+        Tzinv: np.ndarray,
+        i: int,
+        **kwargs: Any,
+    ) -> None:
+        """Initializes the FourierTransformTransformation feature.
+
+        Parameters
+        ----------
+        Tz: np.ndarray
+            Forward propagation matrix.
+        Tzinv: np.ndarray
+            Inverse propagation matrix.
+        i: int
+            Power of the propagation matrix to apply. Negative values apply
+            the inverse.
+        **kwargs: Any
+            Additional keyword arguments passed to the parent Feature class.
+
+        """
+
         super().__init__(Tz=Tz, Tzinv=Tzinv, i=i, **kwargs)
 
     def get(

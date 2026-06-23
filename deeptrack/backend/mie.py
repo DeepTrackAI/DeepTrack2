@@ -4,6 +4,12 @@ This module provides functions to perform Mie scattering calculations,
 including computation of spherical harmonics coefficients and related
 operations.
 
+Backend Compatibility
+----------------------
+All functions in this module support both NumPy and PyTorch arrays via
+`deeptrack.backend.xp`, dispatching automatically based on the active
+backend.
+
 Module Structure
 -----------------
 Functions:
@@ -12,8 +18,8 @@ Functions:
 - `stratified_coefficients`: Coefficients for stratified spherical harmonics.
 - `harmonics`: Evaluates spherical harmonics of the Mie field.
 
-Example
--------
+Examples
+--------
 Define the parameters of the particle and the Mie scattering:
 
 >>> relative_refract_index = 1.5 + 0.01j
@@ -36,7 +42,6 @@ from __future__ import annotations
 
 import array_api_compat as apc
 import numpy as np
-from numpy.typing import NDArray
 
 from ._config import config, xp
 from .polynomials import (
@@ -49,7 +54,7 @@ from .polynomials import (
 )
 
 
-def _iter_arrays(*values):
+def _iter_arrays(*values: np.ndarray) -> np.ndarray:
     """Yield array API objects from values, including nested sequences."""
 
     for value in values:
@@ -59,13 +64,13 @@ def _iter_arrays(*values):
             yield from _iter_arrays(*value)
 
 
-def _first_array(*values):
+def _first_array(*values: np.ndarray) -> np.ndarray | None:
     """Return the first array API object in values, if any."""
 
     return next(_iter_arrays(*values), None)
 
 
-def _complex_dtype(*values):
+def _complex_dtype(*values: np.ndarray) -> np.dtype:
     """Return the complex dtype to use for the current xp backend."""
 
     for value in _iter_arrays(*values):
@@ -75,7 +80,11 @@ def _complex_dtype(*values):
     return xp.get_complex_dtype()
 
 
-def _asarray(value, dtype=None, reference=None):
+def _asarray(
+    value: np.ndarray, 
+    dtype: np.dtype | None=None, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Convert value with xp without detaching existing arrays."""
 
     is_current_backend_array = (
@@ -106,7 +115,11 @@ def _asarray(value, dtype=None, reference=None):
         return xp.asarray(value, **kwargs)
 
 
-def _asarray_vector(value, dtype=None, reference=None):
+def _asarray_vector(
+    value: np.ndarray, 
+    dtype: np.dtype | None=None, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Convert a tensor or sequence of scalars to a one-dimensional array."""
 
     if apc.is_array_api_obj(value):
@@ -120,7 +133,11 @@ def _asarray_vector(value, dtype=None, reference=None):
     )
 
 
-def _zeros(shape, dtype, reference=None):
+def _zeros(
+    shape: tuple[int, ...], 
+    dtype: np.dtype, 
+    reference: np.ndarray | None=None,
+) -> np.ndarray:
     """Create a zero array on the same backend as reference."""
 
     kwargs = {"dtype": dtype}
@@ -151,16 +168,17 @@ def coefficients(
 
     Parameters
     ----------
-    m : float or complex
+    m: float | complex
         The relative refractive index of the particle n_particle / n_medium.
-    a : float
+    a: float
         The radius of the particle (> 0).
-    L : int
-        The maximum order of the spherical harmonics to be calculated.
+    L: int
+        The maximum order of the spherical harmonics to be calculated. If 0,
+        two empty arrays are returned.
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing two arrays of complex numbers, A and B, which
         are the Mie scattering coefficients up to (and including) order L.
 
@@ -207,21 +225,23 @@ def stratified_coefficients(
 
     Parameters
     ----------
-    m : List[float or complex]
+    m: list[complex]
         The relative refractive indices of the particle layers
         (n_particle / n_medium).
-    a : List[float]
+    a: list[float]
         The radii of the particle layers (> 0).
-    L : int
-        The maximum order of the spherical harmonics to be calculated.
+    L: int
+        The maximum order of the spherical harmonics to be calculated. If 0,
+        two empty arrays are returned.
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing arrays of coefficients an and bn, up to (and
         including) order L.
 
     """
+
     dtype = _complex_dtype(m, a)
     reference = _first_array(m, a)
     m = _asarray_vector(m, dtype=dtype, reference=reference)
@@ -299,16 +319,16 @@ def stratified_coefficients(
 
 
 def harmonics(
-    x: NDArray,
+    x: np.ndarray,
     L: int,
-) -> tuple[NDArray, NDArray]:
+) -> tuple[np.ndarray, np.ndarray]:
     """Calculate the spherical harmonics of the Mie field.
 
     The harmonics are calculated up to order L using an iterative method.
 
     Parameters
     ----------
-    x : np.ndarray
+    x: np.ndarray
         An array representing the cosine of the polar angle (theta) for each
         evaluation point relative to the scattering particle's center
         (the origin).
@@ -322,12 +342,14 @@ def harmonics(
         z-axis), and `x = 0` corresponds to theta = 90° (point perpendicular to
         the z-axis).
 
-    L : int
-        The order up to which to evaluate the harmonics.
+    L: int
+        The order up to which to evaluate the harmonics. If 0, two empty
+        arrays of shape (0, *x.shape) are returned.
+
 
     Returns
     -------
-    Tuple[np.ndarray, np.ndarray]
+    tuple[np.ndarray, np.ndarray]
         A tuple containing arrays of harmonics PI and TAU of
         shape (L, *x.shape).
 

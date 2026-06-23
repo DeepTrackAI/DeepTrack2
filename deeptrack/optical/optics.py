@@ -184,7 +184,7 @@ class Microscope(StructuralFeature):
 
     Methods
     -------
-    `get(image: np.ndarray or None, **kwargs: Any) -> np.ndarray`
+    `get(image, **kwargs) -> np.ndarray | torch.Tensor`
         Simulates the imaging process using the defined optical system and
         returns the resulting image.
 
@@ -216,7 +216,7 @@ class Microscope(StructuralFeature):
         sample: Feature,
         objective: Optics,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the `Microscope` instance.
 
         Parameters
@@ -243,11 +243,11 @@ class Microscope(StructuralFeature):
         self._sample = self.add_feature(sample)
         self._objective = self.add_feature(objective)
 
-    def _validate_input(self, scattered):
+    def _validate_input(self, scattered) -> None:
         if hasattr(self._objective, "validate_input"):
             self._objective.validate_input(scattered)
 
-    def _extract_contrast_volume(self, scattered):
+    def _extract_contrast_volume(self, scattered) -> np.ndarray:
         if hasattr(self._objective, "extract_contrast_volume"):
             return self._objective.extract_contrast_volume(
                 scattered,
@@ -255,7 +255,7 @@ class Microscope(StructuralFeature):
             )
         return scattered.array
 
-    def _downscale_image(self, image, upscale):
+    def _downscale_image(self, image, upscale) -> np.ndarray:
         if hasattr(self._objective, "downscale_image"):
             return self._objective.downscale_image(image, upscale)
 
@@ -577,7 +577,7 @@ class Optics(Feature):
         illumination: Feature | None = None,
         upscale: PropertyLike[int | tuple[int, int, int]] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the `Optics` instance.
 
         Parameters
@@ -1109,7 +1109,7 @@ class Optics(Feature):
             if isinstance(pupil_feat, Feature):
                 pupil_function = pupil_feat(pupil_function)
 
-            # If ndarray: multiply (will break differentiability unless you
+            # If np.ndarray: multiply (will break differentiability unless you
             # move it to torch)
             elif isinstance(pupil_feat, np.ndarray):
                 pf = torch.as_tensor(
@@ -1360,7 +1360,7 @@ class Fluorescence(Optics):
 
     Methods
     -------
-    `get(illuminated_volume, limits, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, **kwargs) -> np.ndarray | torch.Tensor`
         Simulates the imaging process using a fluorescence microscope.
 
     Examples
@@ -1377,7 +1377,7 @@ class Fluorescence(Optics):
 
     """
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         """Semantic validation for fluorescence microscopy."""
 
         # Fluorescence cannot operate on coherent fields
@@ -1851,7 +1851,7 @@ class Brightfield(Optics):
 
     Methods
     -------
-    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, fields, ...) -> np.ndarray | torch.Tensor`
         Simulates imaging with brightfield microscopy.
 
 
@@ -1871,7 +1871,7 @@ class Brightfield(Optics):
         working_distance=(u.meter, u.meter),
     )
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         """Semantic validation for brightfield microscopy."""
 
         if isinstance(scattered, ScatteredVolume):
@@ -2227,10 +2227,12 @@ class ISCAT(Brightfield):
             reference field.
         input_polarization: float | str | None
             Forwarded to the scatterer (e.g. `MieSphere`), which is where the
-            polarization projection is actually computed. Default `None`
-            (isotropic illumination, no preferred axis), the standard ISCAT
-            configuration. Override here to use a fixed linear polarization
-            instead.
+            polarization projection is actually computed. Default `"circular"`
+            (physically circularly polarized illumination, no preferred axis),
+            the standard ISCAT configuration. Override here for a fixed linear
+            polarization, or use `None` for genuinely unpolarized illumination
+            (mathematically identical here, but a different physical 
+            description).
         output_polarization: float | None
             Forwarded to the scatterer. Default `None` (no analyzer), the
             standard ISCAT configuration. Override here for a fixed linear
@@ -2305,7 +2307,7 @@ class Darkfield(Brightfield):
 
     Methods
     -------
-    `get(illuminated_volume, limits, fields, **kwargs) -> np.ndarray`
+    `get(illuminated_volume, limits, fields, ...) -> np.ndarray | torch.Tensor`
         Retrieves the darkfield image of the illuminated volume.
 
     Examples
@@ -2338,7 +2340,7 @@ class Darkfield(Brightfield):
 
         super().__init__(illumination_angle=illumination_angle, **kwargs)
 
-    def validate_input(self, scattered):
+    def validate_input(self, scattered) -> None:
         if isinstance(scattered, ScatteredVolume):
             warnings.warn(
                 "Darkfield imaging from ScatteredVolume is a very rough "
@@ -2389,7 +2391,7 @@ class Darkfield(Brightfield):
 
         return (value**2) * scattered.array
 
-    def downscale_image(self, image: np.ndarray, upscale):
+    def downscale_image(self, image: np.ndarray, upscale) -> np.ndarray:
         """Detector downscaling (energy conserving)"""
         if not np.any(np.array(upscale) != 1):
             return image
@@ -2483,7 +2485,7 @@ class IlluminationGradient(Feature):
 
     Methods
     -------
-    `get(image, gradient, constant, vmin, vmax, **kwargs) -> array`
+    `get(image, gradient, constant, ...) -> np.ndarray | torch.Tensor`
         Applies the gradient and constant offset to the amplitude of the field.
 
     Examples
@@ -2629,13 +2631,13 @@ class NonOverlapping(Feature):
     Attributes
     ----------
     __distributed__: bool
-        Always `False` for `NonOverlapping`, indicating that this feature’s
+        Always `False` for `NonOverlapping`, indicating that this feature's
         `.get()` method processes the entire input at once even if it is a
         list, rather than distributing calls for each item of the list.N
 
     Methods
     -------
-    `get(*_, min_distance, max_attempts, **kwargs) -> array`
+    `get(*_, min_distance, max_attempts, ...) -> np.ndarray | torch.Tensor`
         Generate a list of non-overlapping 3D volumes.
     `_check_non_overlapping(list_of_volumes) -> bool`
         Check if all volumes in the list are non-overlapping.
@@ -2643,11 +2645,11 @@ class NonOverlapping(Feature):
         Check if two bounding cubes are non-overlapping.
     `_get_overlapping_cube(...) -> list[int]`
         Get the overlapping cube between two bounding cubes.
-    `_get_overlapping_volume(...) -> array`
+    `_get_overlapping_volume(...) -> np.ndarray | torch.Tensor`
         Get the overlapping volume between a volume and a bounding cube.
     `_check_volumes_non_overlapping(...) -> bool`
         Check if two volumes are non-overlapping.
-    `_resample_volume_position(volume) -> np.ndarray`
+    `_resample_volume_position(volume) -> np.ndarray | torch.Tensor`
         Resample the position of a volume to avoid overlap.
 
     Notes
@@ -2759,7 +2761,7 @@ class NonOverlapping(Feature):
         max_attempts: int = 5,
         max_iters: int = 100,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the NonOverlapping feature.
 
         Ensures that volumes are placed **non-overlapping** by iteratively
@@ -3350,14 +3352,14 @@ class SampleToMasks(Feature):
 
     Methods
     -------
-    `get(image, transformation_function, **kwargs) -> np.ndarray`
+    `get(image, transformation_function, ...) -> np.ndarray | torch.Tensor`
         Applies the transformation function to the input image.
-    `_process_and_get(images, **kwargs) -> np.ndarray`
+    `_process_and_get(images, ...) -> np.ndarray | torch.Tensor`
         Processes a list of images and generates a multi-layer mask.
 
     Returns
     -------
-    np.ndarray
+    np.ndarray | torch.Tensor
         The final mask image with the specified number of layers.
 
     Raises
@@ -3428,7 +3430,7 @@ class SampleToMasks(Feature):
             str | Callable | list[str | Callable]
         ] = "add",
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the SampleToMasks feature.
 
         Parameters

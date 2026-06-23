@@ -179,7 +179,7 @@ class Augmentation(Feature):
         self: Augmentation,
         time_consistent: bool = False,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Augmentation feature.
 
         This constructor initializes the augmentation feature with the
@@ -457,7 +457,7 @@ class Reuse(Feature):
         uses: PropertyLike[int] = 2,
         storage: PropertyLike[int] = 1,
         **kwargs,
-    ):
+    ) -> None:
         super().__init__(uses=uses, storage=storage, **kwargs)
         self.feature = self.add_feature(feature)
         self.counter = 0
@@ -553,7 +553,7 @@ class FlipLR(Augmentation):
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the FlipLR augmentation.
 
         This constructor initializes the `FlipLR` augmentation with the
@@ -706,7 +706,7 @@ class FlipUD(Augmentation):
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the FlipUD augmentation.
 
         This constructor initializes the `FlipUD` augmentation with the
@@ -861,7 +861,7 @@ class FlipDiagonal(Augmentation):
         p: PropertyLike[float] = 0.5,
         augment: PropertyLike[bool] = None,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the FlipDiagonal augmentation.
 
         This constructor initializes the `FlipDiagonal` augmentation with the
@@ -1049,7 +1049,7 @@ class Affine(Augmentation):
         cval: PropertyLike[float] = 0.0,
         mode: PropertyLike[str] = "reflect",
         **kwargs,
-    ):
+    ) -> None:
 
         if translate is None:
             translate = translate_px
@@ -1532,7 +1532,7 @@ class ElasticTransformation(Augmentation):
         cval: PropertyLike[float] = 0,
         mode: PropertyLike[str] = "constant",
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the elastic transformation.
 
         The parameters control the strength (`alpha`) and smoothness (`sigma`)
@@ -1878,7 +1878,7 @@ class Crop(Augmentation):
         crop_mode: PropertyLike[str] = "retain",
         corner: PropertyLike[str] = "random",
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the cropping augmentation.
 
         The crop size and placement can be fixed, random, or computed
@@ -2124,7 +2124,7 @@ class CropToMultiplesOf(Crop):
         multiple: PropertyLike[int | tuple[int | None, ...]] = 1,
         corner: PropertyLike[str] = "random",
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the CropToMultiplesOf augmentation.
 
         The image is cropped so that each dimension becomes a multiple of the
@@ -2222,7 +2222,7 @@ class CropTight(Augmentation):
         self: CropTight,
         eps: PropertyLike[float] = 1e-10,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the tight cropping augmentation.
 
         Parameters
@@ -2477,7 +2477,7 @@ class Pad(Augmentation):
         mode: PropertyLike[str] = "constant",
         cval: PropertyLike[float] = 0,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the padding augmentation.
 
         Parameters
@@ -2713,7 +2713,7 @@ class PadToMultiplesOf(Pad):
         self: PadToMultiplesOf,
         multiple: PropertyLike[int | tuple[int | None, ...]] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the PadToMultiplesOf augmentation.
 
         The image is padded symmetrically along each axis so that its final

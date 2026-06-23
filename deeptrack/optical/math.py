@@ -216,7 +216,7 @@ class Average(Feature):
         axis: PropertyLike[int] = 0,
         features: list[Feature] | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for averaging input features.
 
         Parameters
@@ -323,7 +323,7 @@ class Clip(Feature):
         min: PropertyLike[float] = -xp.inf,
         max: PropertyLike[float] = +xp.inf,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the clipping range.
 
         Parameters
@@ -431,7 +431,7 @@ class NormalizeMinMax(Feature):
         featurewise: bool = True,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the min-max normalization parameters.
 
         Parameters
@@ -578,7 +578,7 @@ class NormalizeStandard(Feature):
         featurewise: PropertyLike[bool] = True,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for standardization.
 
         This constructor initializes the parameters for standardization.
@@ -848,7 +848,7 @@ class NormalizeQuantile(Feature):
         featurewise: PropertyLike[bool] = True,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for quantile normalization.
 
         This constructor initializes the parameters for quantile normalization.
@@ -878,7 +878,7 @@ class NormalizeQuantile(Feature):
         featurewise: bool,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> np.ndarray | torch.Tensor:
         backend = self.get_backend()
 
         if backend == "torch":
@@ -1218,7 +1218,7 @@ class Blur(Feature):
 
         return result
 
-    def _get_numpy(self, image: np.ndarray, **kwargs):
+    def _get_numpy(self, image: np.ndarray, **kwargs) -> np.ndarray:
         raise NotImplementedError
 
     def _get_torch(self, image: torch.Tensor, **kwargs):
@@ -1460,7 +1460,7 @@ class GaussianBlur(Blur):
         sigma: PropertyLike[float] = 2,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for Gaussian blurring.
 
         Parameters
@@ -1695,7 +1695,7 @@ class MedianBlur(Blur):
         ksize: PropertyLike[int] = 3,
         channel_axis: int | None = -1,
         **kwargs: Any,
-    ):
+    ) -> None:
         if isinstance(ksize, int) and ksize % 2 == 0:
             raise ValueError("MedianBlur requires an odd kernel size.")
         self.channel_axis = channel_axis
@@ -1871,7 +1871,7 @@ class Pool(Feature):
         ksize: PropertyLike[int | tuple[int, int] | tuple[int, int, int]] = 2,
         channel_axis: int | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for pooling operations.
 
         Parameters
@@ -2080,10 +2080,10 @@ class Pool(Feature):
         else:
             raise NotImplementedError("Unsupported dimensionality")
 
-    def _get_numpy(self, image: np.ndarray, **kwargs):
+    def _get_numpy(self, image: np.ndarray, **kwargs) -> np.ndarray:
         raise NotImplementedError
 
-    def _get_torch(self, image: torch.Tensor, **kwargs):
+    def _get_torch(self, image: torch.Tensor, **kwargs) -> torch.Tensor:
         raise NotImplementedError
 
 
@@ -2808,7 +2808,7 @@ class MedianPooling(Pool):
         pool = self._get_pool_size(x, has_channels)
 
         # ---------- helper ----------
-        def _median_lastdim(x):
+        def _median_lastdim(x) -> torch.Tensor:
             vals, _ = torch.sort(x, dim=-1)
             n = vals.shape[-1]
             mid = n // 2
@@ -2919,7 +2919,7 @@ class Resize(Feature):
         dsize: PropertyLike[tuple[int, int]] = (256, 256),
         channel_axis: int | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the parameters for the Resize feature.
 
         Parameters
@@ -3194,7 +3194,7 @@ class BlurCV2(Feature):
         filter_function: Callable | str,
         mode: PropertyLike[str] = "reflect",
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the OpenCV-based blur feature.
 
         Parameters
@@ -3338,7 +3338,7 @@ class BilateralBlur(BlurCV2):
         sigma_color: PropertyLike[float] = 50,
         sigma_space: PropertyLike[float] = 50,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the bilateral blur feature.
 
         Parameters

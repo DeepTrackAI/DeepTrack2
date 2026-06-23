@@ -52,9 +52,8 @@ Key Features
 
 - **Backend Compatibility**
 
-    Geometry-based scatterers support both NumPy and PyTorch arrays.
-    Mie-based scatterers currently rely on NumPy implementations and
-    do not fully support PyTorch execution.
+    Both geometry-based and Mie-based scatterers support NumPy and PyTorch
+    arrays, with full backend dispatch via `deeptrack.backend.xp`.
 
 Module Structure
 ----------------
@@ -201,7 +200,7 @@ if TORCH_AVAILABLE:
     import torch
 
 
-def _asarray(value, dtype=None):
+def _asarray(value, dtype=None) -> np.ndarray | torch.Tensor:
     """Convert values through xp while preserving existing tensor gradients."""
 
     is_current_backend_array = (
@@ -219,7 +218,7 @@ def _asarray(value, dtype=None):
     return xp.asarray(value)
 
 
-def _asarray_vector(value, dtype=None):
+def _asarray_vector(value, dtype=None) -> np.ndarray | torch.Tensor:
     """Convert a vector-like value without detaching tensor elements."""
 
     if isinstance(value, (list, tuple)) and any(
@@ -338,7 +337,7 @@ class Scatterer(Feature):
         voxel_size: tuple | None = None,
         pixel_size: tuple | None = None,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the scatterer with the given properties."""
 
         upsample_axes = kwargs.pop("upsample_axes", None)
@@ -661,7 +660,7 @@ class PointParticle(VolumeScatterer):
     def __init__(
         self: PointParticle,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the point particle scatterer."""
 
         kwargs.pop("upsample", None)
@@ -878,7 +877,7 @@ class Sphere(VolumeScatterer):
         radius=(u.meter, u.meter),
     )
 
-    def __init__(self, radius: float = 1e-6, **kwargs):
+    def __init__(self, radius: float = 1e-6, **kwargs) -> None:
         """Initialize the sphere scatterer."""
 
         super().__init__(radius=radius, **kwargs)
@@ -992,7 +991,7 @@ class Ellipsoid(VolumeScatterer):
         rotation: float | tuple[float, float] | tuple[float, float, float] = 0,
         transpose: bool = False,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the ellipsoid scatterer."""
 
         super().__init__(
@@ -1270,7 +1269,7 @@ class MieScatterer(FieldScatterer):
         mode: str = "geometric",
         pupil: np.ndarray | None = None,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Mie scatterer.
 
         Parameters
@@ -2479,7 +2478,7 @@ class MieSphere(MieScatterer):
         radius: float = 1e-6,
         refractive_index: float = 1.45,
         **kwargs,
-    ):
+    ) -> None:
         """Initializes the MieSphere feature.
 
         Parameters
@@ -2671,7 +2670,7 @@ class MieStratifiedSphere(MieScatterer):
                     "monotonically increasing."
                 )
 
-            def inner(L: int):
+            def inner(L: int) -> np.ndarray | torch.Tensor:
                 return mie.stratified_coefficients(
                     _asarray_vector(
                         refractive_index,
@@ -2751,7 +2750,7 @@ class Incoherent(StructuralFeature):
         input_unpolarized: bool = True,
         output_unpolarized: bool = True,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initializes the Incoherent feature.
 
         Parameters

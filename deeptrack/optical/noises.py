@@ -218,7 +218,7 @@ class Background(Noise):
         self: Background,
         offset: PropertyLike[float],
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Background noise feature.
 
         Parameters
@@ -306,7 +306,7 @@ class Gaussian(Noise):
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the Gaussian noise feature.
 
         Parameters
@@ -408,7 +408,7 @@ class ComplexGaussian(Noise):
         mu: PropertyLike[float] = 0,
         sigma: PropertyLike[float] = 1,
         **kwargs: Any,
-    ):
+    ) -> None:
         """Initialize the complex Gaussian noise feature.
 
         Parameters
@@ -485,7 +485,7 @@ class Poisson(Noise):
 
     Methods
     -------
-    `get(image, snr, background, max_val, **kwargs) -> array | tensor`
+    `get(image, snr, background, max_val, ...) -> np.ndarray | torch.Tensor`
         Returns the input image with Poisson noise added.
 
     Examples
@@ -517,7 +517,7 @@ class Poisson(Noise):
         background: PropertyLike[float] = 0,
         max_val: PropertyLike[float] = 1e8,
         **kwargs,
-    ):
+    ) -> None:
         """Initialize the Poisson noise feature.
 
         Parameters

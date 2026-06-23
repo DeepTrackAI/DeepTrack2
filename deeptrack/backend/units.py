@@ -320,7 +320,7 @@ class ConversionTable:
     def __init__(
         self: ConversionTable,
         **conversions: dict[str, tuple[Unit, Unit]],
-    ):
+    ) -> None:
         """Initialize the conversion table with unit mappings.
 
         Parameters
