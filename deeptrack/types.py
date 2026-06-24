@@ -10,7 +10,7 @@ Defined Types
 -------------
 - `PropertyLike`
     A type alias representing a value of type `T` or a callable returning `T`.
-- `DTImageLike`
+- `ImageLike`
     A type alias for array-like structures, namely, NumPy arrays, PyTorch
     tensors, and `Image` objects.
 - `ArrayLike`
