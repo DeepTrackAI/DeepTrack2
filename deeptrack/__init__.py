@@ -34,6 +34,7 @@ from deeptrack.features import *
 from deeptrack.sequences import *
 from deeptrack.wrappers import *
 from deeptrack.elementwise import *
+from deeptrack.statistics import *
 
 from deeptrack.optical.aberrations import *
 from deeptrack.optical.augmentations import *
@@ -41,7 +42,6 @@ from deeptrack.optical.math import *
 from deeptrack.optical.noises import *
 from deeptrack.optical.optics import *
 from deeptrack.optical.scatterers import *
-from deeptrack.statistics import *
 from deeptrack.optical.holography import *
 
 if TORCH_AVAILABLE:
@@ -63,10 +63,21 @@ from deeptrack import (
     # Does not actually import anything
 )
 
-from deeptrack.optical import (
-    optics as optics,
-    scatterers as scatterers,
-    aberrations as aberrations,
-    holography as holography,
-    augmentations as augmentations,
-)
+# Backward compatibility for the pre-2.0 package structure.
+import sys
+
+import deeptrack.optical.optics as optics
+import deeptrack.optical.scatterers as scatterers
+import deeptrack.optical.aberrations as aberrations
+import deeptrack.optical.holography as holography
+import deeptrack.optical.augmentations as augmentations
+import deeptrack.optical.noises as noises
+import deeptrack.optical.math as math
+
+sys.modules["deeptrack.optics"] = optics
+sys.modules["deeptrack.scatterers"] = scatterers
+sys.modules["deeptrack.aberrations"] = aberrations
+sys.modules["deeptrack.holography"] = holography
+sys.modules["deeptrack.augmentations"] = augmentations
+sys.modules["deeptrack.noises"] = noises
+sys.modules["deeptrack.math"] = math
