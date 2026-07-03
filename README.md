@@ -164,13 +164,13 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
-- DTEx231A **[LodeSTAR to Detect Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231A **[LodeSTAR to Detect Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   <!-- GH_ONLY_START -->
   <p align="left">
     <img width="600" src=/assets/MPT-packed.gif?raw=true>
     <br/>
-    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_autotracker_template.ipynb">
+    <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb">
       <img src="https://colab.research.google.com/assets/colab-badge.svg">
     </a>
     <a href="https://doi.org/10.1038/s41467-022-35004-y" alt="Article LodeSTAR">
