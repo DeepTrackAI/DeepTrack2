@@ -113,7 +113,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
 
-- DTEx212 **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx212 **Single Particle Tracking** <!-- **[Single Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx212_single_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
 
   Tracks experimental videos of a single particle.
 
@@ -134,7 +134,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
   </p>
   <!-- GH_ONLY_END -->
 
-- DTEx213 **[Multi-Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx213 **Multi-Particle Tracking** <!-- **[Multi-Particle Tracking](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx213_multi_particle_tracking.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
   
   Detecting quantum dots in a low SNR image.
 
@@ -150,7 +150,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
  
   Extracting the radius and refractive index of particles.
 
-- DTEx215 **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx215 **Cell Counting** <!-- **[Cell Counting](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx215_cell_counting.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
 
   Counting the number of cells in fluorescence images.
 
@@ -164,7 +164,7 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
-- DTEx231A **[LodeSTAR to Detect Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231A **LodeSTAR to Detect Particles** <!-- **[LodeSTAR to Detect Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
 
   <!-- GH_ONLY_START -->
   <p align="left">
@@ -183,13 +183,13 @@ Specific examples for label-free particle tracking using **LodeSTAR**:
 
 - DTEx231C **LodeSTAR to Measure the Mass of Particles in Holography**
 
-- DTEx231D **[LodeSTAR to Detect the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231D **LodeSTAR to Detect the Cells in the BF-C2DT-HSC Dataset** <!-- **[LodeSTAR to Detect the Cells in the BF-C2DT-HSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231D_LodeSTAR_track_BF-C2DL-HSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
 
-- DTEx231E **[LodeSTAR to Detect the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231E **LodeSTAR to Detect the Cells in the Fluo-C2DT-Huh7 Dataset** <!-- **[LodeSTAR to Detect the Cells in the Fluo-C2DT-Huh7 Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231E_LodeSTAR_track_Fluo-C2DL-Huh7.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
   
-- DTEx231F **[LodeSTAR to Detect the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231F **LodeSTAR to Detect the Cells in the PhC-C2DT-PSC Dataset** <!-- **[LodeSTAR to Detect the Cells in the PhC-C2DT-PSC Dataset](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231F_LodeSTAR_track_PhC-C2DL-PSC.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
   
-- DTEx231G **[LodeSTAR to Detect Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+- DTEx231G **LodeSTAR to Detect Plankton** <!-- **[LodeSTAR to Detect Plankton](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231G_LodeSTAR_track_plankton.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
   
 - DTEx231H **LodeSTAR to Detect Particles in 3D Holography**
 
