@@ -1,23 +1,27 @@
 """Tools for evaluating and propagating sequences of features.
 
-This module enables sequential evaluation of DeepTrack2 features by
-resolving them over multiple time steps. It provides tools for propagating
-values like `sequence_index` and `sequence_length` to all dependent
-`SequentialProperty` attributes, allowing simulation of dynamic behaviors
-(e.g., microsocpy videos).
+This module provides functionality for sequentially evaluating DeepTrack2
+features over multiple time steps. It enables the propagation of sequential
+context—such as `sequence_index` and `sequence_length`—to all dependent
+`SequentialProperty` attributes in a feature graph.
+
+By injecting this contextual information before each evaluation, the module
+supports simulations of dynamic, time-dependent systems, such as microscopy
+videos, animations, and temporal data generation pipelines.
 
 Key Features
 ------------
-- **Temporal Simulation via SequentialProperty**
+- **Temporal simulation via `SequentialProperty`**
 
-    Features can be annotated with sampling rules that evolve over a sequence
-    of time steps, enabling animations and simulations of time-dependent
-    systems.
+    Features can be annotated with sampling rules that evolve across discrete
+    time steps. These rules may depend on the current step index, the total
+    sequence length, or values from previous steps.
 
-- **Graph-wide Sequential Data Propagation**
+- **Graph-wide sequential data propagation**
 
-    Sequential information is passed to all relevant nodes in the feature
-    graph.
+    Sequential context is propagated to all relevant nodes in the feature
+    dependency graph, ensuring consistent and synchronized updates across
+    composed and nested features.
 
 Module Structure
 ----------------
@@ -25,67 +29,75 @@ Classes:
 
 - `Sequence`
 
-    It resolves a feature over multiple time steps, using a defined
-    `sequence_length`. Injects sequential arguments into all dependent
-    `SequentialProperty` attributes before each evaluation.
-
-Functions:
-
-- `Sequential(feature, **kwargs)`
-
-    .. deprecated:: 2.0
-
-    def Sequential(
-        feature: Feature,
-        **kwargs: Any,
-    ) -> Feature
-
-    Converts a feature to be resolved as a sequence. Replaced by
-    `Feature.to_sequence()` and will be removed in a future release.
-
-- `_propagate_sequential_data(feature, **kwargs)`
-
-    def _propagate_sequential_data(
-        feature: Feature,
-        **kwargs: Any,
-    ) -> None
-
-    Recursively propagates keyword arguments like `sequence_index` and
-    `sequence_length` to all `SequentialProperty` nodes in a feature graph.
+    Resolves a feature repeatedly over a specified number of time steps
+    (`sequence_length`). Before each evaluation, sequential context is
+    propagated to all dependent `SequentialProperty` attributes.
 
 Examples
 --------
 >>> import deeptrack as dt
 
-Simulating a spinning ellipsoid.
+**Sequential evaluation**
 
-Define imaging system:
->>> optics = dt.optics.Fluorescence(output_region=(0, 0, 32, 32))
+In this example, a feature is evaluated repeatedly while one of its properties
+evolves over time. No optics or image formation is involved.
+
+Define a simple feature with a time-dependent property:
+
+>>> feature = dt.Value(value=0)
+
+Define a sampling rule that increments the value at each step:
+
+>>> def increment(sequence_length, previous_value):
+...     return previous_value + 1
+
+Convert the feature to a sequential feature:
+
+>>> sequential_feature = feature.to_sequential(value=increment)
+
+Wrap the feature in a `Sequence` and evaluate it:
+
+>>> sequence = dt.Sequence(sequential_feature, sequence_length=5)
+>>> sequence()
+[0, 1, 2, 3, 4]
+
+**Simulating a spinning ellipsoid.**
+
+Define an imaging system:
+
+>>> optics = dt.Fluorescence(output_region=(0, 0, 32, 32))
 
 Define a static ellipse:
->>> ellipse = dt.scatterers.Ellipse(
-...     radius=(1e-6,0.5e-6),
+
+>>> ellipse = dt.Ellipse(
+...     radius=(1e-6, 0.5e-6),
 ...     position=(16, 16),
 ...     rotation=0.78,  # Initial rotation
+...     intensity=1,
 ... )
 
 Define a rotation function that increments the previous angle:
+
 >>> def rotate(sequence_length, previous_value):
-...    return previous_value + 6.28 / sequence_length
+...     return previous_value + 6.28 / sequence_length
 
 Convert the ellipse to a sequential feature:
+
 >>> rotating_ellipse = ellipse.to_sequential(rotation=rotate)
 
 Compose with the optics:
+
 >>> imaged_rotating_ellipse = optics(rotating_ellipse)
 
-Wrap the full feature in a Sequence:
+Wrap the composed feature in a `Sequence`:
+
 >>> imaged_rotating_ellipse_sequence = dt.Sequence(
 ...     imaged_rotating_ellipse,
 ...     sequence_length=50,
 ... )
 
-Generate and display the result
+Generate and display the result:
+
 >>> imaged_rotating_ellipse_sequence.update().plot();
 
 """
@@ -103,74 +115,108 @@ __all__ = ["Sequence"]
 
 
 class Sequence(Feature):
-    """Resolves a feature as a sequence.
+    """Resolve a feature repeatedly as a sequence.
 
-    The `Sequence` class repeatedly evaluates a given feature
-    `sequence_length` times. During each evaluation, the keyword arguments
-    `sequence_length` and `sequence_index` are propagated to all
-    `SequentialProperty` attributes of the feature, enabling dynamic updates at
-    each timestep.
+    The `Sequence` class evaluates a wrapped feature multiple times in
+    succession, producing a sequence of outputs. Before each evaluation, the
+    sequential context (`sequence_index` and `sequence_length`) is propagated
+    to all dependent `SequentialProperty` attributes in the feature graph.
 
-    This allows for temporal simulations or animations, where the same feature
-    (e.g., a rotating particle or moving object) evolves over time with
-    properties defined as sequential functions.
+    This enables temporal simulations and animations in which feature
+    properties evolve over discrete time steps according to user-defined
+    sampling rules. The wrapped feature itself may be a single feature or a
+    composed feature graph.
 
     Parameters
     ----------
     feature: Feature
-        The feature to resolve as a sequence.
+        The feature to be evaluated repeatedly.
     sequence_length: int
-        The number of times to evaluate the feature. It defaults to 1.
-    kwargs: Any
-        Additional keyword arguments to be passed to the base `Feature`.
+        The number of sequential evaluations to perform. Defaults to 1.
+    **kwargs: Any
+        Additional keyword arguments passed to the base `Feature` constructor.
 
     Attributes
     ----------
     feature: Feature
-        The feature that is resolved multiple times to generate the sequence.
+        The wrapped feature that is evaluated at each step.
     __distributed__: bool
-        This feature is not distributed across processes or devices.
-        Always set to False.
+        Indicates whether this feature is distributed across processes or
+        devices. Always set to `False` for `Sequence`, as sequential evaluation
+        requires ordered execution.
 
     Methods
     -------
-    `get(input_list: list[Feature], sequence_length: int, **kwargs: Any) -> list[Any] or tuple[list[Any], ...]`
-        Resolves the wrapped feature `sequence_length` times. It returns a list
-        (or tuple of lists) of resolved outputs.
+    `get(input_list, sequence_length, _ID, **kwargs) -> list[Any] | tuple[...]`
+        Evaluate the wrapped feature `sequence_length` times. The outputs are
+        returned as a list. If the wrapped feature returns a tuple or list, the
+        result is transposed into a tuple of lists.
 
     Examples
     --------
     >>> import deeptrack as dt
 
-    Simulating a spinning ellipsoid.
+    **Sequential evaluation**
 
-    Define imaging system:
+    In this example, a feature is evaluated repeatedly while one of its
+    properties evolves over time. No optics or image formation is involved.
+
+    Define a simple feature with a time-dependent property:
+
+    >>> feature = dt.Value(value=0)
+
+    Define a sampling rule that increments the value at each step:
+
+    >>> def increment(sequence_length, previous_value):
+    ...     return previous_value + 1
+
+    Convert the feature to a sequential feature:
+
+    >>> sequential_feature = feature.to_sequential(value=increment)
+
+    Wrap the feature in a `Sequence` and evaluate it:
+
+    >>> sequence = dt.Sequence(sequential_feature, sequence_length=5)
+    >>> sequence()
+    [0, 1, 2, 3, 4]
+
+    **Simulating a spinning ellipsoid.**
+
+    Define an imaging system:
+
     >>> optics = dt.Fluorescence(output_region=(0, 0, 32, 32))
 
     Define a static ellipse:
+
     >>> ellipse = dt.Ellipse(
-    ...     radius=(1e-6,0.5e-6),
+    ...     radius=(1e-6, 0.5e-6),
     ...     position=(16, 16),
     ...     rotation=0.78,  # Initial rotation
+    ...     intensity=1,
     ... )
 
     Define a rotation function that increments the previous angle:
+
     >>> def rotate(sequence_length, previous_value):
-    ...    return previous_value + 6.28 / sequence_length
+    ...     return previous_value + 6.28 / sequence_length
 
     Convert the ellipse to a sequential feature:
+
     >>> rotating_ellipse = ellipse.to_sequential(rotation=rotate)
 
     Compose with the optics:
+
     >>> imaged_rotating_ellipse = optics(rotating_ellipse)
 
-    Wrap the full feature in a Sequence:
+    Wrap the composed feature in a `Sequence`:
+
     >>> imaged_rotating_ellipse_sequence = dt.Sequence(
     ...     imaged_rotating_ellipse,
     ...     sequence_length=50,
     ... )
 
-    Generate and display the result
+    Generate and display the result:
+
     >>> imaged_rotating_ellipse_sequence.update().plot();
 
     """
@@ -185,130 +231,155 @@ class Sequence(Feature):
         sequence_length: PropertyLike[int] = 1,
         **kwargs: Any,
     ) -> None:
-        """Initialize a Sequence object.
+        """Initialize a `Sequence` instance.
 
-        This constructor wraps a feature to be resolved multiple times,
-        propagating sequential information to any `SequentialProperty`
-        attributes.
+        This constructor wraps a feature so that it can be evaluated repeatedly
+        as a sequence. The wrapped feature is added to the feature graph, and
+        the `sequence_length` parameter is registered as a property of the
+        `Sequence` node.
+
+        Sequential context (`sequence_index` and `sequence_length`) is
+        propagated to dependent `SequentialProperty` attributes during
+        evaluation, not during initialization.
 
         Parameters
         ----------
         feature: Feature
-            The feature to be resolved as a sequence.
+            The feature to be evaluated sequentially.
         sequence_length: PropertyLike[int], optional
-            Number of steps in the sequence. It defaults to 1.
+            The number of steps in the sequence. Defaults to 1.
         **kwargs: Any
-            Additional keyword arguments passed to the base `Feature`.
+            Additional keyword arguments passed to the base `Feature`
+            constructor.
 
         """
 
         super().__init__(sequence_length=sequence_length, **kwargs)
+
         self.feature = self.add_feature(feature)
 
     def get(
         self: Sequence,
-        input_list: list[Feature],
-        sequence_length: int | None = None,
+        input_list: list[Any] | None,
+        sequence_length: int,
+        _ID: tuple[int, ...] = (),
         **kwargs: Any,
     ) -> list[Any] | tuple[list[Any], ...]:
         """Resolve the wrapped feature as a sequence of outputs.
 
-        The method evaluates the feature `sequence_length` times, each time
-        updating the `sequence_index` and propagating it to all dependent
-        `SequentialProperty` attributes. The results are collected into a list.
+        This method evaluates the wrapped feature `sequence_length` times.
+        Before each evaluation, the sequential context (`sequence_index`
+        and `sequence_length`) is propagated to all dependent
+        `SequentialProperty` attributes in the feature graph.
+
+        The outputs of each evaluation are collected and returned as a
+        sequence. If the wrapped feature returns multiple values (as a tuple or
+        list), the result is transposed into a tuple of lists, one per output
+        component.
 
         Parameters
         ----------
-        input_list: list[Feature]
-            A list of previously resolved outputs to extend. If empty, a new
-            list is initialized.
-        sequence_length: int, optional
-            Number of times to evaluate the feature. If None, it is assumed
-            to be handled externally or will raise an error.
+        input_list: list[Any] or None
+            Previously resolved outputs to extend. If `None`, a new output list
+            is initialized.
+        sequence_length: int
+            Number of sequential evaluations to perform.
+        _ID: tuple[int, ...], optional
+            Evaluation identifier used to store and retrieve sequential state.
         **kwargs: Any
-            Unused, included for compatibility.
+            Unused. Present for compatibility with the `Feature` interface.
 
         Returns
         -------
-        list[Any] or tuple[list[Any], ...]
-            The sequence of resolved feature outputs. If the output of the
-            feature is a tuple or list, the return is transposed into a tuple
-            of lists.
+        list[Any] | tuple[list[Any], ...]
+            The sequence of resolved outputs. If the wrapped feature returns a
+            tuple or list, the result is a tuple of lists.
 
         """
 
-        outputs = input_list or []
-        for sequence_index in range(sequence_length):
-            #TODO ***BM*** ***AL*** Can this be erased?
-            # np.random.seed(random.randint(0, 1000000))
+        if sequence_length < 0:
+            raise ValueError(
+                "`sequence_length` must be non-negative, "
+                f"got {sequence_length}."
+            )
 
+        output_list: list[Any] = list(input_list) if input_list else []
+
+        for sequence_index in range(sequence_length):
             _propagate_sequential_data(
                 self.feature,
                 sequence_index=sequence_index,
                 sequence_length=sequence_length,
+                _ID=_ID,
             )
-            out = self.feature()
+            out = self.feature(_ID=_ID)
 
-            outputs.append(out)
+            output_list.append(out)
 
-        if isinstance(outputs[0], (tuple, list)):
-            outputs = tuple(zip(*outputs))
+        if not output_list:
+            return output_list
 
-        return outputs
+        if isinstance(output_list[0], (tuple, list)):
+            return tuple(list(x) for x in zip(*output_list))
+
+        return output_list
 
 
 def _propagate_sequential_data(
     feature: Feature,
+    _ID: tuple[int, ...] = (),
     **kwargs: Any,
 ) -> None:
-    """Propagate sequential data through the computational graph.
+    """Propagate sequential context through a feature graph.
 
-    This function updates the attributes of all `SequentialProperty` instances
-    in the computational graph rooted at the given feature. It works by
-    recursively traversing the feature's dependencies and setting the values
-    of matching attributes using the provided keyword arguments.
+    This function propagates sequential context—such as `sequence_index` and
+    `sequence_length`—to all dependent `SequentialProperty` attributes in the
+    feature graph rooted at the given feature. The propagation is performed by
+    traversing the feature’s dependency graph and updating matching attributes
+    on each encountered `SequentialProperty`.
 
     Parameters
     ----------
     feature: Feature
         The root feature whose dependent sequential properties will be updated.
+    _ID: tuple[int, ...], optional
+        Evaluation identifier used to store propagated values.
     **kwargs: Any
-        Attribute-value pairs to assign to matching fields in each
-        `SequentialProperty`.
+        Sequential context to propagate, provided as attribute–value pairs.
 
     """
 
     for dep in feature.recurse_dependencies():
         if isinstance(dep, SequentialProperty):
             for key, value in kwargs.items():
-                if hasattr(dep, key):
-                    getattr(dep, key).set_value(value)
+                attr = getattr(dep, key, None)
+                set_value = getattr(attr, "set_value", None)
+                if callable(set_value):
+                    set_value(value, _ID=_ID)
 
 
-def Sequential(
-    feature: Feature,
-    **kwargs: Any,
-) -> Feature:  # DEPRECATED
-    """Converts a feature to be resolved as a sequence.
+def Sequential(feature: Feature, **kwargs: Any) -> Feature:  # DEPRECATED
+    """Convert a feature to be resolved sequentially.
 
     .. deprecated:: 2.0
-        This function has been substituted by the `Feature.to_sequence()` 
-        method and will be removed in a future release.
+        Use `Feature.to_sequential()` instead. This function will be removed in
+        a future release.
 
-    Should be called on individual features, not combinations of features. All
-    keyword arguments will be treated as sequential properties and will be
-    passed to the parent feature.
+    This function modifies a feature so that selected properties evolve over a
+    sequence of evaluations. It should be applied to individual features rather
+    than composed feature graphs.
 
-    If a property from the keyword argument already exists on the feature, the
-    existing property will be used to initialize the passed property (that is,
-    it will be used for the first timestep).
+    All keyword arguments are interpreted as sequential properties and attached
+    to the feature. If a property with the same name already exists on the
+    feature, its current value is used to initialize the sequential property at
+    the first time step.
 
     Parameters
     ----------
     feature: Feature
-        Feature to make sequential.
-    kwargs: Any
-        Keyword arguments to pass on as sequential properties of `feature`.
+        The feature to be converted to sequential behavior.
+    **kwargs: Any
+        Keyword arguments defining sequential properties of `feature`.
 
     Returns
     -------
@@ -321,8 +392,9 @@ def Sequential(
 
     warnings.warn(
         "The `Sequential()` function is deprecated and will be removed in a "
-        "future release. Please use `Feature.to_sequence()` instead.",
-        category=DeprecationWarning,
+        "future release. Please use `Feature.to_sequential()` instead.",
+        DeprecationWarning,
+        stacklevel=2,
     )
 
     for property_name in kwargs.keys():
@@ -363,11 +435,10 @@ def Sequential(
             prop.initial_sampling_rule = prop.create_action(
                 sampling_rule,
                 **{
-                    k:all_kwargs[k]
-                    for k
-                    in all_kwargs
+                    k: all_kwargs[k]
+                    for k in all_kwargs
                     if k != "previous_value"
-                }
+                },
             )
 
         prop.current = prop.create_action(sampling_rule, **all_kwargs)

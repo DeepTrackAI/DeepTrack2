@@ -8,13 +8,13 @@ Key Features
 ------------
 - **Backend Selection and Management**
 
-    It enables users to select and seamlessly switch between supported
+    Enables users to select and seamlessly switch between supported
     computational backends, including NumPy and PyTorch. This allows for
     backend-agnostic code and flexible pipeline design.
 
 - **Device Control**
 
-    It provides mechanisms to specify the computation device (e.g., CPU, GPU,
+    Provides mechanisms to specify the computation device (e.g., CPU, GPU,
     or `torch.device`). This gives users fine-grained control over
     computational resources.
 
@@ -29,12 +29,12 @@ Classes:
 
 - `Config`: Main configuration class for backend and device.
 
-    It encapsulates methods to get/set backend and device, and provides a
-    context manager for temporary configuration changes.
+    Encapsulates methods to get/set backend and device, and provides a context
+    manager for temporary configuration changes.
 
 - `_Proxy`: Internal class to call proxy backend and correct array types.
 
-    It forwards function calls to the current backend module (NumPy or PyTorch)
+    Forwards function calls to the current backend module (NumPy or PyTorch)
     and ensures arrays are created with the correct type and context.
 
 Attributes:
@@ -80,7 +80,7 @@ Check the default backend and device:
 >>> config.get_device()
 'cpu'
 
-Use the xp proxy to create a NumPy array:
+Use the `xp` proxy to create a NumPy array:
 
 >>> array = xp.arange(5)
 >>> type(array)
@@ -148,6 +148,7 @@ import importlib
 import sys
 import types
 from typing import Any, Literal, TYPE_CHECKING
+import warnings
 
 from array_api_compat import numpy as apc_np
 import array_api_strict
@@ -168,67 +169,83 @@ if TYPE_CHECKING:
 
 try:
     import torch
+
     TORCH_AVAILABLE = True
 except ImportError:
     TORCH_AVAILABLE = False
+    warnings.warn(
+        "PyTorch is not installed. "
+        "Torch-based functionality will be unavailable.",
+        UserWarning,
+    )
 
 try:
     import deeplay
+
     DEEPLAY_AVAILABLE = True
 except ImportError:
     DEEPLAY_AVAILABLE = False
+    warnings.warn(
+        "Deeplay is not installed. "
+        "Deeplay-based functionality will be unavailable.",
+        UserWarning,
+    )
 
 try:
     import cv2
+
     OPENCV_AVAILABLE = True
 except ImportError:
     OPENCV_AVAILABLE = False
+    warnings.warn(
+        "OpenCV (cv2) is not installed. "
+        "Some image processing features will be unavailable.",
+        UserWarning,
+    )
 
 
 class _Proxy(types.ModuleType):
     """Keep track of current backend and forward calls to the correct backend.
 
-    An instance of this object is treated as the module `xp`. It acts like a
+    An instance of `_Proxy` is treated as the module `xp`. It acts like a
     shallow wrapper around the actual backend (for example `numpy` or `torch`),
-    forwarding calls to the correct backend.
+    to which it forwards calls.
 
     This is especially useful for array creation functions in order to ensure
     that the correct array type is created.
 
-    This class is used internally within _config.py.
+    `_Proxy` is used internally within _config.py.
 
     Parameters
     ----------
-    name: str
+    name: str, optional
         Name of the proxy object. This is used when printing the object.
+    backend: types.ModuleType
+        The backend to use.
 
     Attributes
     ----------
     _backend: backend module
         The actual backend module.
+    _backend_info: Any
+        The information about the current backend.
     __name__: str
         The name of the proxy object.
 
     Methods
     -------
-    `set_backend(backend: types.ModuleType) -> None`
+    `set_backend(backend) -> None`
         Set the backend to use.
-
-    `get_float_dtype(dtype: str) -> str`
+    `get_float_dtype(dtype) -> str`
         Get the float data type.
-
-    `get_int_dtype(dtype: str) -> str`
+    `get_int_dtype(dtype) -> str`
         Get the int data type.
-
-    `get_complex_dtype(dtype: str) -> str`
+    `get_complex_dtype(dtype) -> str`
         Get the complex data type.
-
-    `get_bool_dtype(dtype: str) -> str`
+    `get_bool_dtype(dtype) -> str`
         Get the bool data type.
-
-    `__getattr__(attribute: str) -> Any`
+    `__getattr__(attribute) -> Any`
         Forward attribute access to the current backend.
-
     `__dir__() -> list[str]`
         List attributes of the current backend.
 
@@ -240,43 +257,43 @@ class _Proxy(types.ModuleType):
 
     >>> from array_api_compat import numpy as apc_np
     >>>
-    >>> xp = _Proxy("numpy")
-    >>> xp.set_backend(apc_np)
+    >>> xp = _Proxy("numpy", apc_np)
 
     Use the proxy to create an array (calls NumPy under the hood):
 
     >>> array = xp.arange(5)
-    >>> array, type(array)
+    >>> array
     array([0, 1, 2, 3, 4])
- 
+
     >>> type(array)
     numpy.ndarray
 
-    You can use any function or attribute provided by the backend:
+    You can use any function or attribute provided by the backend, e.g.:
 
     >>> ones_array = xp.ones((2, 2))
+    >>> ones_array
+    array([[1., 1.],
+          [1., 1.]])
 
     Query dtypes in a backend-agnostic way:
 
     >>> xp.get_float_dtype()
     dtype('float64')
-    
+
     >>> xp.get_int_dtype()
     dtype('int64')
-    
+
     >>> xp.get_complex_dtype()
     dtype('complex128')
 
-    
     >>> xp.get_bool_dtype()
     dtype('bool')
 
-    Switch to the PyTorch backend:
+    Create a proxy instance and set the backend to PyTorch:
 
     >>> from array_api_compat import torch as apc_torch
     >>>
-    >>> xp = _Proxy("torch")
-    >>> xp.set_backend(apc_torch)
+    >>> xp = _Proxy("torch", apc_torch)
 
     Now the proxy uses PyTorch:
 
@@ -301,7 +318,7 @@ class _Proxy(types.ModuleType):
     >>> xp.get_bool_dtype()
     torch.bool
 
-    You can switch backends as often as needed.:
+    You can switch backends as often as needed:
 
     >>> xp.set_backend(apc_np)
     >>> array = xp.arange(3)
@@ -311,22 +328,27 @@ class _Proxy(types.ModuleType):
     """
 
     _backend: types.ModuleType  # array_api_strict
+    _backend_info: Any
     __name__: str
 
     def __init__(
         self: _Proxy,
-        name: str,
+        name: str = "numpy",
+        backend: types.ModuleType = apc_np,
     ) -> None:
         """Initialize the _Proxy object.
 
         Parameters
         ----------
-        name: str
+        name: str, optional
             Name of the proxy object. This is used when printing the object.
+            Defaults to "numpy".
+        backend: types.ModuleType, optional
+            The backend to use. Defaults to `array_api_compat.numpy`.
 
         """
 
-        self.set_backend(apc_np)
+        self.set_backend(backend)
         self.__name__ = name
 
     def set_backend(
@@ -334,6 +356,8 @@ class _Proxy(types.ModuleType):
         backend: types.ModuleType,
     ) -> None:
         """Set the backend to use.
+
+        Also updates the display name (`.__name__`).
 
         Parameters
         ----------
@@ -343,13 +367,12 @@ class _Proxy(types.ModuleType):
         Examples
         --------
         >>> from deeptrack.backend._config import _Proxy
-    
+
         Create a proxy instance and set the backend to NumPy:
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
         >>> array = xp.arange(5)
         >>> type(array)
         numpy.ndarray
@@ -358,7 +381,6 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> tensor = xp.arange(5)
         >>> type(tensor)
@@ -368,6 +390,12 @@ class _Proxy(types.ModuleType):
 
         self._backend = backend
         self._backend_info = backend.__array_namespace_info__()
+
+        # Auto-detect backend name from module
+        if hasattr(backend, "__name__"):
+            # Get 'numpy' or 'torch' from 'array_api_compat.numpy'
+            backend_name = backend.__name__.split(".")[-1]
+            self.__name__ = backend_name
 
     def get_float_dtype(
         self: _Proxy,
@@ -388,7 +416,7 @@ class _Proxy(types.ModuleType):
         -------
         str
             The name of the floating data type for the current backend.
-    
+
         Examples
         --------
         >>> from deeptrack.backend._config import _Proxy
@@ -397,8 +425,7 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
 
         >>> xp.get_float_dtype()
         dtype('float64')
@@ -410,14 +437,13 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> xp.get_float_dtype()
         torch.float32
 
-        >>> xp.get_float_dtype("float32")
-        torch.float32
+        >>> xp.get_float_dtype("float64")
+        torch.float64
 
         """
 
@@ -453,8 +479,7 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
 
         >>> xp.get_int_dtype()
         dtype('int64')
@@ -466,7 +491,6 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> xp.get_int_dtype()
@@ -509,8 +533,7 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
 
         >>> xp.get_complex_dtype()
         dtype('complex128')
@@ -522,14 +545,13 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> xp.get_complex_dtype()
         torch.complex64
 
-        >>> xp.get_complex_dtype("complex64")
-        torch.complex64
+        >>> xp.get_complex_dtype("complex128")
+        torch.complex128
 
         """
 
@@ -565,8 +587,7 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
 
         >>> xp.get_bool_dtype()
         dtype('bool')
@@ -578,7 +599,6 @@ class _Proxy(types.ModuleType):
 
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
 
         >>> xp.get_bool_dtype()
@@ -614,20 +634,18 @@ class _Proxy(types.ModuleType):
         --------
         >>> from deeptrack.backend._config import _Proxy
 
-        Access NumPy's arange function transparently through the proxy:
+        Access NumPy's `arange` function transparently through the proxy:
 
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
         >>> xp.arange(4)
         array([0, 1, 2, 3])
 
         Now switch to a PyTorch backend:
-    
+
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> xp.arange(4)
         tensor([0, 1, 2, 3])
@@ -652,20 +670,18 @@ class _Proxy(types.ModuleType):
         >>> from deeptrack.backend._config import _Proxy
 
         List the attributes (functions, constants, etc.) in the NumPy backend:
-    
+
         >>> from array_api_compat import numpy as apc_np
         >>>
-        >>> xp = _Proxy("numpy")
-        >>> xp.set_backend(apc_np)
+        >>> xp = _Proxy("numpy", apc_np)
         >>> dir(xp)
         ['ALLOW_THREADS',
         ...]
 
         List the attributes in the PyTorch backend:
-    
+
         >>> from array_api_compat import torch as apc_torch
         >>>
-        >>> xp = _Proxy("torch")
         >>> xp.set_backend(apc_torch)
         >>> dir(xp)
         ['AVG',
@@ -683,7 +699,7 @@ class _Proxy(types.ModuleType):
 # exactly the type of xp as Intersection[_Proxy, apc_np, apc_torch].
 
 
-# This creates the xp object, which we will use a module.
+# This creates the xp object, which we will use as a module.
 # We assign the type to be `array_api_strict` to make IDEs see this as if it
 # were an array API module, instead of the wrapper _Proxy object.
 xp: array_api_strict = _Proxy(__name__ + ".xp")
@@ -696,38 +712,32 @@ sys.modules[xp.__name__] = xp
 class Config:
     """Configuration object for managing backend and device settings.
 
-    This class manages the backend (such as NumPy or PyTorch) and the computing
+    `Config` manages the backend (such as NumPy or PyTorch) and the computing
     device (such as CPU, GPU, or torch.device). It provides methods for
     switching between backends and devices.
 
     Attributes
     ----------
-    device: str | torch.device
-        The currently set device for computation.
     backend: "numpy" or "torch"
         The currently active backend.
+    device: str or torch.device
+        The currently set device for computation.
 
     Methods
     -------
-    `set_device(device: str | torch.device) -> None`
+    `set_device(device) -> None`
         Set the device to use.
-
-    `get_device() -> str | torch.device`
+    `get_device() -> str or torch.device`
         Get the device to use.
-
     `set_backend_numpy() -> None`
         Set the backend to NumPy.
-
     `set_backend_torch() -> None`
         Set the backend to PyTorch.
-
-    `def set_backend(backend: Literal["numpy", "torch"]) -> None`
+    `def set_backend(backend) -> None`
         Set the backend to use for array operations.
-
-    `get_backend() -> Literal["numpy", "torch"]`
+    `get_backend() -> "numpy" or "torch"`
         Get the current backend.
-
-    `with_backend(context_backend: Literal["numpy", "torch"]) -> object`
+    `with_backend(context_backend) -> object`
         Return a context manager that temporarily changes the backend.
 
     Examples
@@ -754,7 +764,7 @@ class Config:
     >>> config.get_device()
     'cuda'
 
-    Use the xp proxy to create arrays/tensors:
+    Use the `xp` proxy to create arrays/tensors:
 
     >>> from deeptrack.backend import xp
 
@@ -792,8 +802,8 @@ class Config:
 
     """
 
-    device: str | torch.device
     backend: Literal["numpy", "torch"]
+    device: str | torch.device
 
     def __init__(self: Config) -> None:
         """Initialize the configuration with default values.
@@ -802,8 +812,8 @@ class Config:
 
         """
 
-        self.set_device("cpu")
-        self.set_backend_numpy()
+        self.backend = "numpy"
+        self.device = "cpu"
 
     def set_device(
         self: Config,
@@ -811,15 +821,15 @@ class Config:
     ) -> None:
         """Set the device to use.
 
-        It can be a string, most typically "cpu", "gpu", "cuda", "mps", or
-        torch.device. In any case, it needs to be used with a compatible
+        The device can be a string, most typically "cpu", "gpu", "cuda", "mps",
+        or `torch.device`. In any case, it needs to be used with a compatible
         backend.
 
         It can only be "cpu" when using NumPy backend.
 
         Parameters
         ----------
-        device: str or torch.device
+        device: str | torch.device
             The device to use.
 
         Examples
@@ -870,6 +880,26 @@ class Config:
 
         """
 
+        # Warning if setting devide other than cpu with NumPy backend
+        if self.get_backend() == "numpy":
+            is_cpu = False
+
+            if isinstance(device, str):
+                is_cpu = device.lower() == "cpu"
+            else:
+                is_cpu = device.type == "cpu"
+
+            if not is_cpu:
+                warnings.warn(
+                    "NumPy backend does not support GPU devices. "
+                    f"Setting device to {device!r} will have no effect; "
+                    "computations will run on the CPU. "
+                    "To use GPU devices, switch to the PyTorch backend with "
+                    "`config.set_backend_torch()`.",
+                    UserWarning,
+                    stacklevel=2,
+                )
+
         self.device = device
 
     def get_device(self: Config) -> str | torch.device:
@@ -879,7 +909,7 @@ class Config:
         -------
         str or torch.device
             The device to use. It can be a string, most typically "cpu", "gpu",
-            "cuda", "mps", or torch.device. In any case, it needs to be used
+            "cuda", "mps", or `torch.device`. In any case, it needs to be used
             with a compatible backend.
 
         Examples
@@ -911,14 +941,14 @@ class Config:
         >>> config.get_backend()
         'numpy'
 
-        NumPy backend enables use of standard NumPy arrays via the xp proxy:
+        NumPy backend enables use of standard NumPy arrays via the `xp` proxy:
 
         >>> from deeptrack.backend import xp
         >>>
         >>> array = xp.arange(5)
         >>> type(array)
         numpy.ndarray
-    
+
         """
 
         self.set_backend("numpy")
@@ -938,7 +968,7 @@ class Config:
         >>> config.get_backend()
         'torch'
 
-        PyTorch backend enables use of PyTorch tensors via the xp proxy:
+        PyTorch backend enables use of PyTorch tensors via the `xp` proxy:
 
         >>> from deeptrack.backend import xp
         >>>
@@ -958,7 +988,7 @@ class Config:
 
         Parameters
         ----------
-        backend : "numpy" or "torch"
+        backend : "numpy" | "torch"
             The backend to use for array operations.
 
         Examples
@@ -979,7 +1009,7 @@ class Config:
         >>> config.get_backend()
         'torch'
 
-        Switch between backends as needed in your workflow using the xp proxy:
+        Switch between backends as needed using the `xp` proxy:
 
         >>> from deeptrack.backend import xp
 
@@ -992,14 +1022,39 @@ class Config:
         >>> tensor = xp.arange(4)
         >>> type(tensor)
         torch.Tensor
-    
+
         """
 
         # This import is only necessary when using the torch backend.
         if backend == "torch":
-            # pylint: disable=import-outside-toplevel,unused-import
-            # flake8: noqa: E402
+            # Error if PyTorch is not installed.
+            if not TORCH_AVAILABLE:
+                raise ImportError(
+                    "PyTorch is not installed, so the torch backend is "
+                    "unavailable. Install torch to use `config.set_backend("
+                    '"torch")`.'
+                )
+
             from deeptrack.backend import array_api_compat_ext
+
+        # Warning if switching to NumPy with device other than CPU.
+        if backend == "numpy":
+            device = self.device
+
+            is_cpu = False
+            if isinstance(device, str):
+                is_cpu = device.lower() == "cpu"
+            else:
+                is_cpu = device.type == "cpu"
+
+            if not is_cpu:
+                warnings.warn(
+                    "NumPy backend does not support GPU devices. "
+                    f"The currently set device {device!r} will be ignored, "
+                    "and computations will run on the CPU.",
+                    UserWarning,
+                    stacklevel=2,
+                )
 
         self.backend = backend
         xp.set_backend(importlib.import_module(f"array_api_compat.{backend}"))
@@ -1068,7 +1123,7 @@ class Config:
 
         >>> from deeptrack.backend import xp
 
-        >>> config.set_backend("numpy")config.set_backend("numpy")
+        >>> config.set_backend("numpy")
 
         >>> def do_torch_operation():
         ...     with config.with_backend("torch"):
@@ -1080,7 +1135,7 @@ class Config:
 
         >>> config.get_backend()
         'numpy'
-    
+
         """
 
         self_backend = self.backend

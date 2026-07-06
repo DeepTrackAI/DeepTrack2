@@ -320,7 +320,7 @@ class ConversionTable:
     def __init__(
         self: ConversionTable,
         **conversions: dict[str, tuple[Unit, Unit]],
-    ):
+    ) -> None:
         """Initialize the conversion table with unit mappings.
 
         Parameters
@@ -385,6 +385,29 @@ class ConversionTable:
                 continue
 
             default_unit, desired_unit = value
+
+            if (
+                TORCH_AVAILABLE
+                and torch.is_tensor(quantity)
+                and quantity.requires_grad
+            ):
+                factor = (1 * default_unit).to(desired_unit).to_reduced_units()
+                factor = factor.magnitude
+                kwargs[key] = quantity * factor
+                continue
+
+            if (
+                TORCH_AVAILABLE
+                and isinstance(quantity, (list, tuple))
+                and any(
+                    torch.is_tensor(item) and item.requires_grad
+                    for item in quantity
+                )
+            ):
+                factor = (1 * default_unit).to(desired_unit).to_reduced_units()
+                factor = factor.magnitude
+                kwargs[key] = type(quantity)(item * factor for item in quantity)
+                continue
 
             # Convert non-quantities to quantities in default units
             if not isinstance(quantity, Quantity):
