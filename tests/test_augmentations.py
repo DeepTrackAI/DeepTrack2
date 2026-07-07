@@ -167,6 +167,37 @@ class TestAugmentations(unittest.TestCase):
             self.assertEqual(counter["i"], 3)
             self.assertEqual(out6, 3)
 
+    def test_Reuse_preserves_take_properties_on_cached_output(self):
+
+        config.set_backend("numpy")
+
+        class ImageWithPosition(features.Feature):
+            __distributed__ = False
+
+            def __init__(self):
+                super().__init__(position=lambda: np.array([1, 2]))
+                self.counter = 0
+
+            def get(self, data=None, position=None, **kwargs):
+                self.counter += 1
+                return np.ones((2, 2)) * self.counter
+
+        base_feature = ImageWithPosition()
+        reuse = augmentations.Reuse(base_feature, uses=2, storage=1)
+        label = features.TakeProperties(reuse, "position")
+        combined = reuse & label
+
+        first = combined.update()()
+        second = combined.update()()
+
+        self.assertIsInstance(first, list)
+        self.assertIsInstance(second, list)
+        self.assertEqual(len(first), 2)
+        self.assertEqual(len(second), 2)
+        np.testing.assert_array_equal(first[1], np.array([1, 2]))
+        np.testing.assert_array_equal(second[1], np.array([1, 2]))
+        np.testing.assert_array_equal(label(), np.array([1, 2]))
+
     def test_FlipLR(self):
 
         backends = ["numpy"]
