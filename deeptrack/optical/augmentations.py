@@ -95,6 +95,7 @@ from typing import Callable, Any
 import numpy as np
 
 from deeptrack import utils, TORCH_AVAILABLE
+from deeptrack.backend.core import DeepTrackDataDict
 from deeptrack.features import Feature
 from deeptrack.types import PropertyLike
 from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
@@ -462,6 +463,37 @@ class Reuse(Feature):
         self.feature = self.add_feature(feature)
         self.counter = 0
         self.cache = []
+        self._cache_dependency_data = []
+
+    @staticmethod
+    def _copy_data_dict(data: DeepTrackDataDict) -> DeepTrackDataDict:
+        """Create a shallow copy of a node data dictionary."""
+
+        copied = DeepTrackDataDict()
+        for key, data_object in data.dict.items():
+            copied.create_index(key)
+            copied[key].store(data_object.current_value())
+            if not data_object.is_valid():
+                copied[key].invalidate()
+
+        return copied
+
+    def _snapshot_feature_data(self: Reuse) -> dict[Any, DeepTrackDataDict]:
+        """Snapshot cached values of the wrapped feature graph."""
+
+        return {
+            dependency: self._copy_data_dict(dependency.data)
+            for dependency in self.feature.recurse_dependencies()
+        }
+
+    def _restore_feature_data(
+        self: Reuse,
+        snapshot: dict[Any, DeepTrackDataDict],
+    ) -> None:
+        """Restore cached values of the wrapped feature graph."""
+
+        for dependency, data in snapshot.items():
+            dependency.data = self._copy_data_dict(data)
 
     def get(
         self: Reuse,
@@ -503,11 +535,14 @@ class Reuse(Feature):
         if recompute:
             output = self.feature(data)
             self.cache.append(output)
+            self._cache_dependency_data.append(self._snapshot_feature_data())
             if len(self.cache) > storage:
                 self.cache.pop(0)
+                self._cache_dependency_data.pop(0)
         else:
             index = self.counter % storage
             output = self.cache[index]
+            self._restore_feature_data(self._cache_dependency_data[index])
 
         self.counter += 1
 
