@@ -2904,6 +2904,10 @@ class TestFeatures(unittest.TestCase):
                 )
 
         finally:
+            import gc
+
+            gc.collect()
+            
             for file in temp_files:
                 if os.path.exists(file):
                     os.remove(file)
