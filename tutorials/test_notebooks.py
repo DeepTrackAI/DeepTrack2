@@ -10,8 +10,9 @@ def test_notebooks():
     """
     Test all notebooks in the examples directory.
     """
-
-    notebooks = glob.glob(os.path.join("examples", "**", "*.ipynb"), recursive=True)
+    
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    notebooks = glob.glob(os.path.join(script_dir, "2-examples", "**", "*.ipynb"), recursive=True)
     failed_runs = []
     for notebook in notebooks:
         print(f"Testing notebook: {notebook}...")
