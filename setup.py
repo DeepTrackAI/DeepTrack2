@@ -12,13 +12,14 @@ required = [x for x in required if not x.startswith("pydata-sphinx-theme")]
 
 setup(
     name="deeptrack",
-    version="2.0.1",
+    version="2.0.2",
     license="MIT",
     packages=find_packages(),
     author=(
         "Benjamin Midtvedt, Jesus Pineda, Henrik Klein Moberg, "
-        "Harshith Bachimanchi, Mirja Granfors, Alex Lech, Carlo Manzo, "
-        "Giovanni Volpe"
+        "Harshith Bachimanchi, Mirja Granfors, Alex Lech, "
+        "Jiacheng Huang, Eduard Duta, Guillem Guigo i Corominas, "
+        "Carlo Manzo, Giovanni Volpe"
     ),
     description=(
         "A deep learning framework to enhance microscopy, "
@@ -33,6 +34,5 @@ setup(
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
-    extras_requires={"tensorflow": ["tensorflow<=2.10", "tensorflow-probability", "tensorflow-datasets", "tensorflow_addons"]},
-    python_requires=">=3.8",
+    python_requires=">=3.10",
 )
