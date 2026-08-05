@@ -18,7 +18,7 @@ jobs:
     steps:
       # Step 1: Check out the docs branch
       - name: Checkout docs branch
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           ref: docs
 
@@ -36,7 +36,7 @@ jobs:
 
       # Step 4: Pull the release code into a separate directory
       - name: Checkout release code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
         with:
           path: release-code
           # Use the test tag from workflow_dispatch or the actual release tag
