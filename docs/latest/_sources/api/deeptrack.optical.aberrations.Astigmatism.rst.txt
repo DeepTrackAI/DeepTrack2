@@ -1,0 +1,7 @@
+Astigmatism
+===========
+
+.. currentmodule:: deeptrack.optical.aberrations
+
+.. autoclass:: Astigmatism
+   :show-inheritance:

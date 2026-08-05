@@ -1,0 +1,7 @@
+MedianPooling
+=============
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: MedianPooling
+   :show-inheritance:

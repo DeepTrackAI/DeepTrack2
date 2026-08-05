@@ -1,0 +1,6 @@
+standard_normal
+===============
+
+.. currentmodule:: deeptrack.backend.array_api_compat_ext.torch.random
+
+.. autofunction:: standard_normal

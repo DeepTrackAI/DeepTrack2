@@ -1,0 +1,7 @@
+MieSphere
+=========
+
+.. currentmodule:: deeptrack.optical.scatterers
+
+.. autoclass:: MieSphere
+   :show-inheritance:

@@ -1,0 +1,7 @@
+HorizontalTilt
+==============
+
+.. currentmodule:: deeptrack.optical.aberrations
+
+.. autoclass:: HorizontalTilt
+   :show-inheritance:

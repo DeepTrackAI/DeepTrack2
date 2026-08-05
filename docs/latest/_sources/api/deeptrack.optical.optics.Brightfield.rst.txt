@@ -1,0 +1,21 @@
+Brightfield
+===========
+
+.. currentmodule:: deeptrack.optical.optics
+
+.. autoclass:: Brightfield
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Brightfield.extract_contrast_volume
+      ~Brightfield.get
+      ~Brightfield.validate_input
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: extract_contrast_volume
+   .. automethod:: get
+   .. automethod:: validate_input

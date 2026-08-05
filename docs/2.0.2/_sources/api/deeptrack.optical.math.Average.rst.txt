@@ -1,0 +1,17 @@
+Average
+=======
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: Average
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Average.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,7 @@
+SumPooling
+==========
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: SumPooling
+   :show-inheritance:

@@ -1,0 +1,7 @@
+ElasticTransformation
+=====================
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: ElasticTransformation
+   :show-inheritance:

@@ -1,0 +1,17 @@
+Branch
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Branch
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Branch.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,17 @@
+Value
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Value
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Value.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

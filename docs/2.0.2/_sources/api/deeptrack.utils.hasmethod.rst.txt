@@ -1,0 +1,6 @@
+hasmethod
+=========
+
+.. currentmodule:: deeptrack.utils
+
+.. autofunction:: hasmethod

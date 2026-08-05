@@ -1,0 +1,7 @@
+Pad
+===
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: Pad
+   :show-inheritance:

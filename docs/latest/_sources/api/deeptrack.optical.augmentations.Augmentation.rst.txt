@@ -1,0 +1,7 @@
+Augmentation
+============
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: Augmentation
+   :show-inheritance:

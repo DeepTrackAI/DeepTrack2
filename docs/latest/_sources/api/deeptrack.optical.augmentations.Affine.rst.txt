@@ -1,0 +1,7 @@
+Affine
+======
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: Affine
+   :show-inheritance:

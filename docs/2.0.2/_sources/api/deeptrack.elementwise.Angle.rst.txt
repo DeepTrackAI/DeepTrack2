@@ -1,0 +1,7 @@
+Angle
+=====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Angle
+   :show-inheritance:

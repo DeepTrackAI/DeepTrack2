@@ -1,0 +1,23 @@
+MieScatterer
+============
+
+.. currentmodule:: deeptrack.optical.scatterers
+
+.. autoclass:: MieScatterer
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~MieScatterer.get
+      ~MieScatterer.get_detector_mask
+      ~MieScatterer.get_xy_grid
+      ~MieScatterer.get_xy_size
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get
+   .. automethod:: get_detector_mask
+   .. automethod:: get_xy_grid
+   .. automethod:: get_xy_size

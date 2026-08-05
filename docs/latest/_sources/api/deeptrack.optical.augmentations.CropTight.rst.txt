@@ -1,0 +1,7 @@
+CropTight
+=========
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: CropTight
+   :show-inheritance:

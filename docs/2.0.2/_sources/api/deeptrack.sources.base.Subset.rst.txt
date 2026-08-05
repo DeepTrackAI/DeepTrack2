@@ -1,0 +1,7 @@
+Subset
+======
+
+.. currentmodule:: deeptrack.sources.base
+
+.. autoclass:: Subset
+   :show-inheritance:

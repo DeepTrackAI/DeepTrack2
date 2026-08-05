@@ -1,0 +1,37 @@
+Wrapper
+=======
+
+.. currentmodule:: deeptrack.wrappers
+
+.. autoclass:: Wrapper
+   :show-inheritance:
+
+   .. rubric:: Attributes Summary
+
+   .. autosummary::
+
+      ~Wrapper.array
+      ~Wrapper.ndim
+      ~Wrapper.properties
+      ~Wrapper.shape
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Wrapper.as_array
+      ~Wrapper.copy
+      ~Wrapper.get_property
+
+   .. rubric:: Attributes Documentation
+
+   .. autoattribute:: array
+   .. autoattribute:: ndim
+   .. autoattribute:: properties
+   .. autoattribute:: shape
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: as_array
+   .. automethod:: copy
+   .. automethod:: get_property

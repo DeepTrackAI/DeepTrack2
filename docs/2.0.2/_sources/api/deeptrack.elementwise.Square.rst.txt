@@ -1,0 +1,7 @@
+Square
+======
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Square
+   :show-inheritance:

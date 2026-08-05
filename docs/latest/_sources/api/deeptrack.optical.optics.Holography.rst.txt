@@ -1,0 +1,7 @@
+Holography
+==========
+
+.. currentmodule:: deeptrack.optical.optics
+
+.. autoclass:: Holography
+   :show-inheritance:

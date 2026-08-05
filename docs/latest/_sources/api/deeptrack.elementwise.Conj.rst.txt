@@ -1,0 +1,7 @@
+Conj
+====
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Conj
+   :show-inheritance:

@@ -1,0 +1,17 @@
+PointParticle
+=============
+
+.. currentmodule:: deeptrack.optical.scatterers
+
+.. autoclass:: PointParticle
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~PointParticle.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

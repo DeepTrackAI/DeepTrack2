@@ -1,0 +1,6 @@
+create_elementwise_class
+========================
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autofunction:: create_elementwise_class

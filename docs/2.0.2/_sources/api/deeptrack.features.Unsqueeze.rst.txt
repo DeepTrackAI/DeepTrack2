@@ -1,0 +1,17 @@
+Unsqueeze
+=========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Unsqueeze
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Unsqueeze.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

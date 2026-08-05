@@ -1,0 +1,7 @@
+AverageBlur
+===========
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: AverageBlur
+   :show-inheritance:

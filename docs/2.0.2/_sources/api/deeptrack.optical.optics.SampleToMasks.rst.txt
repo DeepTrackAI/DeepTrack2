@@ -1,0 +1,17 @@
+SampleToMasks
+=============
+
+.. currentmodule:: deeptrack.optical.optics
+
+.. autoclass:: SampleToMasks
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~SampleToMasks.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,6 @@
+isotropic_erosion
+=================
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autofunction:: isotropic_erosion

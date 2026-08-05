@@ -1,0 +1,7 @@
+HorizontalComa
+==============
+
+.. currentmodule:: deeptrack.optical.aberrations
+
+.. autoclass:: HorizontalComa
+   :show-inheritance:

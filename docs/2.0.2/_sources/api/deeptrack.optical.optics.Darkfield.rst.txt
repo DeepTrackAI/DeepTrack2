@@ -1,0 +1,23 @@
+Darkfield
+=========
+
+.. currentmodule:: deeptrack.optical.optics
+
+.. autoclass:: Darkfield
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Darkfield.downscale_image
+      ~Darkfield.extract_contrast_volume
+      ~Darkfield.get
+      ~Darkfield.validate_input
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: downscale_image
+   .. automethod:: extract_contrast_volume
+   .. automethod:: get
+   .. automethod:: validate_input

@@ -1,0 +1,7 @@
+FlipLR
+======
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: FlipLR
+   :show-inheritance:

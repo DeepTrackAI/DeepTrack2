@@ -1,0 +1,7 @@
+Divide
+======
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Divide
+   :show-inheritance:

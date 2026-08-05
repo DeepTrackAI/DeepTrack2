@@ -1,0 +1,7 @@
+ObliqueAstigmatism
+==================
+
+.. currentmodule:: deeptrack.optical.aberrations
+
+.. autoclass:: ObliqueAstigmatism
+   :show-inheritance:

@@ -1,0 +1,7 @@
+FlipDiagonal
+============
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: FlipDiagonal
+   :show-inheritance:

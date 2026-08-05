@@ -1,0 +1,23 @@
+Fluorescence
+============
+
+.. currentmodule:: deeptrack.optical.optics
+
+.. autoclass:: Fluorescence
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Fluorescence.downscale_image
+      ~Fluorescence.extract_contrast_volume
+      ~Fluorescence.get
+      ~Fluorescence.validate_input
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: downscale_image
+   .. automethod:: extract_contrast_volume
+   .. automethod:: get
+   .. automethod:: validate_input

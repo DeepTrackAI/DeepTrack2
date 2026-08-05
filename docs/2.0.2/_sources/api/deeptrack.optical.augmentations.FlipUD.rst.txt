@@ -1,0 +1,7 @@
+FlipUD
+======
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: FlipUD
+   :show-inheritance:

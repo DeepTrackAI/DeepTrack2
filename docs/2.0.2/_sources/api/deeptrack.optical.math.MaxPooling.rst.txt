@@ -1,0 +1,7 @@
+MaxPooling
+==========
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: MaxPooling
+   :show-inheritance:

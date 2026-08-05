@@ -1,0 +1,17 @@
+BindUpdate
+==========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: BindUpdate
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~BindUpdate.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

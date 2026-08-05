@@ -1,0 +1,17 @@
+Resize
+======
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: Resize
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Resize.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

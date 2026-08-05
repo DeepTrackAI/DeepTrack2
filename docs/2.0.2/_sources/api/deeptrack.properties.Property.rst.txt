@@ -1,0 +1,17 @@
+Property
+========
+
+.. currentmodule:: deeptrack.properties
+
+.. autoclass:: Property
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Property.create_action
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: create_action

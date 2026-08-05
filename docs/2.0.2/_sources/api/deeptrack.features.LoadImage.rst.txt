@@ -1,0 +1,17 @@
+LoadImage
+=========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: LoadImage
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~LoadImage.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

@@ -1,0 +1,6 @@
+multinomial
+===========
+
+.. currentmodule:: deeptrack.backend.array_api_compat_ext.torch.random
+
+.. autofunction:: multinomial

@@ -1,0 +1,17 @@
+TakeProperties
+==============
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: TakeProperties
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~TakeProperties.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

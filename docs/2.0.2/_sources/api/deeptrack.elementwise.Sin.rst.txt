@@ -1,0 +1,7 @@
+Sin
+===
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Sin
+   :show-inheritance:

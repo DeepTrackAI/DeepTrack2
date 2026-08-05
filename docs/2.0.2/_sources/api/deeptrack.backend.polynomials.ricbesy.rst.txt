@@ -1,0 +1,6 @@
+ricbesy
+=======
+
+.. currentmodule:: deeptrack.backend.polynomials
+
+.. autofunction:: ricbesy

@@ -1,0 +1,7 @@
+Noise
+=====
+
+.. currentmodule:: deeptrack.optical.noises
+
+.. autoclass:: Noise
+   :show-inheritance:

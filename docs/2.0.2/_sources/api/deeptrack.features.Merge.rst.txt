@@ -1,0 +1,17 @@
+Merge
+=====
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Merge
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Merge.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

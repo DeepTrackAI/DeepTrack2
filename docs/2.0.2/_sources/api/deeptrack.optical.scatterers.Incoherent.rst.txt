@@ -1,0 +1,17 @@
+Incoherent
+==========
+
+.. currentmodule:: deeptrack.optical.scatterers
+
+.. autoclass:: Incoherent
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Incoherent.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

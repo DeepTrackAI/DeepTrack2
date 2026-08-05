@@ -1,0 +1,7 @@
+Scatterer
+=========
+
+.. currentmodule:: deeptrack.optical.scatterers
+
+.. autoclass:: Scatterer
+   :show-inheritance:

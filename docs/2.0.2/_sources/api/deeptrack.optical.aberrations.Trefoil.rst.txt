@@ -1,0 +1,7 @@
+Trefoil
+=======
+
+.. currentmodule:: deeptrack.optical.aberrations
+
+.. autoclass:: Trefoil
+   :show-inheritance:

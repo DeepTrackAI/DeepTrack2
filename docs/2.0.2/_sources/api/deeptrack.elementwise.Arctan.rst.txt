@@ -1,0 +1,7 @@
+Arctan
+======
+
+.. currentmodule:: deeptrack.elementwise
+
+.. autoclass:: Arctan
+   :show-inheritance:

@@ -1,0 +1,7 @@
+Crop
+====
+
+.. currentmodule:: deeptrack.optical.augmentations
+
+.. autoclass:: Crop
+   :show-inheritance:

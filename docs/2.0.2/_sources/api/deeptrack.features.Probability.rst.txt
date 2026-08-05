@@ -1,0 +1,17 @@
+Probability
+===========
+
+.. currentmodule:: deeptrack.features
+
+.. autoclass:: Probability
+   :show-inheritance:
+
+   .. rubric:: Methods Summary
+
+   .. autosummary::
+
+      ~Probability.get
+
+   .. rubric:: Methods Documentation
+
+   .. automethod:: get

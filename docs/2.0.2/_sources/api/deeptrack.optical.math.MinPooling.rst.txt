@@ -1,0 +1,7 @@
+MinPooling
+==========
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autoclass:: MinPooling
+   :show-inheritance:

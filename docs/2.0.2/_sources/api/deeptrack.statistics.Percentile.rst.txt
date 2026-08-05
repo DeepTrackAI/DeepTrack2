@@ -1,0 +1,7 @@
+Percentile
+==========
+
+.. currentmodule:: deeptrack.statistics
+
+.. autoclass:: Percentile
+   :show-inheritance:

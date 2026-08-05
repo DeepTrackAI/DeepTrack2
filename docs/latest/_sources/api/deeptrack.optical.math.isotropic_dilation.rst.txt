@@ -1,0 +1,6 @@
+isotropic_dilation
+==================
+
+.. currentmodule:: deeptrack.optical.math
+
+.. autofunction:: isotropic_dilation
