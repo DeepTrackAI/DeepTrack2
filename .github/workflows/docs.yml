@@ -49,7 +49,7 @@ jobs:
 
       - name: Create the markdown files
         run: |
-          python generate_doc_markdown.py deeptrack --exclude=tests,test,torch,deeplay
+          python generate_doc_markdown.py deeptrack --exclude=tests,test,pytorch,deeplay
 
       # Step 5: Set version variable
       - name: Set version variable
