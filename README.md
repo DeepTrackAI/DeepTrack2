@@ -162,10 +162,6 @@ These are examples of how DeepTrack2 can be used on real datasets:
 
   Tracking multiple particles in 3D for holography.
 
-- DTEx217 **GAN image generation**
-
-  Using a GAN to create cell image from masks.
-
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
 - DTEx231A **LodeSTAR to Detect Particles** <!-- **[LodeSTAR to Detect Particles](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx231A_LodeSTAR_template.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a> -->
