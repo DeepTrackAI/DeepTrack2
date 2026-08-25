@@ -109,6 +109,10 @@ Here you find a series of notebooks providing an overview of the core features o
 
 These are examples of how DeepTrack2 can be used on real datasets:
 
+- DTEx207 **[Gan Image Generation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb)** <a href="https://colab.research.google.com/github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx207_GAN_image_generation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Genereting realistic electron microscopy images with a conditional GAN
+
 - DTEx211 **[MNIST](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx211_MNIST.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Training a fully connected neural network to identify handwritten digits using MNIST dataset.
@@ -157,10 +161,6 @@ These are examples of how DeepTrack2 can be used on real datasets:
 - DTEx216 **3D Multi-Particle tracking**
 
   Tracking multiple particles in 3D for holography.
-
-- DTEx217 **GAN image generation**
-
-  Using a GAN to create cell image from masks.
 
 Specific examples for label-free particle tracking using **LodeSTAR**:
 
