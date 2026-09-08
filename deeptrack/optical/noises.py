@@ -148,7 +148,10 @@ class Noise(Feature):
 
         # Lazy import avoids circular dependency
         try:
-            from deeptrack.optical.scatterers import ScatteredVolume, ScatteredField
+            from deeptrack.optical.scatterers import (
+                ScatteredVolume,
+                ScatteredField,
+            )
 
             scattered_types = (ScatteredVolume, ScatteredField)
         except Exception:
@@ -597,9 +600,12 @@ class Poisson(Noise):
             peak = torch.clamp(peak, min=1e-12)
 
             rescale = (snr / peak) ** 2
+            lower_bound = torch.tensor(
+                1e-10, dtype=rescale.dtype, device=rescale.device
+            )
             rescale = torch.clamp(
                 rescale,
-                min=1e-10,
+                min=lower_bound,
                 max=max_val / torch.clamp(torch.abs(image_max), min=1e-12),
             )
 
