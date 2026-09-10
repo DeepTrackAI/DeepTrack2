@@ -105,6 +105,34 @@ Here you find a series of notebooks providing an overview of the core features o
 
   Creating custom scatterers in the shape of bacteria.
 
+- DTGS181  **[DeepTrack2 Pipeline Panels](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS181_fig1a_scheme.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS181_fig1a_scheme.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Visualizing every stage of a DeepTrack2 imaging pipeline, from scatterer to annotation.
+
+- DTGS182  **[Simulating SMLM Data](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS182_fig1b_SMLM.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS182_fig1b_SMLM.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a single-molecule localization microscopy (SMLM) image with overlapping emitters.
+
+- DTGS183  **[Simulating a Bacterial Sample](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS183_fig1c_bacteria.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS183_fig1c_bacteria.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a brightfield image of a mixed population of bacilli and dividing bacterial chains.
+
+- DTGS184  **[Simulating Cell Nuclei](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS184_fig1d_nuclei.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS184_fig1d_nuclei.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a fluorescence image of cell nuclei with an instance-level ground-truth mask.
+
+- DTGS185  **[Simulating GUVs](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS185_fig1e_GUVs.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS185_fig1e_GUVs.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating dual-color images of phase-separated giant unilamellar vesicles (GUVs).
+
+- DTGS186  **[Simulating Synapses](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS186_fig1f_synapses.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS186_fig1f_synapses.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a two-channel colocalization image of synaptic puncta.
+
+- DTGS187  **[Simulating TEM Images](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS187_fig1g_TEM.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/1-getting-started/DTGS187_fig1g_TEM.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Simulating a transmission electron microscopy (TEM) image of a cell membrane and mitochondria.
+
 # Examples
 
 These are examples of how DeepTrack2 can be used on real datasets:
