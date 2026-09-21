@@ -216,6 +216,10 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - DTEx241B **MAGIK to Track HeLa Cells**
 
+- DTEx251 **[Neural tissue segmentation](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251_neural_tissue_segmentation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251_neural_tissue_segmentation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+- DTEx252 **[Phase mask optimization](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
 # Advanced Tutorials
 
 This section provides a list of advanced tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
