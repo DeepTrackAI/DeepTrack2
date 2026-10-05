@@ -1,37 +1,55 @@
-FROM ollama/ollama
-
+FROM continuumio/anaconda3
+  
 ENV DEBIAN_FRONTEND=noninteractive
 
-USER root
 
-RUN apt-get update \
-   && apt-get install -y \
-    build-essential \
-    gcc g++ gfortran \
-    cmake \
-    make \
-    git \
-    wget \
-    curl \
-    python3 \
-    python3-pip \
-    python3-dev \
-    python3-venv \
-    python-is-python3 \
-    vim \
-    flex \
-    hwloc \
-    gawk \
-    zlib1g-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y openssh-server sudo && \
+    rm -rf /var/lib/apt/lists/*
 
-WORKDIR /opt
 
-RUN python3 -m venv .deeptrack && \
-    . .venv/bin/activate && \
-    pip3 install --no-cache-dir deeptrack deeplay && \
-    pip3 install --no-cache-dir torch torchvision \
+RUN pip3 install --no-cache-dir torch torchvision \
         --index-url https://download.pytorch.org/whl/cu126 && \
-    echo 'source /opt/.deeptrack/bin/activate' >> /root/.bashrc
+    pip3 install --no-cache-dir deeptrack opencv-python && \
+    conda install -y --quiet jupyterlab && \
+    conda clean -afy
 
-CMD ["/bin/bash"]
+
+RUN useradd -m -s /bin/bash dev
+
+
+RUN mkdir -p /home/dev/.ssh /run/sshd && \
+    chmod 700 /home/dev/.ssh && \
+    chown -R dev:dev /home/dev/.ssh
+
+
+RUN sed -i \
+    -e 's/^#PasswordAuthentication yes/PasswordAuthentication no/' \
+    -e 's/^PasswordAuthentication yes/PasswordAuthentication no/' \
+    -e 's/^#PubkeyAuthentication yes/PubkeyAuthentication yes/' \
+    /etc/ssh/sshd_config
+
+RUN mkdir -p /root/.ssh && \
+    echo "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAfNHQ94iIubf0eG9S+E6NayfPuzXcQPWriuBMTPhWnW xhujia@GU.GU.SE@softmatterlab01-p.gu.gu.se" \
+    > /root/.ssh/authorized_keys && \
+    chmod 700 /root/.ssh && \
+    chmod 600 /root/.ssh/authorized_keys && \
+    chown -R root:root /root/.ssh
+
+RUN echo 'source /opt/conda/etc/profile.d/conda.sh' >> /home/dev/.bashrc
+
+WORKDIR /a
+
+EXPOSE 22 8888
+
+CMD ["/bin/bash", "-c", "\
+    /usr/sbin/sshd && \
+    jupyter lab \
+    --notebook-dir=/ \
+    --ip=0.0.0.0 \
+    --port=8888 \
+    --no-browser \
+    --allow-root \
+    --ServerApp.token='' \
+    --ServerApp.password='' \
+"]

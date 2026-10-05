@@ -1,5 +1,5 @@
 FROM ollama/ollama
-
+  
 ENV DEBIAN_FRONTEND=noninteractive
 
 USER root
@@ -28,10 +28,10 @@ RUN apt-get update \
 WORKDIR /opt
 
 RUN python3 -m venv .deeptrack && \
-    . .venv/bin/activate && \
-    pip3 install --no-cache-dir deeptrack deeplay && \
+    . .deeptrack/bin/activate && \
     pip3 install --no-cache-dir torch torchvision \
         --index-url https://download.pytorch.org/whl/cu126 && \
+    pip3 install --no-cache-dir deeptrack opencv-python && \
     echo 'source /opt/.deeptrack/bin/activate' >> /root/.bashrc
 
 CMD ["/bin/bash"]
