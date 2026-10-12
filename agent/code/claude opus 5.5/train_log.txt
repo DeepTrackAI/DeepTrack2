@@ -1,0 +1,71 @@
+device: cuda
+validation set: 500 images (6s)
+parameters: 7.76 M
+step   100/6000  loss 66.9024  16s
+step   200/6000  loss 15.4477  32s
+step   300/6000  loss 7.2626  48s
+step   400/6000  loss 4.1229  64s
+step   500/6000  loss 2.6494  80s
+step   600/6000  loss 2.0047  95s
+step   700/6000  loss 1.6370  111s
+step   800/6000  loss 1.2856  126s
+step   900/6000  loss 1.0870  142s
+step  1000/6000  loss 0.9578  157s
+  val: {"KT": {"precision": 0.9761, "recall": 0.422, "f1": 0.5892, "rmse_px": 0.5}, "SPB": {"precision": 0.9886, "recall": 0.864, "f1": 0.9221, "rmse_px": 0.256}}
+step  1100/6000  loss 0.9067  173s
+step  1200/6000  loss 0.8152  188s
+step  1300/6000  loss 0.7561  204s
+step  1400/6000  loss 0.7307  220s
+step  1500/6000  loss 0.6925  235s
+step  1600/6000  loss 0.6396  251s
+step  1700/6000  loss 0.6580  267s
+step  1800/6000  loss 0.5841  282s
+step  1900/6000  loss 0.5960  298s
+step  2000/6000  loss 0.5735  313s
+  val: {"KT": {"precision": 0.9821, "recall": 0.438, "f1": 0.6058, "rmse_px": 0.5}, "SPB": {"precision": 0.9945, "recall": 0.904, "f1": 0.9471, "rmse_px": 0.283}}
+step  2100/6000  loss 0.5701  329s
+step  2200/6000  loss 0.5613  344s
+step  2300/6000  loss 0.5679  360s
+step  2400/6000  loss 0.5336  375s
+step  2500/6000  loss 0.5446  391s
+step  2600/6000  loss 0.5352  406s
+step  2700/6000  loss 0.5239  422s
+step  2800/6000  loss 0.5258  437s
+step  2900/6000  loss 0.5133  453s
+step  3000/6000  loss 0.5032  469s
+  val: {"KT": {"precision": 0.9717, "recall": 0.47, "f1": 0.6336, "rmse_px": 0.531}, "SPB": {"precision": 0.9957, "recall": 0.916, "f1": 0.9542, "rmse_px": 0.248}}
+step  3100/6000  loss 0.4969  484s
+step  3200/6000  loss 0.4790  500s
+step  3300/6000  loss 0.4952  516s
+step  3400/6000  loss 0.4734  531s
+step  3500/6000  loss 0.4675  547s
+step  3600/6000  loss 0.4580  563s
+step  3700/6000  loss 0.4747  578s
+step  3800/6000  loss 0.4683  594s
+step  3900/6000  loss 0.4656  610s
+step  4000/6000  loss 0.4400  626s
+  val: {"KT": {"precision": 0.9664, "recall": 0.4883, "f1": 0.6488, "rmse_px": 0.566}, "SPB": {"precision": 0.9957, "recall": 0.922, "f1": 0.9574, "rmse_px": 0.248}}
+step  4100/6000  loss 0.4523  642s
+step  4200/6000  loss 0.4515  657s
+step  4300/6000  loss 0.4763  673s
+step  4400/6000  loss 0.4406  688s
+step  4500/6000  loss 0.4452  704s
+step  4600/6000  loss 0.4261  720s
+step  4700/6000  loss 0.4252  735s
+step  4800/6000  loss 0.4306  751s
+step  4900/6000  loss 0.4198  766s
+step  5000/6000  loss 0.4093  782s
+  val: {"KT": {"precision": 0.975, "recall": 0.4807, "f1": 0.6439, "rmse_px": 0.566}, "SPB": {"precision": 0.9926, "recall": 0.939, "f1": 0.9651, "rmse_px": 0.25}}
+step  5100/6000  loss 0.4516  798s
+step  5200/6000  loss 0.4306  813s
+step  5300/6000  loss 0.4103  829s
+step  5400/6000  loss 0.4187  845s
+step  5500/6000  loss 0.4205  861s
+step  5600/6000  loss 0.4312  877s
+step  5700/6000  loss 0.4058  892s
+step  5800/6000  loss 0.4158  908s
+step  5900/6000  loss 0.4076  924s
+step  6000/6000  loss 0.4049  940s
+  val: {"KT": {"precision": 0.9775, "recall": 0.4913, "f1": 0.6539, "rmse_px": 0.557}, "SPB": {"precision": 0.9916, "recall": 0.949, "f1": 0.9699, "rmse_px": 0.246}}
+saved model to /a/rgb_5/unet_kt_spb.pt
+saved /a/rgb_5/unet_validation_examples.png
