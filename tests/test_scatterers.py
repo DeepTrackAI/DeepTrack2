@@ -343,6 +343,58 @@ class TestScatterers_NumPy_Only(BackendTestBase):
         self.assertGreater(ratio, 1e-2)
         self.assertLess(ratio, 1e2)
 
+    def test_MieSphere_weak_sphere_forward_amplitude(self):
+        # A small, weakly scattering sphere is a thin phase object: summed
+        # over the image plane, its scattered field must equal
+        # +i k0 (n_p - n_m) V (Born limit, exp(-i w t)). The result must not
+        # depend on the simulation pixel size, and its sign means that a
+        # sphere denser than the medium delays the light.
+        wavelength, n_m, n_p, radius = 532e-9, 1.33, 1.40, 30e-9
+        expected = (
+            1j * 2 * np.pi / wavelength * (n_p - n_m)
+            * 4 / 3 * np.pi * radius**3
+        )
+
+        def scattered_field(mode, dx, refractive_index):
+            optics = Brightfield(
+                NA=1.2,
+                wavelength=wavelength,
+                resolution=dx,
+                magnification=1,
+                refractive_index_medium=n_m,
+                output_region=(0, 0, 256, 256),
+                padding=(128, 128, 128, 128),
+                return_field=True,
+            )
+            sphere = scatterers.MieSphere(
+                radius=radius,
+                refractive_index=refractive_index,
+                position=(128, 128),
+                z=0,
+                position_unit="pixel",
+                input_polarization=0,
+                output_polarization=0,
+                mode=mode,
+            )
+            return np.asarray(optics(sphere)())[..., 0]
+
+        for mode in ("hybrid", "geometric"):
+            for dx in (67e-9, 33.5e-9):
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore")
+                    field = scattered_field(mode, dx, n_p)
+                    background = scattered_field(mode, dx, n_m)
+                ratio = (field - background).sum() * dx**2 / expected
+
+                # Sign: the phase delay of a denser sphere (both modes).
+                self.assertGreater(ratio.real, 0.5, msg=(mode, dx, ratio))
+                if mode == "hybrid":
+                    # Hybrid is exact in this limit: magnitude and phase.
+                    self.assertAlmostEqual(ratio.real, 1, delta=0.05,
+                                           msg=(mode, dx, ratio))
+                    self.assertAlmostEqual(ratio.imag, 0, delta=0.05,
+                                           msg=(mode, dx, ratio))
+                    
     def test_MieStratifiedSphere(self):
         scatterer = scatterers.MieStratifiedSphere(
             radius=(0.5e-6, 1.0e-6),
