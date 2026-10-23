@@ -890,7 +890,7 @@ class Optics(Feature):
             * refractive_index_medium
             / wavelength
             * voxel_size[2]
-            * np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO)
+            * (np.sqrt(1 - (NA / refractive_index_medium) ** 2 * RHO) - 1)
         )
 
         z_shift[z_shift.imag != 0] = 0
@@ -1088,7 +1088,7 @@ class Optics(Feature):
             inside,
             torch.zeros_like(inside),
         )
-        z_shift = (k0 * vz) * torch.sqrt(inside).to(complex_dtype)
+        z_shift = (k0 * vz) * (torch.sqrt(inside) - 1.0).to(complex_dtype)
 
         # defocus reshape (-1,1,1)
         defocus_t = torch.as_tensor(
