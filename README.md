@@ -216,6 +216,18 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
 - DTEx241B **MAGIK to Track HeLa Cells**
 
+- DTEx251 **[Neural Tissue Segmentation with Simulated Training Data](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251_neural_tissue_segmentation.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251_neural_tissue_segmentation.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Training a U-Net on simulated images to segment membranes and mitochondria in experimental electron microscopy images of neural tissue.
+
+- DTEx252 **[Particle Localization and Phase Mask Optimization](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Jointly optimizing an optical phase mask and a CNN to localize closely spaced particles in 3D.
+
+- DTEx252B **[Reproducing the Phase Mask Optimization Figures](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252B_phase_mask_optimization_figures.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252B_phase_mask_optimization_figures.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Reproducing the paper figures using the pretrained models from DTEx252.
+
 # Advanced Tutorials
 
 This section provides a list of advanced tutorials. The primary focus of these tutorials is to demonstrate the functionalities of individual modules and how they work in relative isolation, helping to provide a better understanding of them and their roles in DeepTrack2.
