@@ -1461,18 +1461,29 @@ class TestFeatures(unittest.TestCase):
         stack_feature = features.Stack(value=2)
         stack_feature(3)
         self.assertEqual(stack_feature(_ID=(0,)), 2)
+        # The feature stays usable at its original `_ID` after the reset.
+        self.assertEqual(stack_feature(), 2)
 
         stack_feature = features.Stack(value=2)
         stack_feature(3)
         self.assertEqual(features.Repeat(stack_feature, N=1)(), 2)
 
-        # The reset through an alias also leaves the feature usable at its
-        # original `_ID` and at the alias afterwards.
+        # Public composition mixing a nested use (longer `_ID`) and a direct
+        # use (original `_ID`) of a feature called before.
         stack_feature = features.Stack(value=2)
         stack_feature(3)
-        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        pipeline = features.Repeat(stack_feature, N=1) & stack_feature
+        self.assertListEqual(pipeline(), [2, 2])
+
+        # Round trips between `_ID` lengths: a longer `_ID` writes to the
+        # trimmed entry, so it neither fails nor changes the key length.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
         self.assertListEqual(stack_feature(5, _ID=(0,)), [5, 2])
-        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        self.assertEqual(stack_feature(), 2)
+        self.assertListEqual(stack_feature(6), [6, 2])
+        self.assertEqual(stack_feature(_ID=(0, 1)), 2)
+        self.assertEqual(stack_feature(), 2)
 
         # Two aliases of one cell within the same resolution share the
         # input set during that resolution.
@@ -1491,6 +1502,19 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(stack_feature(_ID=(0,)), 2)
         self.assertTrue(stack_feature._input.is_valid(_ID=(1,)))
         self.assertEqual(stack_feature._input(_ID=(1,)), 4)
+
+        # A stale sibling reached through an alias does not take an input
+        # received during the current resolution down with it.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3, _ID=(0,))
+        probe = features.Value(
+            lambda: (
+                stack_feature(4, _ID=(1,)),
+                stack_feature(_ID=(0, 99)),
+                stack_feature(_ID=(1, 99)),
+            )
+        )
+        self.assertEqual(probe(), ([4, 2], 2, [4, 2]))
 
     def test_Feature_input_reset_metadata_purged_on_update(self):
         # Records of explicit inputs live with the cache cells, so resetting
@@ -1521,24 +1545,38 @@ class TestFeatures(unittest.TestCase):
                 release.wait(timeout=10)
                 return inputs
 
-        blocking = Blocking()
-        blocker = threading.Thread(target=blocking, args=(1,))
-        blocker.start()
-        self.assertTrue(entered.wait(timeout=10))
-
         result = {}
+        errors = []
+
+        def guarded(target, *args):
+            def run():
+                try:
+                    target(*args)
+                except Exception as error:  # noqa: BLE001
+                    errors.append(error)
+            return run
 
         def worker():
             stack_feature = features.Stack(value=2)
             stack_feature(3)
             result["value"] = stack_feature()
 
-        thread = threading.Thread(target=worker)
-        thread.start()
-        thread.join(timeout=10)
-        release.set()
-        blocker.join(timeout=10)
+        blocking = Blocking()
+        blocker = threading.Thread(target=guarded(blocking, 1))
+        thread = threading.Thread(target=guarded(worker))
+        try:
+            blocker.start()
+            self.assertTrue(entered.wait(timeout=10))
+            thread.start()
+            thread.join(timeout=10)
+        finally:
+            release.set()
+            blocker.join(timeout=10)
 
+        self.assertFalse(thread.is_alive())
+        self.assertFalse(blocker.is_alive())
+        if errors:
+            raise errors[0]
         self.assertEqual(result["value"], 2)
 
     def test_Features_chain_lambda(self):

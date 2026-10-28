@@ -887,6 +887,15 @@ class Feature(DeepTrackNode):
         with _resolution_scope(), config.with_backend(self._backend):
             epoch = _RESOLUTION_EPOCH.get()
 
+            # An `_ID` longer than the key length of this feature's caches
+            # refers to the entry at the trimmed `_ID`: that is how the
+            # caches resolve reads, while a write at the longer `_ID` is
+            # rejected. Use the trimmed `_ID` throughout, so that resets,
+            # inputs and outputs all land in the entry reads come from.
+            keylength = self._input.data._keylength
+            if keylength is not None and len(_ID) > keylength:
+                _ID = _ID[:keylength]
+
             # If data_list is a Source, activate it.
             self._activate_sources(data_list)
 
@@ -913,7 +922,7 @@ class Feature(DeepTrackNode):
                 if stale_cells:
                     for cell in stale_cells:
                         del self._explicit_input_epochs[cell]
-                    self._reset_input(_ID=_ID)
+                    self._input.invalidate(_ID=_ID)
 
             # A dict to store values of self.arguments before updating them.
             original_values: dict[str, Any] = {}
@@ -954,37 +963,14 @@ class Feature(DeepTrackNode):
 
     resolve = __call__
 
-    def _reset_input(
-        self: Feature,
-        _ID: tuple[int, ...] = (),
-    ) -> None:
-        """Discard the input stored at `_ID` so that it is recomputed.
-
-        When `_ID` has the key length of the `_input` cache, the entry is
-        simply invalidated. Otherwise `_ID` reached the stale entry only by
-        trimming (or by prefix), and the cache could not store a recomputed
-        value at `_ID` next to the existing key length. In that case the
-        input and everything downstream of it are reset, as `update()` does,
-        so that the recomputation can be stored at `_ID`.
-
-        """
-
-        keylength = self._input.data._keylength
-        if keylength is None or len(_ID) == keylength:
-            self._input.invalidate(_ID=_ID)
-        else:
-            self._input.update()
-
     def _input_cells(
         self: Feature,
         _ID: tuple[int, ...] = (),
     ) -> list[DeepTrackDataObject]:
         """Return the cache cells of `_input` that `_ID` refers to.
 
-        The cache may resolve several `_ID`s to one cell (an `_ID` longer
-        than the cache key length is trimmed) or one `_ID` to several cells
-        (an `_ID` shorter than the key length matches by prefix). An empty
-        cache yields no cell.
+        An `_ID` shorter than the cache key length matches several cells by
+        prefix; an empty cache yields no cell.
 
         """
 
