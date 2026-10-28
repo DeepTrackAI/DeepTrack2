@@ -154,11 +154,14 @@ array([[16, 17, 18],
 
 from __future__ import annotations
 
+import contextlib
 import itertools
 import operator
 import random
 import warnings
-from typing import Any, Callable, Iterable, Literal, TYPE_CHECKING
+from typing import (
+    Any, Callable, Iterable, Iterator, Literal, TYPE_CHECKING,
+)
 
 import array_api_compat as apc
 import numpy as np
@@ -238,6 +241,33 @@ MERGE_STRATEGY_OVERRIDE: int = 0
 
 # Append newly generated outputs to the existing list of inputs.
 MERGE_STRATEGY_APPEND: int = 1
+
+
+# Resolution bookkeeping.
+#
+# `_RESOLUTION_DEPTH` counts the nested `Feature.__call__()` frames currently
+# executing, and `_RESOLUTION_EPOCH` is incremented every time a top-level
+# (non-nested) call starts. Together they let a feature tell whether an input
+# it received explicitly was set during the current resolution or during a
+# previous one, so that a stale input is not silently reused when the feature
+# is later called without input (e.g. when evaluated as a property).
+_RESOLUTION_DEPTH: int = 0
+_RESOLUTION_EPOCH: int = 0
+
+
+@contextlib.contextmanager
+def _resolution_scope() -> Iterator[None]:
+    """Track nested `Feature.__call__()` frames and resolution epochs."""
+
+    global _RESOLUTION_DEPTH, _RESOLUTION_EPOCH
+
+    if _RESOLUTION_DEPTH == 0:
+        _RESOLUTION_EPOCH += 1
+    _RESOLUTION_DEPTH += 1
+    try:
+        yield
+    finally:
+        _RESOLUTION_DEPTH -= 1
 
 
 class Feature(DeepTrackNode):
@@ -683,6 +713,10 @@ class Feature(DeepTrackNode):
         self._input = DeepTrackNode(node_name="_input", action=_input)
         self._input.add_child(self)
 
+        # Maps each `_ID` whose input was set explicitly by `.__call__()` to
+        # the resolution epoch in which it was set (see `_RESOLUTION_EPOCH`).
+        self._explicit_input_epochs: dict[tuple[int, ...], int] = {}
+
         # Random seed node (for deterministic behavior if desired).
         self._random_seed = DeepTrackNode(
             node_name="_random_seed",
@@ -750,8 +784,14 @@ class Feature(DeepTrackNode):
         data_list: Any, optional
             The input data to the feature or pipeline. It is most commonly a
             list of NumPy arrays or PyTorch tensors, but it can be anything.
-            Defaults to `None`, in which case the feature uses the previous set
-            of input values or propagates properties.
+            Defaults to `None`, in which case the feature is evaluated without
+            input. An input set explicitly by a previous call is not reused:
+            it is reset so that the feature falls back to its default input
+            (an empty list, or the output of the feature wired as `_input`).
+            Within a single resolution, however, a feature that received an
+            input and is then evaluated again without input (for example as
+            the property of another feature) keeps that input, so that it
+            yields one consistent value throughout the pipeline.
         **kwargs: Any
             Additional parameters passed to the pipeline. These override
             properties with matching names. For example, calling
@@ -781,10 +821,11 @@ class Feature(DeepTrackNode):
         >>> feature(np.array([1, 2, 3]))
         array([3, 4, 5])
 
-        Execute the feature with previously set input:
+        Execute the feature without input. The previously set input is
+        reset, so the feature is applied to an empty input list:
 
-        >>> feature()  # Uses stored input
-        array([3, 4, 5])
+        >>> feature()
+        []
 
         Execute the feature with new input:
 
@@ -815,13 +856,33 @@ class Feature(DeepTrackNode):
 
             return True
 
-        with config.with_backend(self._backend):
+        def _is_empty_input(value: Any) -> bool:
+            return value is None or (
+                isinstance(value, list) and len(value) == 0
+            )
+
+        with _resolution_scope(), config.with_backend(self._backend):
             # If data_list is a Source, activate it.
             self._activate_sources(data_list)
 
-            # If the input is not empty, set the value of the input.
+            # If the input is not empty, set the value of the input and
+            # remember in which epoch it was set.
             if _should_set_input(data_list):
                 self._input.set_value(data_list, _ID=_ID)
+                self._explicit_input_epochs[_ID] = _RESOLUTION_EPOCH
+
+            # If no input is given but an input was set explicitly during a
+            # previous resolution, that input is stale: reset it so that the
+            # feature falls back to its default input (an empty list, or the
+            # output of the feature wired as `_input`). An input set during
+            # the current resolution is kept, so that a feature evaluated
+            # both with input and as a property in the same pipeline yields
+            # a single consistent value.
+            elif _is_empty_input(data_list):
+                epoch = self._explicit_input_epochs.get(_ID)
+                if epoch is not None and epoch != _RESOLUTION_EPOCH:
+                    del self._explicit_input_epochs[_ID]
+                    self._input.invalidate(_ID=_ID)
 
             # A dict to store values of self.arguments before updating them.
             original_values: dict[str, Any] = {}
@@ -1611,6 +1672,7 @@ class Feature(DeepTrackNode):
             )
 
         super().update()
+        self._explicit_input_epochs.clear()
 
         return self
 

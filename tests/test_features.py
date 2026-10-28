@@ -1389,6 +1389,40 @@ class TestFeatures(unittest.TestCase):
         input_2 = [10, 20]
         self.assertListEqual(pipeline(input_2), [-input_2[0], -input_2[1]])
 
+    def test_Feature_input_reset_after_direct_call(self):
+        # Issue 352: an input set by a previous direct call must not leak
+        # into a later evaluation without input.
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(stack_feature(), 2)
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(1)
+        self.assertListEqual((1 & stack_feature)(), [1, 2])
+
+        # Also when the feature is nested in a pipeline.
+        stack_feature = features.Stack(value=2)
+        pipeline = stack_feature >> features.Add(b=1)
+        pipeline(5)
+        self.assertEqual(pipeline(), 3)
+
+        # A new input still invalidates as before.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertListEqual(stack_feature(2), [2, 2])
+
+        # A feature evaluated with input and as a property within the same
+        # resolution keeps a single consistent value.
+        inp = features.DummyFeature()
+        pipeline = inp - inp * 2
+        self.assertEqual(pipeline(10), -10)
+        self.assertEqual(pipeline(10), -10)
+
+        # Repeated calls without input stay cached.
+        value = features.Value(value=lambda: np.random.rand())
+        self.assertEqual(value(), value())
+
     def test_Features_chain_lambda(self):
 
         value = features.Value(value=1)
