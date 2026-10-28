@@ -8,6 +8,8 @@
 
 import itertools
 import operator
+import gc
+import threading
 import unittest
 import warnings
 
@@ -1388,6 +1390,210 @@ class TestFeatures(unittest.TestCase):
 
         input_2 = [10, 20]
         self.assertListEqual(pipeline(input_2), [-input_2[0], -input_2[1]])
+
+    def test_Feature_input_reset_after_direct_call(self):
+        # Issue 352: an input set by a previous direct call must not leak
+        # into a later evaluation without input.
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(stack_feature(), 2)
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(1)
+        self.assertListEqual((1 & stack_feature)(), [1, 2])
+
+        # Also when the feature is nested in a pipeline.
+        stack_feature = features.Stack(value=2)
+        pipeline = stack_feature >> features.Add(b=1)
+        pipeline(5)
+        self.assertEqual(pipeline(), 3)
+
+        # A new input still invalidates as before.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertListEqual(stack_feature(2), [2, 2])
+
+        # A feature evaluated with input and as a property within the same
+        # resolution keeps a single consistent value.
+        inp = features.DummyFeature()
+        pipeline = inp - inp * 2
+        self.assertEqual(pipeline(10), -10)
+        self.assertEqual(pipeline(10), -10)
+
+    def test_Feature_input_reset_recomputes_once(self):
+        # Sequence: explicit input, empty call (recompute on the default
+        # input), empty call (cached). `get` is counted directly, so the
+        # test does not rely on property caching.
+
+        calls = []
+
+        class Counting(features.Feature):
+            __distributed__ = False
+
+            def get(self, inputs, **kwargs):
+                calls.append(list(inputs))
+                return inputs
+
+        feature = Counting()
+        self.assertListEqual(feature([1, 2]), [1, 2])
+        self.assertListEqual(calls, [[1, 2]])
+
+        self.assertListEqual(feature(), [])
+        self.assertListEqual(calls, [[1, 2], []])
+
+        self.assertListEqual(feature(), [])
+        self.assertListEqual(calls, [[1, 2], []])
+
+        # A reducer wired to a feature falls back to that feature's output
+        # after an explicit input.
+        from deeptrack import statistics
+
+        inp = features.Value([1, 0])
+        mean = statistics.Mean(inp)
+        self.assertEqual(mean(5), 5.0)
+        self.assertListEqual(list(mean()), [1.0, 0.0])
+
+    def test_Feature_input_reset_respects_ID_aliases(self):
+        # `_ID`s longer than the cache key length are trimmed to the same
+        # cell: the stale check must follow the cache, not the raw tuple.
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        # The feature stays usable at its original `_ID` after the reset.
+        self.assertEqual(stack_feature(), 2)
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(features.Repeat(stack_feature, N=1)(), 2)
+
+        # Public composition mixing a nested use (longer `_ID`) and a direct
+        # use (original `_ID`) of a feature called before.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        pipeline = features.Repeat(stack_feature, N=1) & stack_feature
+        self.assertListEqual(pipeline(), [2, 2])
+
+        # Round trips between `_ID` lengths: a longer `_ID` writes to the
+        # trimmed entry, so it neither fails nor changes the key length.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertListEqual(stack_feature(5, _ID=(0,)), [5, 2])
+        self.assertEqual(stack_feature(), 2)
+        self.assertListEqual(stack_feature(6), [6, 2])
+        self.assertEqual(stack_feature(_ID=(0, 1)), 2)
+        self.assertEqual(stack_feature(), 2)
+
+        # Two aliases of one cell within the same resolution share the
+        # input set during that resolution.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        probe = features.Value(
+            lambda: (stack_feature(3, _ID=(0,)), stack_feature())
+        )
+        self.assertEqual(probe(), ([3, 2], [3, 2]))
+
+        # Distinct cells are reset independently: resetting (0,) leaves the
+        # input stored at (1,) untouched.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3, _ID=(0,))
+        stack_feature(4, _ID=(1,))
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        self.assertTrue(stack_feature._input.is_valid(_ID=(1,)))
+        self.assertEqual(stack_feature._input(_ID=(1,)), 4)
+
+        # A stale sibling reached through an alias does not take an input
+        # received during the current resolution down with it.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3, _ID=(0,))
+        probe = features.Value(
+            lambda: (
+                stack_feature(4, _ID=(1,)),
+                stack_feature(_ID=(0, 99)),
+                stack_feature(_ID=(1, 99)),
+            )
+        )
+        self.assertEqual(probe(), ([4, 2], 2, [4, 2]))
+
+    def test_Feature_cache_ID_trimming_keeps_logical_ID(self):
+        # Only the caches that still hold a shorter key length see a trimmed
+        # `_ID`; properties keep the logical one, so distinct `_ID`s sample
+        # independently even when `_input` kept key length zero.
+
+        counter = iter(range(10))
+        feature = features.Value(lambda: next(counter))
+        self.assertEqual(feature(), 0)
+        feature.value.update()
+        self.assertEqual((feature(_ID=(0,)), feature(_ID=(1,))), (1, 2))
+
+        feature = features.Value(lambda _ID: _ID)
+        feature()
+        feature.value.update()
+        self.assertEqual(feature(_ID=(7,)), (7,))
+
+    def test_Feature_input_reset_metadata_purged_on_update(self):
+        # Records of explicit inputs live with the cache cells, so resetting
+        # the cache through `update()` drops them for every component.
+
+        stack_feature = features.Stack(value=2)
+        pipeline = features.Value(1) >> stack_feature
+        for i in range(4):
+            pipeline(_ID=(i,))
+        self.assertEqual(len(stack_feature._explicit_input_epochs), 4)
+
+        pipeline.update()
+        gc.collect()
+        self.assertEqual(len(stack_feature._explicit_input_epochs), 0)
+        self.assertEqual(len(pipeline._explicit_input_epochs), 0)
+
+    def test_Feature_input_reset_is_thread_isolated(self):
+        # A call blocked in another thread must not make this thread's
+        # top-level calls look nested (which would share one epoch and keep
+        # the stale input).
+
+        entered = threading.Event()
+        release = threading.Event()
+
+        class Blocking(features.Feature):
+            def get(self, inputs, **kwargs):
+                entered.set()
+                release.wait(timeout=10)
+                return inputs
+
+        result = {}
+        errors = []
+
+        def guarded(target, *args):
+            def run():
+                try:
+                    target(*args)
+                except Exception as error:  # noqa: BLE001
+                    errors.append(error)
+            return run
+
+        def worker():
+            stack_feature = features.Stack(value=2)
+            stack_feature(3)
+            result["value"] = stack_feature()
+
+        blocking = Blocking()
+        blocker = threading.Thread(target=guarded(blocking, 1))
+        thread = threading.Thread(target=guarded(worker))
+        try:
+            blocker.start()
+            self.assertTrue(entered.wait(timeout=10))
+            thread.start()
+            thread.join(timeout=10)
+        finally:
+            release.set()
+            blocker.join(timeout=10)
+
+        self.assertFalse(thread.is_alive())
+        self.assertFalse(blocker.is_alive())
+        if errors:
+            raise errors[0]
+        self.assertEqual(result["value"], 2)
 
     def test_Features_chain_lambda(self):
 
