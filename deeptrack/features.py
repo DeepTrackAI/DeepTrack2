@@ -155,10 +155,13 @@ array([[16, 17, 18],
 from __future__ import annotations
 
 import contextlib
+import contextvars
 import itertools
 import operator
 import random
+import threading
 import warnings
+import weakref
 from typing import (
     Any, Callable, Iterable, Iterator, Literal, TYPE_CHECKING,
 )
@@ -170,7 +173,7 @@ from matplotlib import animation
 from pint import Quantity
 
 from deeptrack.backend import config, TORCH_AVAILABLE, xp
-from deeptrack.backend.core import DeepTrackNode
+from deeptrack.backend.core import DeepTrackDataObject, DeepTrackNode
 from deeptrack.backend.units import ConversionTable
 from deeptrack.properties import Property, PropertyDict, SequentialProperty
 from deeptrack.sources import SourceItem
@@ -246,28 +249,43 @@ MERGE_STRATEGY_APPEND: int = 1
 # Resolution bookkeeping.
 #
 # `_RESOLUTION_DEPTH` counts the nested `Feature.__call__()` frames currently
-# executing, and `_RESOLUTION_EPOCH` is incremented every time a top-level
-# (non-nested) call starts. Together they let a feature tell whether an input
-# it received explicitly was set during the current resolution or during a
+# executing, and `_RESOLUTION_EPOCH` holds the epoch of the current top-level
+# (non-nested) call. Together they let a feature tell whether an input it
+# received explicitly was set during the current resolution or during a
 # previous one, so that a stale input is not silently reused when the feature
 # is later called without input (e.g. when evaluated as a property).
-_RESOLUTION_DEPTH: int = 0
-_RESOLUTION_EPOCH: int = 0
+#
+# Both are context variables, so independent threads (or asyncio tasks) each
+# have their own depth and epoch and do not see each other's calls as nested.
+# Epoch numbers come from one process-wide counter, so they never collide
+# across contexts.
+_RESOLUTION_DEPTH: contextvars.ContextVar[int] = contextvars.ContextVar(
+    "_RESOLUTION_DEPTH", default=0
+)
+_RESOLUTION_EPOCH: contextvars.ContextVar[int] = contextvars.ContextVar(
+    "_RESOLUTION_EPOCH", default=0
+)
+_EPOCH_COUNTER = itertools.count(1)
+_EPOCH_LOCK = threading.Lock()
 
 
 @contextlib.contextmanager
 def _resolution_scope() -> Iterator[None]:
     """Track nested `Feature.__call__()` frames and resolution epochs."""
 
-    global _RESOLUTION_DEPTH, _RESOLUTION_EPOCH
-
-    if _RESOLUTION_DEPTH == 0:
-        _RESOLUTION_EPOCH += 1
-    _RESOLUTION_DEPTH += 1
+    depth = _RESOLUTION_DEPTH.get()
+    epoch_token = None
+    if depth == 0:
+        with _EPOCH_LOCK:
+            epoch = next(_EPOCH_COUNTER)
+        epoch_token = _RESOLUTION_EPOCH.set(epoch)
+    depth_token = _RESOLUTION_DEPTH.set(depth + 1)
     try:
         yield
     finally:
-        _RESOLUTION_DEPTH -= 1
+        _RESOLUTION_DEPTH.reset(depth_token)
+        if epoch_token is not None:
+            _RESOLUTION_EPOCH.reset(epoch_token)
 
 
 class Feature(DeepTrackNode):
@@ -713,9 +731,14 @@ class Feature(DeepTrackNode):
         self._input = DeepTrackNode(node_name="_input", action=_input)
         self._input.add_child(self)
 
-        # Maps each `_ID` whose input was set explicitly by `.__call__()` to
-        # the resolution epoch in which it was set (see `_RESOLUTION_EPOCH`).
-        self._explicit_input_epochs: dict[tuple[int, ...], int] = {}
+        # Maps each cache cell of `_input` whose value was set explicitly by
+        # `.__call__()` to the resolution epoch in which it was set (see
+        # `_RESOLUTION_EPOCH`). Keyed by cell rather than by `_ID`, so that
+        # `_ID`s the cache resolves to the same cell share one record, and so
+        # that records disappear with their cells when the cache is reset.
+        self._explicit_input_epochs: weakref.WeakKeyDictionary[
+            DeepTrackDataObject, int
+        ] = weakref.WeakKeyDictionary()
 
         # Random seed node (for deterministic behavior if desired).
         self._random_seed = DeepTrackNode(
@@ -862,6 +885,8 @@ class Feature(DeepTrackNode):
             )
 
         with _resolution_scope(), config.with_backend(self._backend):
+            epoch = _RESOLUTION_EPOCH.get()
+
             # If data_list is a Source, activate it.
             self._activate_sources(data_list)
 
@@ -869,7 +894,8 @@ class Feature(DeepTrackNode):
             # remember in which epoch it was set.
             if _should_set_input(data_list):
                 self._input.set_value(data_list, _ID=_ID)
-                self._explicit_input_epochs[_ID] = _RESOLUTION_EPOCH
+                for cell in self._input_cells(_ID):
+                    self._explicit_input_epochs[cell] = epoch
 
             # If no input is given but an input was set explicitly during a
             # previous resolution, that input is stale: reset it so that the
@@ -879,10 +905,15 @@ class Feature(DeepTrackNode):
             # both with input and as a property in the same pipeline yields
             # a single consistent value.
             elif _is_empty_input(data_list):
-                epoch = self._explicit_input_epochs.get(_ID)
-                if epoch is not None and epoch != _RESOLUTION_EPOCH:
-                    del self._explicit_input_epochs[_ID]
-                    self._input.invalidate(_ID=_ID)
+                stale_cells = [
+                    cell
+                    for cell in self._input_cells(_ID)
+                    if self._explicit_input_epochs.get(cell, epoch) != epoch
+                ]
+                if stale_cells:
+                    for cell in stale_cells:
+                        del self._explicit_input_epochs[cell]
+                    self._reset_input(_ID=_ID)
 
             # A dict to store values of self.arguments before updating them.
             original_values: dict[str, Any] = {}
@@ -922,6 +953,50 @@ class Feature(DeepTrackNode):
         return output
 
     resolve = __call__
+
+    def _reset_input(
+        self: Feature,
+        _ID: tuple[int, ...] = (),
+    ) -> None:
+        """Discard the input stored at `_ID` so that it is recomputed.
+
+        When `_ID` has the key length of the `_input` cache, the entry is
+        simply invalidated. Otherwise `_ID` reached the stale entry only by
+        trimming (or by prefix), and the cache could not store a recomputed
+        value at `_ID` next to the existing key length. In that case the
+        input and everything downstream of it are reset, as `update()` does,
+        so that the recomputation can be stored at `_ID`.
+
+        """
+
+        keylength = self._input.data._keylength
+        if keylength is None or len(_ID) == keylength:
+            self._input.invalidate(_ID=_ID)
+        else:
+            self._input.update()
+
+    def _input_cells(
+        self: Feature,
+        _ID: tuple[int, ...] = (),
+    ) -> list[DeepTrackDataObject]:
+        """Return the cache cells of `_input` that `_ID` refers to.
+
+        The cache may resolve several `_ID`s to one cell (an `_ID` longer
+        than the cache key length is trimmed) or one `_ID` to several cells
+        (an `_ID` shorter than the key length matches by prefix). An empty
+        cache yields no cell.
+
+        """
+
+        try:
+            cells = self._input.data[_ID]
+        except KeyError:
+            return []
+
+        if isinstance(cells, dict):
+            return list(cells.values())
+
+        return [cells]
 
     def to_sequential(
         self: Feature,
@@ -1672,7 +1747,6 @@ class Feature(DeepTrackNode):
             )
 
         super().update()
-        self._explicit_input_epochs.clear()
 
         return self
 
@@ -5614,20 +5688,12 @@ class Stack(Feature):
 
     Note
     ----
-    If a feature is called directly, its result is cached internally. This can
-    affect how it behaves when reused in chained pipelines. For example:
+    An input given to a feature by a direct call is not reused when the
+    feature is later evaluated without input, for example inside a chained
+    pipeline:
 
     >>> stack_feature = dt.Stack(value=2)
-    >>> _ = stack_feature(1)  # Evaluate the feature and cache the output
-    >>> (1 & stack_feature)()
-    [1, 1, 2]
-
-    To ensure consistent behavior when reusing a feature after calling it,
-    reset its state using instead:
-
-    >>> stack_feature = dt.Stack(value=2)
-    >>> _ = stack_feature(1)
-    >>> stack_feature.update()  # clear cached state
+    >>> _ = stack_feature(1)  # Evaluate the feature with input 1
     >>> (1 & stack_feature)()
     [1, 2]
 

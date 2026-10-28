@@ -8,6 +8,8 @@
 
 import itertools
 import operator
+import gc
+import threading
 import unittest
 import warnings
 
@@ -1419,9 +1421,125 @@ class TestFeatures(unittest.TestCase):
         self.assertEqual(pipeline(10), -10)
         self.assertEqual(pipeline(10), -10)
 
-        # Repeated calls without input stay cached.
-        value = features.Value(value=lambda: np.random.rand())
-        self.assertEqual(value(), value())
+    def test_Feature_input_reset_recomputes_once(self):
+        # Sequence: explicit input, empty call (recompute on the default
+        # input), empty call (cached). `get` is counted directly, so the
+        # test does not rely on property caching.
+
+        calls = []
+
+        class Counting(features.Feature):
+            __distributed__ = False
+
+            def get(self, inputs, **kwargs):
+                calls.append(list(inputs))
+                return inputs
+
+        feature = Counting()
+        self.assertListEqual(feature([1, 2]), [1, 2])
+        self.assertListEqual(calls, [[1, 2]])
+
+        self.assertListEqual(feature(), [])
+        self.assertListEqual(calls, [[1, 2], []])
+
+        self.assertListEqual(feature(), [])
+        self.assertListEqual(calls, [[1, 2], []])
+
+        # A reducer wired to a feature falls back to that feature's output
+        # after an explicit input.
+        from deeptrack import statistics
+
+        inp = features.Value([1, 0])
+        mean = statistics.Mean(inp)
+        self.assertEqual(mean(5), 5.0)
+        self.assertListEqual(list(mean()), [1.0, 0.0])
+
+    def test_Feature_input_reset_respects_ID_aliases(self):
+        # `_ID`s longer than the cache key length are trimmed to the same
+        # cell: the stale check must follow the cache, not the raw tuple.
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(features.Repeat(stack_feature, N=1)(), 2)
+
+        # The reset through an alias also leaves the feature usable at its
+        # original `_ID` and at the alias afterwards.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        self.assertListEqual(stack_feature(5, _ID=(0,)), [5, 2])
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+
+        # Two aliases of one cell within the same resolution share the
+        # input set during that resolution.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3)
+        probe = features.Value(
+            lambda: (stack_feature(3, _ID=(0,)), stack_feature())
+        )
+        self.assertEqual(probe(), ([3, 2], [3, 2]))
+
+        # Distinct cells are reset independently: resetting (0,) leaves the
+        # input stored at (1,) untouched.
+        stack_feature = features.Stack(value=2)
+        stack_feature(3, _ID=(0,))
+        stack_feature(4, _ID=(1,))
+        self.assertEqual(stack_feature(_ID=(0,)), 2)
+        self.assertTrue(stack_feature._input.is_valid(_ID=(1,)))
+        self.assertEqual(stack_feature._input(_ID=(1,)), 4)
+
+    def test_Feature_input_reset_metadata_purged_on_update(self):
+        # Records of explicit inputs live with the cache cells, so resetting
+        # the cache through `update()` drops them for every component.
+
+        stack_feature = features.Stack(value=2)
+        pipeline = features.Value(1) >> stack_feature
+        for i in range(4):
+            pipeline(_ID=(i,))
+        self.assertEqual(len(stack_feature._explicit_input_epochs), 4)
+
+        pipeline.update()
+        gc.collect()
+        self.assertEqual(len(stack_feature._explicit_input_epochs), 0)
+        self.assertEqual(len(pipeline._explicit_input_epochs), 0)
+
+    def test_Feature_input_reset_is_thread_isolated(self):
+        # A call blocked in another thread must not make this thread's
+        # top-level calls look nested (which would share one epoch and keep
+        # the stale input).
+
+        entered = threading.Event()
+        release = threading.Event()
+
+        class Blocking(features.Feature):
+            def get(self, inputs, **kwargs):
+                entered.set()
+                release.wait(timeout=10)
+                return inputs
+
+        blocking = Blocking()
+        blocker = threading.Thread(target=blocking, args=(1,))
+        blocker.start()
+        self.assertTrue(entered.wait(timeout=10))
+
+        result = {}
+
+        def worker():
+            stack_feature = features.Stack(value=2)
+            stack_feature(3)
+            result["value"] = stack_feature()
+
+        thread = threading.Thread(target=worker)
+        thread.start()
+        thread.join(timeout=10)
+        release.set()
+        blocker.join(timeout=10)
+
+        self.assertEqual(result["value"], 2)
 
     def test_Features_chain_lambda(self):
 
