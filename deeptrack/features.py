@@ -288,6 +288,26 @@ def _resolution_scope() -> Iterator[None]:
             _RESOLUTION_EPOCH.reset(epoch_token)
 
 
+def _cache_ID(
+    node: DeepTrackNode,
+    _ID: tuple[int, ...],
+) -> tuple[int, ...]:
+    """Return the `_ID` under which `node`'s cache holds the entry for `_ID`.
+
+    A cache resolves a read at an `_ID` longer than its key length by
+    trimming it, but rejects a write there. Writing at the trimmed `_ID`
+    instead lands in the entry reads come from. An `_ID` that fits the key
+    length, or a cache without key length yet, is returned unchanged.
+
+    """
+
+    keylength = node.data._keylength
+    if keylength is not None and len(_ID) > keylength:
+        return _ID[:keylength]
+
+    return _ID
+
+
 class Feature(DeepTrackNode):
     """Base feature class.
 
@@ -887,23 +907,19 @@ class Feature(DeepTrackNode):
         with _resolution_scope(), config.with_backend(self._backend):
             epoch = _RESOLUTION_EPOCH.get()
 
-            # An `_ID` longer than the key length of this feature's caches
-            # refers to the entry at the trimmed `_ID`: that is how the
-            # caches resolve reads, while a write at the longer `_ID` is
-            # rejected. Use the trimmed `_ID` throughout, so that resets,
-            # inputs and outputs all land in the entry reads come from.
-            keylength = self._input.data._keylength
-            if keylength is not None and len(_ID) > keylength:
-                _ID = _ID[:keylength]
-
             # If data_list is a Source, activate it.
             self._activate_sources(data_list)
+
+            # `_ID` is the logical identifier, used for properties and
+            # arguments. The `_input` cache may resolve it to a shorter
+            # entry; see `_cache_ID()`.
+            input_ID = _cache_ID(self._input, _ID)
 
             # If the input is not empty, set the value of the input and
             # remember in which epoch it was set.
             if _should_set_input(data_list):
-                self._input.set_value(data_list, _ID=_ID)
-                for cell in self._input_cells(_ID):
+                self._input.set_value(data_list, _ID=input_ID)
+                for cell in self._input_cells(input_ID):
                     self._explicit_input_epochs[cell] = epoch
 
             # If no input is given but an input was set explicitly during a
@@ -916,13 +932,13 @@ class Feature(DeepTrackNode):
             elif _is_empty_input(data_list):
                 stale_cells = [
                     cell
-                    for cell in self._input_cells(_ID)
+                    for cell in self._input_cells(input_ID)
                     if self._explicit_input_epochs.get(cell, epoch) != epoch
                 ]
                 if stale_cells:
                     for cell in stale_cells:
                         del self._explicit_input_epochs[cell]
-                    self._input.invalidate(_ID=_ID)
+                    self._input.invalidate(_ID=input_ID)
 
             # A dict to store values of self.arguments before updating them.
             original_values: dict[str, Any] = {}
@@ -948,7 +964,7 @@ class Feature(DeepTrackNode):
                 # This executes the feature.
                 # DeepTrackNode will determine if it needs to be recalculated.
                 # If it does, it will call the `.action()` method.
-                output = super().__call__(_ID=_ID)
+                output = super().__call__(_ID=_cache_ID(self, _ID))
 
             finally:
                 # If there are self.arguments, reset the values
@@ -1627,7 +1643,7 @@ class Feature(DeepTrackNode):
         """
 
         # Retrieve the input images.
-        inputs = self._input(_ID=_ID)
+        inputs = self._input(_ID=_cache_ID(self._input, _ID))
 
         # Get the current property values.
         properties_copy = self.properties(_ID=_ID).copy()

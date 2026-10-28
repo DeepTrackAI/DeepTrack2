@@ -1516,6 +1516,22 @@ class TestFeatures(unittest.TestCase):
         )
         self.assertEqual(probe(), ([4, 2], 2, [4, 2]))
 
+    def test_Feature_cache_ID_trimming_keeps_logical_ID(self):
+        # Only the caches that still hold a shorter key length see a trimmed
+        # `_ID`; properties keep the logical one, so distinct `_ID`s sample
+        # independently even when `_input` kept key length zero.
+
+        counter = iter(range(10))
+        feature = features.Value(lambda: next(counter))
+        self.assertEqual(feature(), 0)
+        feature.value.update()
+        self.assertEqual((feature(_ID=(0,)), feature(_ID=(1,))), (1, 2))
+
+        feature = features.Value(lambda _ID: _ID)
+        feature()
+        feature.value.update()
+        self.assertEqual(feature(_ID=(7,)), (7,))
+
     def test_Feature_input_reset_metadata_purged_on_update(self):
         # Records of explicit inputs live with the cache cells, so resetting
         # the cache through `update()` drops them for every component.
