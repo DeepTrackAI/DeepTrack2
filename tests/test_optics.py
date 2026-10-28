@@ -112,6 +112,45 @@ class TestOptics_NumPy(BackendTestBase):
         self.assertIsInstance(output_image, self.array_type)
         self.assertEqual(output_image.shape, (64, 64, 1))
 
+    def test_Brightfield_illumination_phase_independent_of_volume(self):
+        # The illumination must reach the camera as 1, wherever the sample
+        # volume sits in z. Otherwise its phase relative to fields added at
+        # the focal plane (e.g. MieSphere) depends on unrelated objects.
+        microscope = optics.Brightfield(
+            NA=1.0,
+            wavelength=633e-9,
+            resolution=100e-9,
+            magnification=1,
+            refractive_index_medium=1.33,
+            output_region=(0, 0, 64, 64),
+            return_field=True,
+        )
+        mie = MieSphere(
+            radius=0.3e-6,
+            refractive_index=1.58,
+            position=(32, 32),
+            position_unit="pixel",
+            z=0,
+            mode="hybrid",
+        )
+        far_sphere = Sphere(
+            radius=0.2e-6,
+            refractive_index=1.58,
+            position=(8, 8),
+            position_unit="pixel",
+            z=20,
+        )
+
+        with self._suppress_expected_optics_warnings():
+            sphere_only = np.asarray(microscope(far_sphere).resolve())[..., 0]
+            mie_only = np.asarray(microscope(mie).resolve())[..., 0]
+            both = np.asarray(microscope(mie >> far_sphere).resolve())[..., 0]
+
+        self.assertAlmostEqual(abs(sphere_only[56, 56] - 1), 0, delta=0.02)
+        window = (slice(22, 42), slice(22, 42))
+        change = np.abs(np.abs(both[window]) ** 2 - np.abs(mie_only[window]) ** 2)
+        self.assertLess(change.max(), 0.1)
+
     def test_Holography(self):
         microscope = optics.Holography(
             NA=0.7,

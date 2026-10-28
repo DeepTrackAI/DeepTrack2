@@ -2130,8 +2130,10 @@ class MieScatterer(FieldScatterer):
             L, illumination_angle_field, coefficients
         )
 
+        # From Bohren & Huffman eq 4.75 E_s = E_0 * exp(i k R) / (-i k R) * S
+        # and 1 / (-i) = + i
         scattered_values = (
-            -1j
+            1j
             / (k * R3_field)
             * xp.exp(1j * k * R3_field)
             * (S2 * S2_coef + S1 * S1_coef)
@@ -2355,7 +2357,18 @@ class MieScatterer(FieldScatterer):
         )
         S1, S2 = self._mie_scattering(L, illum_valid, coefficients)
 
-        scattered_values = (S2 * S2_coef + S1 * S1_coef) / amp_factor
+        # Angular spectrum of the scattered field. A far field
+        # exp(i k R) / (-i k R) * S corresponds to plane-wave amplitudes
+        # A(kx, ky) = -S / (2 pi k^2 cos(theta)) (stationary phase / Weyl
+        # expansion). The DFT that follows needs A * (2 pi / dx)^2, giving
+        # -2 pi / ((k dx)^2 cos(theta)) * S relative to the unit illumination.
+        cos_valid = cos_theta_field[pupil_mask]
+        scattered_values = (
+            -2
+            * np.pi
+            / (k**2 * voxel_size[0] * voxel_size[1] * cos_valid)
+            * (S2 * S2_coef + S1 * S1_coef)
+        ) / amp_factor
 
         if TORCH_AVAILABLE and torch.is_tensor(arr):
             flat_values = torch.zeros(
