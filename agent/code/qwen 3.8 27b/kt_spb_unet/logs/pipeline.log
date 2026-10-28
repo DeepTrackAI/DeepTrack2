@@ -1,0 +1,153 @@
++ NFRAMES=2000
++ EPOCHS=12
++ BASE=64
++ BATCH=16
+++ date -u +%H:%M:%S
++ echo '=== RENDER (00:03:53) frames=2000 ==='
+=== RENDER (00:03:53) frames=2000 ===
++ python render_all.py --frames 2000 --workers 4
+rendering 1960 frames with 4 workers -> /a/kt_spb_unet/data
+[render] 50/1960  0.4 f/s  eta 86.3 min
+[render] 100/1960  0.4 f/s  eta 83.6 min
+[render] 150/1960  0.4 f/s  eta 80.2 min
+[render] 200/1960  0.4 f/s  eta 77.6 min
+[render] 250/1960  0.4 f/s  eta 75.1 min
+[render] 300/1960  0.4 f/s  eta 73.1 min
+[render] 350/1960  0.4 f/s  eta 70.5 min
+[render] 400/1960  0.4 f/s  eta 68.6 min
+[render] 450/1960  0.4 f/s  eta 66.1 min
+[render] 500/1960  0.4 f/s  eta 64.1 min
+[render] 550/1960  0.4 f/s  eta 61.8 min
+[render] 600/1960  0.4 f/s  eta 59.7 min
+[render] 650/1960  0.4 f/s  eta 57.4 min
+[render] 700/1960  0.4 f/s  eta 55.2 min
+[render] 750/1960  0.4 f/s  eta 52.9 min
+[render] 800/1960  0.4 f/s  eta 50.8 min
+[render] 850/1960  0.4 f/s  eta 48.7 min
+[render] 900/1960  0.4 f/s  eta 46.5 min
+[render] 950/1960  0.4 f/s  eta 44.3 min
+[render] 1000/1960  0.4 f/s  eta 42.1 min
+[render] 1050/1960  0.4 f/s  eta 39.9 min
+[render] 1100/1960  0.4 f/s  eta 37.7 min
+[render] 1150/1960  0.4 f/s  eta 35.5 min
+[render] 1200/1960  0.4 f/s  eta 33.3 min
+[render] 1250/1960  0.4 f/s  eta 31.1 min
+[render] 1300/1960  0.4 f/s  eta 28.9 min
+[render] 1350/1960  0.4 f/s  eta 26.7 min
+[render] 1400/1960  0.4 f/s  eta 24.5 min
+[render] 1450/1960  0.4 f/s  eta 22.3 min
+[render] 1500/1960  0.4 f/s  eta 20.1 min
+[render] 1550/1960  0.4 f/s  eta 17.9 min
+[render] 1600/1960  0.4 f/s  eta 15.7 min
+[render] 1650/1960  0.4 f/s  eta 13.6 min
+[render] 1700/1960  0.4 f/s  eta 11.4 min
+[render] 1750/1960  0.4 f/s  eta 9.2 min
+[render] 1800/1960  0.4 f/s  eta 7.0 min
+[render] 1850/1960  0.4 f/s  eta 4.8 min
+[render] 1900/1960  0.4 f/s  eta 2.6 min
+[render] 1950/1960  0.4 f/s  eta 0.4 min
+done 1960 frames in 5140.8s  (0.38 f/s)
+
+real	85m43.945s
+user	159m31.495s
+sys	10m40.639s
+++ date -u +%H:%M:%S
++ echo '=== TRAINING (01:29:37) base=64 epochs=12 batch=16 ==='
+=== TRAINING (01:29:37) base=64 epochs=12 batch=16 ===
++ python train.py --frames 2000 --epochs 12 --base 64 --batch 16
+device=cuda base=64 batch=16
+train=1800  val=200
+UNet base=64: 12.42M params
+[W1008 01:29:41.308287617 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 354877440, total: 42406903808).
+[W1008 01:29:41.345326129 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.345452607 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.372034411 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.372174254 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.391303710 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.391445066 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.392663631 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.392785932 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.393265515 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.393391052 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.393842372 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1637875712 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.393983348 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1637875712 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.394462350 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.394579691 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.395064775 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.395182817 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.395627445 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.395744255 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.396193601 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.396313277 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.396753756 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.396870586 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.397320334 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.397441011 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.397886520 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1637875712 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.398040120 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1637875712 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.398483264 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.398599413 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.399050593 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.399171040 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.399609907 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.399730063 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.400215197 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.400335293 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.400774751 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.400894747 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.401368570 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.401485911 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 547356672 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.401926721 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.402052798 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 1092616192 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.403244473 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 545259520 bytes (free: 155648000, total: 42406903808).
+[W1008 01:29:41.403365712 CUDACachingAllocator.cpp:3934] memory allocation failed with OOM on device 0 while trying to allocate 545259520 bytes (free: 155648000, total: 42406903808).
+Traceback (most recent call last):
+  File "/a/kt_spb_unet/train.py", line 131, in <module>
+    main()
+  File "/a/kt_spb_unet/train.py", line 106, in main
+    out = net(img)
+          ^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/a/kt_spb_unet/unet.py", line 93, in forward
+    x = dec(x)
+        ^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/container.py", line 259, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1783, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1794, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/modules/batchnorm.py", line 210, in forward
+    return F.batch_norm(
+           ^^^^^^^^^^^^^
+  File "/opt/conda/lib/python3.12/site-packages/torch/nn/functional.py", line 2904, in batch_norm
+    return torch.batch_norm(
+           ^^^^^^^^^^^^^^^^^
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 520.00 MiB. GPU 0 has a total capacity of 39.49 GiB of which 148.44 MiB is free. Process 32095 has 468.00 MiB memory in use. Process 1548731 has 1.25 GiB memory in use. Process 2451550 has 1.25 GiB memory in use. Process 3273110 has 10.12 GiB memory in use. Process 3291017 has 10.12 GiB memory in use. Process 65408 has 868.00 MiB memory in use. Process 72207 has 912.00 MiB memory in use. Process 2937854 has 14.37 GiB memory in use. Of the allocated memory 13.63 GiB is allocated by PyTorch, and 265.66 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://docs.pytorch.org/docs/stable/notes/cuda.html#optimizing-memory-usage-with-pytorch-cuda-alloc-conf)
+
+real	0m4.297s
+user	0m3.067s
+sys	0m1.130s
+++ date -u +%H:%M:%S
++ echo '=== DONE (01:29:42) ==='
+=== DONE (01:29:42) ===
++ ls -lh checkpoints/
+total 15M
+-rw-r--r--. 1 root root 3.0M Oct  7 22:55 smoke.pt
+-rw-r--r--. 1 root root  12M Oct  8 00:02 unet_base32_best.pt
++ du -sh data/ data
+3.0G	data/
