@@ -16,7 +16,7 @@
     <img src="https://img.shields.io/badge/docs-available-blue?logo=readthedocs">
   </a>
   <a href="https://badge.fury.io/py/deeptrack">
-    <img src="https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue" alt="Python version">
+    <img src="https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13%20%7C%203.14%20%7C%203.15-blue" alt="Python version">
   </a>
   <a href="https://doi.org/10.1063/5.0034891">
     <img src="https://img.shields.io/badge/cite us-10.1063%2F5.0034891-blue">
