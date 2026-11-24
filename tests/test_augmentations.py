@@ -978,6 +978,48 @@ class TestAugmentations(unittest.TestCase):
                 expected_region,
             )
 
+    def test_Crop_fewer_values_than_ndim(self):
+        # Axes not covered by `crop` or `corner` are left uncropped.
+
+        backends = ["numpy"]
+        if TORCH_AVAILABLE:
+            backends.append("torch")
+
+        for backend in backends:
+
+            config.set_backend(backend)
+
+            image_np = np.arange(20 * 30 * 2, dtype=np.float32)
+            image_np = image_np.reshape(20, 30, 2)
+            image = image_np if backend == "numpy" else torch.tensor(image_np)
+
+            def check(out, expected):
+                if backend == "numpy":
+                    np.testing.assert_array_equal(out, expected)
+                else:
+                    self.assertTrue(torch.equal(out, torch.tensor(expected)))
+
+            cropper = augmentations.Crop(
+                crop=(10, 12), crop_mode="retain", corner=(3, 5),
+            )
+            check(cropper(image), image_np[3:13, 5:17, :])
+
+            cropper = augmentations.Crop(
+                crop=(4, 6), crop_mode="remove", corner=(1, 2),
+            )
+            check(cropper(image), image_np[1:17, 2:26, :])
+
+            cropper = augmentations.Crop(
+                crop=(10, 12, 1), crop_mode="retain", corner=(3, 5),
+            )
+            check(cropper(image), image_np[3:13, 5:17, 0:1])
+
+            cropper = augmentations.Crop(crop=(10, 12), crop_mode="retain")
+            out = cropper(image)
+            self.assertSequenceEqual(tuple(out.shape), (10, 12, 2))
+
+        config.set_backend("numpy")
+
     def test_Crop_time_consistent_bind(self):
 
         backends = ["numpy"]
