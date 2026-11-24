@@ -251,6 +251,10 @@ Specific examples for graph-neural-network-based particle linking and trace char
 
   Training a U-Net on simulated images to segment membranes and mitochondria in experimental electron microscopy images of neural tissue.
 
+- DTEx251B **[Neural Tissue Segmentation with Manually Annotated Training Data](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251B_neural_tissue_segmentation_manual_annotations.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx251B_neural_tissue_segmentation_manual_annotations.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
+
+  Training the same U-Net directly on the manually annotated images, as a reference for the simulation-based approach in DTEx251.
+
 - DTEx252 **[Particle Localization and Phase Mask Optimization](https://github.com/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb)** <a href="https://colab.research.google.com/github/DeepTrackAI/DeepTrack2/blob/develop/tutorials/2-examples/DTEx252_phase_mask_optimization.ipynb"><img src="https://colab.research.google.com/assets/colab-badge.svg"></a>
 
   Jointly optimizing an optical phase mask and a CNN to localize closely spaced particles in 3D.
