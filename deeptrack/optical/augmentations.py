@@ -1867,7 +1867,8 @@ class Crop(Augmentation):
     ----------
     crop: int | tuple[int, ...] | list[int] | Callable
         Defines the cropping amount. If an integer, the same value is used
-        for all axes. If a tuple or list, values are interpreted per axis.
+        for all axes. If a tuple or list, values are interpreted per axis;
+        axes beyond its length are not cropped.
         If `crop_mode="retain"`, `crop` specifies the output size.
         If `crop_mode="remove"`, `crop` specifies the number of pixels
         removed from the borders.
@@ -1880,7 +1881,8 @@ class Crop(Augmentation):
     corner: PropertyLike[str | tuple[int, int] | Callable], optional
         Top-left corner of the cropped region.
         - `"random"` selects a random valid corner. (default)
-        - A tuple specifies the corner explicitly.
+        - A tuple specifies the corner explicitly. Axes beyond its length
+          start at 0.
         - A callable receives the input array and returns a corner.
 
     Methods
@@ -1923,7 +1925,8 @@ class Crop(Augmentation):
         ----------
         crop: int | tuple[int, ...] | list[int] | Callable
             Defines the cropping amount. If an integer, the same value is used
-            for all axes. If a tuple or list, values are interpreted per axis.
+            for all axes. If a tuple or list, values are interpreted per axis;
+            axes beyond its length are not cropped.
             If `crop_mode="retain"`, `crop` specifies the output size.
             If `crop_mode="remove"`, `crop` specifies the number of pixels
             removed from the borders.
@@ -1936,7 +1939,8 @@ class Crop(Augmentation):
         corner: PropertyLike[str | tuple[int, int] | Callable], optional
             Top-left corner of the cropped region.
             - `"random"` selects a random valid corner. (default)
-            - A tuple specifies the corner explicitly.
+            - A tuple specifies the corner explicitly. Axes beyond its length
+              start at 0.
             - A callable receives the input array and returns a corner.
 
         """
@@ -1979,7 +1983,8 @@ class Crop(Augmentation):
             Input array to be cropped.
         crop: int | tuple[int, ...] | list[int] | Callable
             Defines the cropping amount. If an integer, the same value is used
-            for all axes. If a tuple or list, values are interpreted per axis.
+            for all axes. If a tuple or list, values are interpreted per axis;
+            axes beyond its length are not cropped.
             If `crop_mode="retain"`, `crop` specifies the output size.
             If `crop_mode="remove"`, `crop` specifies the number of pixels
             removed from the borders.
@@ -1992,7 +1997,8 @@ class Crop(Augmentation):
         corner: str | tuple[int] | Callable
             Top-left corner of the cropped region.
             - `"random"` selects a random valid corner.
-            - A tuple specifies the corner explicitly.
+            - A tuple specifies the corner explicitly. Axes beyond its length
+              start at 0.
             - A callable receives the input array and returns a corner.
         xp: module
             The array library (e.g., `numpy` or `torch`) to use for
@@ -2015,6 +2021,13 @@ class Crop(Augmentation):
             c if c is not None else array.shape[i] for i, c in enumerate(crop)
         ]
 
+        # Axes not covered by `crop` are left uncropped.
+        missing_axes = range(len(crop), array.ndim)
+        if crop_mode == "retain":
+            crop += [array.shape[i] for i in missing_axes]
+        elif crop_mode == "remove":
+            crop += [0 for _ in missing_axes]
+
         if crop_mode == "retain":
             crop_amount = np.array(array.shape) - np.array(crop)
         elif crop_mode == "remove":
@@ -2032,6 +2045,10 @@ class Crop(Augmentation):
             slice_start = corner(array)
         else:
             slice_start = corner
+
+        # Axes not covered by `corner` start at 0.
+        slice_start = list(slice_start)
+        slice_start += [0] * (array.ndim - len(slice_start))
 
         slice_start = [
             int(c) % (int(m) + 1) for c, m in zip(slice_start, crop_amount)
